@@ -3680,7 +3680,12 @@ function clearAdminSession(){
 let publicFilesLoading=false;
 let publicFilesAutoRefreshTimer=null;
 let publicFilesAutoRefreshStarted=false;
+let publicFilesCurrentFolder='';
 const PUBLIC_FILES_AUTO_REFRESH_MS=5000;
+
+function publicFilesEncodePath(rel){
+  return String(rel||'').split('/').filter(Boolean).map(encodeURIComponent).join('/');
+}
 
 function loadPublicFiles(options){
   options=options||{};
@@ -3702,8 +3707,9 @@ function loadPublicFiles(options){
 
   const controller=new AbortController();
   const timer=setTimeout(function(){ controller.abort(); },8000);
+  const query='?list=1&path='+encodeURIComponent(publicFilesCurrentFolder)+'&ts='+Date.now();
 
-  fetch(base+'?list=1&ts='+Date.now(),{
+  fetch(base+query,{
     method:'GET',
     cache:'no-store',
     signal:controller.signal
@@ -3713,32 +3719,52 @@ function loadPublicFiles(options){
     return response.json();
   })
   .then(function(data){
+    const folders=data && Array.isArray(data.folders) ? data.folders : [];
     const files=data && Array.isArray(data.files) ? data.files : [];
-    if(!files.length){
-      list.innerHTML='<div class="empty">No files found in public_files.</div>';
+    const entries=folders.concat(files);
+
+    if(!entries.length){
+      list.innerHTML='<div class="empty">This folder is empty.</div>';
       return;
     }
-    if(!files.length){
-      if(!silent || !list.querySelector('.admin-list-item')) {
-        list.innerHTML='<div class="empty">No files found in public_files.</div>';
-      }
-      return;
+
+    let html='';
+
+    if(publicFilesCurrentFolder){
+      const parent=publicFilesCurrentFolder.split('/').filter(Boolean);
+      parent.pop();
+      const parentPath=parent.join('/');
+      html+='<div class="admin-list-item" style="display:flex;align-items:center;gap:10px;cursor:pointer" onclick="openPublicFolder(\''+escapeJs(parentPath)+'\')">'
+        +'<strong style="font-size:13px">⬅️ ..</strong><span style="color:#8ea5c3;font-size:11px">Back</span></div>';
     }
-    list.innerHTML=files.map(function(file,fileIndex){
+
+    folders.forEach(function(folder,folderIndex){
+      const rel=String(folder.path||'');
+      const label=String(folder.name||rel.split('/').pop()||'Folder');
+      html+='<div class="admin-list-item" style="display:flex;align-items:center;justify-content:space-between;gap:10px;cursor:pointer" onclick="openPublicFolder(\''+escapeJs(rel)+'\')">'
+        +'<div style="min-width:0;flex:1"><strong style="word-break:break-word">📁 '+escapeHtml(label)+'</strong>'
+        +'<div class="admin-video-meta">Folder</div></div>'
+        +'<div style="font-size:18px;color:#8ea5c3">›</div></div>';
+    });
+
+    files.forEach(function(file,fileIndex){
       const rel=String(file.path||file.name||'');
-      const link=base+'/'+rel.split('/').map(encodeURIComponent).join('/');
+      const link=base+'/'+publicFilesEncodePath(rel);
       const size=Number(file.size)||0;
       let sizeText=size<1024 ? size+' B' : size<1024*1024 ? (size/1024).toFixed(1)+' KB' : (size/1024/1024).toFixed(1)+' MB';
-      return '<div class="admin-list-item" style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap">'
-        +'<div style="min-width:0;flex:1"><strong style="word-break:break-word">'+escapeHtml(rel)+'</strong>'
+      const menuId='public-file-menu-'+fileIndex;
+      html+='<div class="admin-list-item" style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap">'
+        +'<div style="min-width:0;flex:1"><strong style="word-break:break-word">📄 '+escapeHtml(String(file.name||rel))+'</strong>'
         +'<div class="admin-video-meta">'+sizeText+(file.modified?' • '+escapeHtml(formatDate(file.modified)):'')+'</div></div>'
         +'<div class="public-file-options-wrap">'
-        +'<button class="options-button public-file-more" type="button" aria-label="File options" onclick="togglePublicFileMenu(\'public-file-menu-'+fileIndex+'\',event)">⋮</button>'
-        +'<div class="video-options public-file-options" id="public-file-menu-'+fileIndex+'" style="display:none">'
+        +'<button class="options-button public-file-more" type="button" aria-label="File options" onclick="togglePublicFileMenu(\''+menuId+'\',event)">⋮</button>'
+        +'<div class="video-options public-file-options" id="'+menuId+'" style="display:none">'
         +'<button type="button" onclick="window.open(\''+escapeJs(link)+'\',\'_blank\');closePublicFileMenus()">OPEN</button>'
         +'<button type="button" onclick="copyPublicFileLink(\''+escapeJs(link)+'\');closePublicFileMenus()">🔗 COPY LINK</button>'
         +'</div></div></div>';
-    }).join('');
+    });
+
+    list.innerHTML=html;
   })
   .catch(function(err){
     const isTimeout=err && err.name==='AbortError';
@@ -3753,6 +3779,11 @@ function loadPublicFiles(options){
   });
 }
 
+function openPublicFolder(folderPath){
+  closePublicFileMenus();
+  publicFilesCurrentFolder=String(folderPath||'').replace(/^\/+|\/+$/g,'');
+  loadPublicFiles({silent:false});
+}
 
 function startPublicFilesAutoRefresh(){
   if(publicFilesAutoRefreshStarted) return;
