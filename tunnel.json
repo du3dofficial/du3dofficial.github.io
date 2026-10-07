@@ -1,5 +1,5 @@
 {
   "tunnelUrl": "https://talent-queries-cabinets-springer.trycloudflare.com",
   "apiUrl": "https://talent-queries-cabinets-springer.trycloudflare.com/api",
-  "publicFilesUrl": "https://talent-queries-cabinets-springer.trycloudflare.com/files"
+  "publicFilesUrl": "https://YOUR-CURRENT-TUNNEL.trycloudflare.com/files"
 }
