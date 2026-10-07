@@ -6782,6 +6782,8 @@ function getServerError(err){
   const DU3D_QUEEN_SAFETY_BONUS=260;
   const DU3D_QUEEN_HANG_PENALTY=1800;
   const DU3D_QUEEN_TRADE_PENALTY=650;
+  const DU3D_EARLY_KING_MOVE_PENALTY=950;
+  const DU3D_UNSAFE_KING_MOVE_PENALTY=1800;
 
   function du3dSquareToCoords(square){
     if(!square || square.length!==2) return null;
@@ -6814,6 +6816,39 @@ function getServerError(err){
       }
     }
     return false;
+  }
+
+  function du3dKingSafetyScore(color){
+    const kingSquare=color==='w'?'e1':'e8';
+    const king=game.get(kingSquare);
+    let score=0;
+
+    // Castling is a special, safe king move and should never be penalized.
+    const history=game.history({verbose:true}) || [];
+    const castled=history.some(function(m){
+      return m.color===color && m.piece==='k' &&
+        ((color==='w' && (m.from==='e1' && (m.to==='g1'||m.to==='c1'))) ||
+         (color==='b' && (m.from==='e8' && (m.to==='g8'||m.to==='c8'))));
+    });
+
+    // In the opening, keep the king home unless it is castling or escaping check.
+    const materialPieces=game.board().reduce(function(n,row){
+      return n+row.filter(Boolean).length;
+    },0);
+    const openingPhase=materialPieces>=22;
+    if(openingPhase && !castled){
+      const k=game.get(color==='w'?'e1':'e8');
+      if(!k) score-=DU3D_EARLY_KING_MOVE_PENALTY;
+    }
+
+    // Extra protection for a king that is not currently under check: prefer a
+    // sheltered/castled king over unnecessary wandering.
+    if(!game.in_check()){
+      const ksq=color==='w'?'e1':'e8';
+      if(!game.get(ksq) && !castled) score-=DU3D_EARLY_KING_MOVE_PENALTY;
+    }
+
+    return score;
   }
 
   function du3dQueenSafetyScore(color){
@@ -6942,6 +6977,9 @@ function getServerError(err){
       kingSafetyScore("b") -
       kingSafetyScore("w");
 
+    /* DU3D keeps the king home in the opening unless there is a real reason. */
+    score+=du3dKingSafetyScore("b")-du3dKingSafetyScore("w");
+
     /* DU3D strongly protects king and queen. */
     score+=du3dQueenSafetyScore("b")-du3dQueenSafetyScore("w");
 
@@ -7061,6 +7099,23 @@ function getServerError(err){
           move.promotion
         ] || 0);
 
+    }
+
+    /* King moves: castling/check responses are special; otherwise heavily deprioritize
+       early king wandering so the search chooses safer developing moves first. */
+    if(move.piece==='k'){
+      const color=game.turn();
+      const currentlyInCheck=game.in_check();
+      const isCastle=(move.from==='e1' && (move.to==='g1'||move.to==='c1')) ||
+                      (move.from==='e8' && (move.to==='g8'||move.to==='c8'));
+      if(!currentlyInCheck && !isCastle){
+        score-=DU3D_EARLY_KING_MOVE_PENALTY*3;
+      }
+      if(move.to){
+        const enemyColor=color==='w'?'b':'w';
+        if(du3dIsSquareAttackedBy(move.to,enemyColor))
+          score-=DU3D_UNSAFE_KING_MOVE_PENALTY;
+      }
     }
 
     /* Never casually place DU3D's queen where a pawn/minor can take it. */
