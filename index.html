@@ -198,7 +198,9 @@
     .spinner-wheel canvas{width:100%;height:100%;display:block;border-radius:50%}
     .spinner-pointer{position:absolute;top:0;left:50%;transform:translateX(-50%);z-index:5;width:0;height:0;border-left:17px solid transparent;border-right:17px solid transparent;border-top:34px solid #fff;filter:drop-shadow(0 4px 8px rgba(0,0,0,.75))}
     .spinner-pointer:after{content:"";position:absolute;left:-9px;top:-31px;width:18px;height:18px;border-radius:50%;background:#ff3d4d;box-shadow:0 0 18px rgba(255,50,65,.9)}
-    .spinner-center{position:absolute;z-index:4;width:76px;height:76px;border-radius:50%;display:grid;place-items:center;background:radial-gradient(circle at 35% 30%,#ff6671,#a80e1b 60%,#43050a);border:6px solid #120204;box-shadow:0 5px 18px rgba(0,0,0,.65),0 0 20px rgba(255,35,50,.35);color:#fff;font-size:12px;font-weight:1000;letter-spacing:1px;text-align:center;pointer-events:none}
+    .spinner-center{position:absolute;z-index:4;width:82px;height:82px;border-radius:50%;display:grid;place-items:center;background:radial-gradient(circle at 35% 30%,#ff6671,#a80e1b 60%,#43050a);border:6px solid #120204;box-shadow:0 5px 18px rgba(0,0,0,.65),0 0 20px rgba(255,35,50,.35);color:#fff;font-size:12px;font-weight:1000;letter-spacing:1px;text-align:center;pointer-events:none;overflow:hidden}
+    .spinner-center img{width:100%;height:100%;object-fit:cover;border-radius:50%;display:none}.spinner-center .spinner-avatar-fallback{}
+    .spinner-center span{position:absolute;inset:0;display:grid;place-items:center;font-size:30px}
     .spinner-result{min-height:52px;margin-top:12px;padding:12px 15px;border-radius:12px;text-align:center;border:1px solid rgba(255,70,80,.22);background:rgba(255,255,255,.035);color:#f3c8cc;font-weight:800}
     .spinner-result strong{display:block;color:#fff;font-size:20px;margin-top:3px}
     .spinner-form{position:relative;z-index:1}
@@ -225,7 +227,7 @@
     .spinner-spin:disabled{opacity:.42;cursor:not-allowed;transform:none}
     .spinner-status{margin-top:12px;text-align:center;color:#8f6a70;font-size:11px;line-height:1.45}
     @media(max-width:850px){.spinner-layout{grid-template-columns:1fr}.spinner-wheel-wrap{max-width:500px}.spinner-names{max-height:230px}}
-    @media(max-width:520px){.spinner-card{padding:15px}.spinner-input-row{flex-direction:column}.spinner-add{width:100%}.spinner-actions{grid-template-columns:1fr}.spinner-center{width:62px;height:62px;font-size:10px}.spinner-pointer{border-left-width:14px;border-right-width:14px;border-top-width:29px}}
+    @media(max-width:520px){.spinner-card{padding:15px}.spinner-input-row{flex-direction:column}.spinner-add{width:100%}.spinner-actions{grid-template-columns:1fr}.spinner-center{width:64px;height:64px}.spinner-center span{font-size:23px}.spinner-pointer{border-left-width:14px;border-right-width:14px;border-top-width:29px}}
 
     /* GALLERY */
     #galleryBoard{
@@ -1961,7 +1963,7 @@ button[onclick*="showAdminLogin"] { display:none !important; }
         <div class="spinner-wheel-wrap">
           <div class="spinner-pointer"></div>
           <div class="spinner-wheel" id="spinnerWheel"><canvas id="spinnerCanvas" width="700" height="700"></canvas></div>
-          <div class="spinner-center">SPIN</div>
+          <div class="spinner-center" id="spinnerCenter" aria-label="User profile"><img id="spinnerAvatar" alt="User profile avatar"><span id="spinnerAvatarFallback">👤</span></div>
         </div>
         <div class="spinner-result" id="spinnerResult">Ready to spin.<strong>Choose a name</strong></div>
       </div>
@@ -2252,6 +2254,13 @@ function syncAdminSession(){ adminToken=(window.du3dUserToken && window.du3dCurr
     }
     ctx.beginPath();ctx.arc(cx,cy,radius,0,Math.PI*2);ctx.strokeStyle='rgba(255,255,255,.2)';ctx.lineWidth=5;ctx.stroke();
   }
+  function updateSpinnerAvatar(){
+    var img=$('spinnerAvatar'),fallback=$('spinnerAvatarFallback');
+    var user=window.du3dCurrentUser||{};
+    var src=user.avatarUrl||user.avatar||user.photoURL||user.photoUrl||user.profileImage||'';
+    if(img&&src){ img.src=src; img.style.display='block'; if(fallback)fallback.style.display='none'; }
+    else if(img){ img.removeAttribute('src'); img.style.display='none'; if(fallback){ fallback.textContent='👤'; fallback.style.display='grid'; } }
+  }
   function renderNames(){
     var list=$('spinnerNames'),count=$('spinnerCount'),spin=$('spinnerSpinButton'),status=$('spinnerStatus');
     if(count)count.textContent=names.length;
@@ -2296,11 +2305,13 @@ function syncAdminSession(){ adminToken=(window.du3dUserToken && window.du3dCurr
     if(!confirm('Clear all names from the spinner?'))return;
     names=[];save();rotation=0;var wheel=$('spinnerWheel');if(wheel)wheel.style.transform='rotate(0deg)';var result=$('spinnerResult');if(result)result.innerHTML='Ready to spin.<strong>Choose a name</strong>';renderNames();
   }
+  window.du3dSpinWheel=spin;
+  window.du3dUpdateSpinnerAvatar=updateSpinnerAvatar;
   document.addEventListener('DOMContentLoaded',function(){
-    load();renderNames();
-    var add=$('spinnerAddButton'),spin=$('spinnerSpinButton'),clear=$('spinnerClearButton'),input=$('spinnerNameInput');
+    load();updateSpinnerAvatar();renderNames();
+    var add=$('spinnerAddButton'),spinButton=$('spinnerSpinButton'),clear=$('spinnerClearButton'),input=$('spinnerNameInput');
     if(add)add.addEventListener('click',addName);
-    if(spin)spin.addEventListener('click',spin);
+    if(spinButton)spinButton.addEventListener('click',spin);
     if(clear)clear.addEventListener('click',clearAll);
     if(input)input.addEventListener('keydown',function(e){if(e.key==='Enter')addName();});
   });
@@ -2329,6 +2340,11 @@ function showPage(page){
 
   if(page==="gallery"){
     renderGallery();
+  }
+
+  if(page==="spinner"){
+    if(typeof updateSpinnerAvatar === "function") updateSpinnerAvatar();
+    if(typeof renderNames === "function") renderNames();
   }
 
   if(page==="admin"){
