@@ -7029,6 +7029,81 @@ function getServerError(err){
     return score;
   }
 
+  /*
+     QUEEN CAPTURE SUPPORT CHECK
+     Before DU3D captures with its queen, temporarily make the capture and
+     check whether the queen has real friendly support. A queen capture that
+     leaves the queen unsupported and immediately capturable is treated as a
+     bad move unless the position is forcing (check/checkmate).
+  */
+  function du3dQueenCaptureSafety(move){
+    if(!move || move.piece!=="q" || !move.to || !move.captured) return 0;
+
+    const mover=game.turn();
+    const enemy=mover==='w'?'b':'w';
+    let result=0;
+
+    try{
+      game.move(move);
+
+      const queenSquare=move.to;
+      const enemyMoves=game.moves({verbose:true}) || [];
+      const queenIsAttacked=du3dIsSquareAttackedBy(queenSquare,enemy);
+      const legalQueenCaptures=enemyMoves.filter(function(m){
+        return m.to===queenSquare;
+      });
+
+      /* Check real legal support, not just geometric protection: a pinned
+         friendly piece does not count as reliable queen support. */
+      let supportCount=0;
+      const board=game.board();
+      for(let r=0;r<8;r++){
+        for(let c=0;c<8;c++){
+          const piece=board[r][c];
+          if(!piece || piece.color!==mover || piece.type==='q') continue;
+          const from=String.fromCharCode(97+c)+(8-r);
+          const pieceMoves=game.moves({square:from,verbose:true}) || [];
+          if(pieceMoves.some(function(m){return m.to===queenSquare;})) supportCount++;
+        }
+      }
+
+      const forcingCheck=game.in_check();
+      const mateAvailable=forcingCheck && enemyMoves.length===0;
+
+      if(mateAvailable){
+        result+=1000000;
+      }else if(forcingCheck){
+        result+=4500;
+      }
+
+      if(supportCount===0){
+        result-=queenIsAttacked ? 14000 : 2200;
+      }else{
+        result+=Math.min(supportCount,3)*650;
+      }
+
+      /* If the opponent can legally capture the queen immediately, this is
+         exactly the kind of unsupported queen sacrifice DU3D should avoid.
+         Queen-vs-queen exchanges remain acceptable when the exchange is legal. */
+      if(legalQueenCaptures.length){
+        const queenTradeOnly=legalQueenCaptures.every(function(m){
+          return m.piece==='q';
+        });
+        if(queenTradeOnly && move.captured==='q'){
+          result+=350;
+        }else{
+          result-=18000;
+        }
+      }
+    }catch(e){
+      result-=20000;
+    }finally{
+      try{ game.undo(); }catch(e){}
+    }
+
+    return result;
+  }
+
   function du3dQueenSafetyScore(color){
     const board=game.board(); let score=0;
     for(let r=0;r<8;r++) for(let c=0;c<8;c++){
@@ -7418,6 +7493,13 @@ function getServerError(err){
       }
       // Prefer useful queen activity when it does not expose the queen.
       if(!queenDestinationIsAttacked) score+=140;
+
+      // If this is a capture, actually test the position after the capture.
+      // The queen should not take an enemy piece and then discover that no
+      // friendly piece supports it and the opponent can simply take the queen.
+      if(move.captured){
+        score+=du3dQueenCaptureSafety(move);
+      }
     }
 
 
