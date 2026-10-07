@@ -223,6 +223,21 @@
     .spinner-remove{width:20px;height:20px;padding:0;border:0;border-radius:50%;background:rgba(255,255,255,.08);color:#ffadb4;cursor:pointer;font-weight:900}
     .spinner-empty{padding:25px 10px;text-align:center;color:#76575c;font-size:12px;width:100%}
     .spinner-actions{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:17px}
+    .spinner-clear-modal{position:fixed;inset:0;z-index:10060;display:none;align-items:center;justify-content:center;padding:20px;background:rgba(2,0,1,.78);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
+    .spinner-clear-modal.show{display:flex;animation:spinnerModalFade .18s ease}
+    .spinner-clear-card{width:min(420px,94vw);padding:25px 24px 22px;border:1px solid rgba(255,70,80,.42);border-radius:20px;background:linear-gradient(145deg,rgba(39,5,10,.98),rgba(9,2,4,.99));box-shadow:0 28px 90px rgba(0,0,0,.78),0 0 45px rgba(255,35,50,.16);text-align:center;animation:spinnerModalPop .22s cubic-bezier(.2,.8,.2,1)}
+    .spinner-clear-icon{width:62px;height:62px;margin:0 auto 13px;border-radius:50%;display:grid;place-items:center;background:radial-gradient(circle at 35% 30%,#ff6874,#a90d1b 62%,#41050a);border:2px solid rgba(255,130,140,.38);box-shadow:0 0 25px rgba(255,45,60,.28);font-size:27px}
+    .spinner-clear-title{margin:0;color:#fff;font-size:21px;font-weight:1000}
+    .spinner-clear-message{margin:9px 0 0;color:#c9959a;font-size:12px;line-height:1.55}
+    .spinner-clear-message strong{color:#fff}
+    .spinner-clear-actions{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:20px}
+    .spinner-modal-cancel,.spinner-modal-confirm{min-height:45px;padding:11px 14px;border-radius:11px;font-weight:1000;cursor:pointer;letter-spacing:.3px}
+    .spinner-modal-cancel{border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.055);color:#ead8da}
+    .spinner-modal-cancel:hover{background:rgba(255,255,255,.09);transform:translateY(-1px)}
+    .spinner-modal-confirm{border:1px solid rgba(255,85,95,.6);background:linear-gradient(135deg,#ff394b,#920916);color:#fff;box-shadow:0 10px 25px rgba(180,10,25,.28)}
+    .spinner-modal-confirm:hover{filter:brightness(1.1);transform:translateY(-1px)}
+    @keyframes spinnerModalFade{from{opacity:0}to{opacity:1}}
+    @keyframes spinnerModalPop{from{opacity:0;transform:translateY(10px) scale(.96)}to{opacity:1;transform:translateY(0) scale(1)}}
     .spinner-spin,.spinner-clear{padding:14px 12px;border-radius:12px;cursor:pointer;font-weight:1000;letter-spacing:.4px}
     .spinner-spin{border:1px solid rgba(255,80,90,.55);background:linear-gradient(135deg,#ff3547,#850714);color:#fff;box-shadow:0 12px 30px rgba(180,10,25,.28)}
     .spinner-spin:hover:not(:disabled){filter:brightness(1.1);transform:translateY(-1px)}
@@ -231,7 +246,7 @@
     .spinner-spin:disabled{opacity:.42;cursor:not-allowed;transform:none}
     .spinner-status{margin-top:12px;text-align:center;color:#8f6a70;font-size:11px;line-height:1.45}
     @media(max-width:850px){.spinner-layout{grid-template-columns:1fr}.spinner-wheel-wrap{max-width:500px}.spinner-names{max-height:230px}}
-    @media(max-width:520px){.spinner-card{padding:15px}.spinner-input-row{flex-direction:column}.spinner-add{width:100%}.spinner-actions{grid-template-columns:1fr}.spinner-center{width:64px;height:64px}.spinner-center span{font-size:23px}.spinner-pointer{border-left-width:14px;border-right-width:14px;border-top-width:29px}}
+    @media(max-width:520px){.spinner-card{padding:15px}.spinner-input-row{flex-direction:column}.spinner-add{width:100%}.spinner-actions{grid-template-columns:1fr 1fr}.spinner-center{width:64px;height:64px}.spinner-center span{font-size:23px}.spinner-pointer{border-left-width:14px;border-right-width:14px;border-top-width:29px}}
 
     /* GALLERY */
     #galleryBoard{
@@ -1980,19 +1995,31 @@ button[onclick*="showAdminLogin"] { display:none !important; }
           <input class="spinner-input" id="spinnerNameInput" type="text" maxlength="40" autocomplete="off" placeholder="Enter a name…" aria-label="Name">
           <button class="spinner-add" id="spinnerAddButton" type="button">＋ ADD</button>
         </div>
-        <div class="spinner-name-count"><span>Names in the wheel</span><span class="spinner-count" id="spinnerCount">0</span></div>
-        <div class="spinner-names" id="spinnerNames"><div class="spinner-empty">No names yet. Add your first name above.</div></div>
-        <div class="spinner-name-count spinner-picked-heading"><span>🏆 Picked Names</span><span class="spinner-count" id="spinnerPickedCount">0</span></div>
-        <div class="spinner-names spinner-picked-names" id="spinnerPickedNames"><div class="spinner-empty">No winners yet.</div></div>
         <div class="spinner-actions">
           <button class="spinner-spin" id="spinnerSpinButton" type="button" disabled>🎡 SPIN THE WHEEL</button>
           <button class="spinner-clear" id="spinnerClearButton" type="button">🗑 CLEAR ALL NAMES</button>
         </div>
+        <div class="spinner-name-count spinner-picked-heading"><span>🏆 Picked Names</span><span class="spinner-count" id="spinnerPickedCount">0</span></div>
+        <div class="spinner-names spinner-picked-names" id="spinnerPickedNames"><div class="spinner-empty">No winners yet.</div></div>
+        <div class="spinner-name-count"><span>Names in the wheel</span><span class="spinner-count" id="spinnerCount">0</span></div>
+        <div class="spinner-names" id="spinnerNames"><div class="spinner-empty">No names yet. Add your first name above.</div></div>
         <div class="spinner-status" id="spinnerStatus">Add at least one name to begin.</div>
       </div>
     </div>
   </div>
 </section>
+
+<div class="spinner-clear-modal" id="spinnerClearModal" role="dialog" aria-modal="true" aria-labelledby="spinnerClearTitle" aria-describedby="spinnerClearMessage">
+  <div class="spinner-clear-card">
+    <div class="spinner-clear-icon">🗑️</div>
+    <h3 class="spinner-clear-title" id="spinnerClearTitle">Clear All Names?</h3>
+    <p class="spinner-clear-message" id="spinnerClearMessage">This will remove <strong>all names from the wheel</strong> and clear the Picked Names list. This action cannot be undone.</p>
+    <div class="spinner-clear-actions">
+      <button class="spinner-modal-cancel" id="spinnerModalCancel" type="button">CANCEL</button>
+      <button class="spinner-modal-confirm" id="spinnerModalConfirm" type="button">🗑 CLEAR ALL</button>
+    </div>
+  </div>
+</div>
 
 <!-- CHESS -->
 <section class="page-view" id="chess">
@@ -2437,11 +2464,21 @@ function syncAdminSession(){ adminToken=(window.du3dUserToken && window.du3dCurr
       renderNames();
     },4650);
   }
+  function closeClearModal(){
+    var modal=$('spinnerClearModal');
+    if(modal)modal.classList.remove('show');
+  }
+  function performClearAll(){
+    if(spinning)return;
+    names=[];pickedNames=[];save();rotation=0;var wheel=$('spinnerWheel');if(wheel)wheel.style.transform='rotate(0deg)';var result=$('spinnerResult');if(result)result.innerHTML='Ready to spin.<strong>Choose a name</strong>';renderNames();closeClearModal();
+  }
   function clearAll(){
     if(spinning)return;
     if(!names.length)return;
-    if(!confirm('Clear all names from the spinner?'))return;
-    names=[];pickedNames=[];save();rotation=0;var wheel=$('spinnerWheel');if(wheel)wheel.style.transform='rotate(0deg)';var result=$('spinnerResult');if(result)result.innerHTML='Ready to spin.<strong>Choose a name</strong>';renderNames();
+    var modal=$('spinnerClearModal');
+    if(!modal)return;
+    modal.classList.add('show');
+    setTimeout(function(){var confirmButton=$('spinnerModalConfirm');if(confirmButton)confirmButton.focus();},20);
   }
   window.du3dSpinWheel=spin;
   window.du3dUpdateSpinnerAvatar=updateSpinnerAvatar;
@@ -2452,6 +2489,11 @@ function syncAdminSession(){ adminToken=(window.du3dUserToken && window.du3dCurr
     if(add)add.addEventListener('click',addName);
     if(spinButton)spinButton.addEventListener('click',spin);
     if(clear)clear.addEventListener('click',clearAll);
+    var modal=$('spinnerClearModal'),modalCancel=$('spinnerModalCancel'),modalConfirm=$('spinnerModalConfirm');
+    if(modalCancel)modalCancel.addEventListener('click',closeClearModal);
+    if(modalConfirm)modalConfirm.addEventListener('click',performClearAll);
+    if(modal)modal.addEventListener('click',function(e){if(e.target===modal)closeClearModal();});
+    document.addEventListener('keydown',function(e){if(e.key==='Escape'){var m=$('spinnerClearModal');if(m&&m.classList.contains('show'))closeClearModal();}});
     var center=$('spinnerCenter');
     if(center){
       center.addEventListener('click',function(){if(!spinning&&names.length)spin();});
