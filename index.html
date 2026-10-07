@@ -3719,10 +3719,45 @@ function loadPublicFiles(options){
     return response.json();
   })
   .then(function(data){
-    const folders=data && Array.isArray(data.folders) ? data.folders : [];
-    const files=data && Array.isArray(data.files) ? data.files : [];
-    const entries=folders.concat(files);
+    /*
+     * Support BOTH the new folder-aware server and the older public-file
+     * server. This is important because the laptop server/tunnel may still
+     * be running the previous server.js. If the response only contains a
+     * recursive files[] list, build the visible folders/files in the browser.
+     */
+    let folders=data && Array.isArray(data.folders) ? data.folders : [];
+    let files=data && Array.isArray(data.files) ? data.files : [];
 
+    if(!Array.isArray(data && data.folders)){
+      const allFiles=files.slice();
+      const current=String(publicFilesCurrentFolder||'').replace(/^\/+|\/+$/g,'');
+      const prefix=current ? current+'/' : '';
+      const folderMap={};
+      const visibleFiles=[];
+
+      allFiles.forEach(function(file){
+        const rel=String(file.path||file.name||'').replace(/^\/+|\/+$/g,'');
+        if(!rel || (prefix && rel.indexOf(prefix)!==0)) return;
+        const rest=prefix ? rel.slice(prefix.length) : rel;
+        if(!rest) return;
+        const slash=rest.indexOf('/');
+        if(slash>=0){
+          const folderName=rest.slice(0,slash);
+          const folderPath=prefix+folderName;
+          if(!folderMap[folderPath]) folderMap[folderPath]={name:folderName,path:folderPath};
+        }else{
+          visibleFiles.push(file);
+        }
+      });
+
+      folders=Object.keys(folderMap).map(function(k){return folderMap[k];});
+      files=visibleFiles;
+    }
+
+    folders.sort(function(a,b){ return String(a.name||'').localeCompare(String(b.name||'')); });
+    files.sort(function(a,b){ return String(a.name||a.path||'').localeCompare(String(b.name||b.path||'')); });
+
+    const entries=folders.concat(files);
     if(!entries.length){
       list.innerHTML='<div class="empty">This folder is empty.</div>';
       return;
