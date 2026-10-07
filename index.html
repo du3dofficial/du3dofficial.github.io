@@ -7332,20 +7332,38 @@ function getServerError(err){
 
     }
 
-    /* King moves: castling/check responses are special; otherwise heavily deprioritize
-       early king wandering so the search chooses safer developing moves first. */
+    /* KING PRIORITY: keep the king on e1/e8 during the opening.
+       The previous penalty could be outweighed by capture/check/history bonuses,
+       so an unnecessary early king move could still win move ordering. That is
+       dangerous because moving the king permanently destroys both castling rights.
+       Castling (O-O / O-O-O) is always allowed, and moving out of check is mandatory. */
     if(move.piece==='k'){
       const color=game.turn();
       const currentlyInCheck=game.in_check();
       const isCastle=(move.from==='e1' && (move.to==='g1'||move.to==='c1')) ||
                       (move.from==='e8' && (move.to==='g8'||move.to==='c8'));
-      if(!currentlyInCheck && !isCastle){
+      const materialPieces=game.board().reduce(function(n,row){
+        return n+row.filter(Boolean).length;
+      },0);
+      const openingPhase=materialPieces>=22;
+
+      if(openingPhase && !currentlyInCheck && !isCastle){
+        /* Hardly ever choose a non-castling king move in the opening. */
+        score-=10000000;
+      }else if(!currentlyInCheck && !isCastle){
         score-=DU3D_EARLY_KING_MOVE_PENALTY*3;
       }
+
       if(move.to){
         const enemyColor=color==='w'?'b':'w';
         if(du3dIsSquareAttackedBy(move.to,enemyColor))
           score-=DU3D_UNSAFE_KING_MOVE_PENALTY;
+      }
+
+      if(isCastle){
+        /* Prefer safe castling strongly once legal: both short and long castle
+           are valid strategic choices, rather than king wandering. */
+        score+=2200;
       }
     }
 
@@ -7386,6 +7404,18 @@ function getServerError(err){
     }
 
 
+    /* CASTLING: DU3D knows both short (O-O) and long (O-O-O).
+       Prefer castling when it improves king safety and development,
+       but never force it when the position makes it unsafe or unnecessary. */
+    if(move.flags && move.flags.indexOf("k")>=0){
+      score+=950;
+      score+=game.in_check() ? 0 : 250;
+    }
+    if(move.flags && move.flags.indexOf("q")>=0){
+      score+=850;
+      score+=game.in_check() ? 0 : 200;
+    }
+
     if(
       move.flags &&
       (
@@ -7393,9 +7423,7 @@ function getServerError(err){
         move.flags.indexOf("q")>=0
       )
     ){
-
       score+=300;
-
     }
 
 
