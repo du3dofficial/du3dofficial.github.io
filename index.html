@@ -3051,9 +3051,10 @@ function submitAuth(){
 function toggleAdminAccordion(id){
   const box=document.getElementById(id);
   if(!box) return;
-  const opening=!box.classList.contains('open');
-  document.querySelectorAll('.admin-accordion.open').forEach(function(el){ if(el!==box) el.classList.remove('open'); });
-  box.classList.toggle('open',opening);
+  // Each admin section is independent. Opening one section must NOT
+  // automatically hide any other section. The admin manually opens
+  // and closes each section with its own title button.
+  box.classList.toggle('open');
 }
 function closeAllAdminAccordions(){
   document.querySelectorAll('.admin-accordion.open').forEach(function(el){ el.classList.remove('open'); });
