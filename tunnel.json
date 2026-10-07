@@ -1,5 +1,5 @@
 ﻿{
-    "tunnelUrl":  " ",
-    "apiUrl":  " /api",
-    "publicFilesUrl":  " /files"
+    "tunnelUrl":  " https://spec-boats-magic-gmc.trycloudflare.com",
+    "apiUrl":  " https://spec-boats-magic-gmc.trycloudflare.com/api",
+    "publicFilesUrl":  " https://spec-boats-magic-gmc.trycloudflare.com/files",
 }
