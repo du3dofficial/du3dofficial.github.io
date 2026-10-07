@@ -7238,8 +7238,15 @@ function getServerError(err){
 
     if(move.captured){
 
+      /* Queen captures need special discipline. The normal MVV-LVA capture
+         bonus is intentionally huge, which can make the queen chase pawns
+         even when there is no tactical reason to do so. Keep queen-vs-queen
+         trades fully prioritized, but make captures of lesser pieces compete
+         normally with safe developing/positional moves. */
+      const queenCapturingLesserPiece = move.piece==='q' && move.captured!=='q';
+      const captureBase = queenCapturingLesserPiece ? 15000 : 100000;
       score+=
-        100000+
+        captureBase+
         (pieceValues[
           move.captured
         ] || 0)*10 -
