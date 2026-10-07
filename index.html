@@ -1636,6 +1636,99 @@
 @media(max-width:520px){
   .du3d-chat-drawer{width:100%!important}
 }
+
+/* =========================================================
+   PUBLIC FILES ADMIN
+========================================================= */
+.public-files-admin-list{
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+  margin-top:10px;
+}
+.public-file-item{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  padding:11px 12px;
+  border:1px solid rgba(255,70,80,.20);
+  border-radius:10px;
+  background:rgba(10,2,4,.72);
+}
+.public-file-main{min-width:0;flex:1}
+.public-file-name{
+  font-weight:800;
+  color:#fff;
+  overflow-wrap:anywhere;
+}
+.public-file-meta{
+  margin-top:4px;
+  color:#d58b91;
+  font-size:10px;
+}
+.public-file-actions{
+  position:relative;
+  flex-shrink:0;
+}
+.public-file-more{
+  width:34px;
+  height:34px;
+  padding:0;
+  border-radius:9px;
+  border:1px solid rgba(255,70,80,.28);
+  background:rgba(30,4,8,.9);
+  color:#fff;
+  font-size:21px;
+  line-height:30px;
+  cursor:pointer;
+}
+.public-file-options{
+  position:absolute;
+  right:0;
+  top:40px;
+  z-index:1000;
+  min-width:150px;
+  padding:5px;
+  border:1px solid rgba(255,70,80,.28);
+  border-radius:10px;
+  background:#160307;
+  box-shadow:0 12px 30px rgba(0,0,0,.55);
+}
+.public-file-options button{
+  display:block;
+  width:100%;
+  border:0;
+  background:transparent;
+  color:#fff;
+  text-align:left;
+  padding:9px 10px;
+  border-radius:7px;
+  cursor:pointer;
+}
+.public-file-options button:hover{background:rgba(255,45,60,.16)}
+.public-folder-row{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  margin-bottom:8px;
+}
+.public-folder-back{
+  border:1px solid rgba(255,70,80,.24);
+  background:rgba(25,4,8,.8);
+  color:#fff;
+  border-radius:8px;
+  padding:7px 10px;
+  cursor:pointer;
+}
+.public-folder-path{
+  min-width:0;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+  color:#d58b91;
+  font-size:11px;
+}
 </style>
 <script>
 /* =========================================================
@@ -2078,6 +2171,11 @@ button[onclick*="showAdminLogin"] { display:none !important; }
 <input id="userAvatarFile" accept="image/png,image/jpeg,image/webp,image/gif" style="margin-top:8px" type="file"/>
 <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px"><button class="primary" onclick="uploadUserAvatarChoice()" style="margin-top:0" type="button">⬆ UPLOAD AVATAR</button></div>
 <div class="message" id="avatarAdminMessage"></div><div class="admin-list" id="avatarAdminList" style="margin-top:10px"></div>
+</div></div></div><div class="admin-accordion" id="adminSectionPublicFiles"><button class="admin-accordion-title" onclick="toggleAdminAccordion('adminSectionPublicFiles');loadPublicFiles()" type="button">7  📁 PUBLIC FILES</button><div class="admin-accordion-body"><div class="admin-row">
+<h3 class="admin-section-title"><span class="admin-section-number">7</span> 📁 PUBLIC FILES</h3>
+<small>Files and folders from the laptop <code>public_files</code> folder. Open files directly or copy their public link.</small>
+<div class="message" id="publicFilesMessage">Loading public files...</div>
+<div id="publicFilesBrowser" style="margin-top:10px"></div>
 </div></div></div><button class="logout" onclick="logout()">Log out</button><div class="message" id="adminMessage"></div></div>
 </section>
 </main>
@@ -3076,6 +3174,191 @@ function submitAuth(){
   }else{
     google.script.run.withSuccessHandler(success).withFailureHandler(fail).registerUser(username,password);
   }
+}
+
+
+/* =========================================================
+   PUBLIC FILES / FOLDER BROWSER
+========================================================= */
+window.du3dPublicFiles = [];
+window.du3dPublicFolder = '';
+
+function escapeJsString(value){
+  return String(value || '').replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/\r?\n/g,'\\n');
+}
+
+function formatPublicFileSize(bytes){
+  bytes=Number(bytes)||0;
+  if(bytes<1024) return bytes+' B';
+  if(bytes<1024*1024) return (bytes/1024).toFixed(1)+' KB';
+  if(bytes<1024*1024*1024) return (bytes/1024/1024).toFixed(1)+' MB';
+  return (bytes/1024/1024/1024).toFixed(2)+' GB';
+}
+
+function closePublicFileMenus(){
+  document.querySelectorAll('.public-file-options').forEach(function(el){
+    el.style.display='none';
+  });
+}
+
+function togglePublicFileMenu(id,event){
+  if(event) event.stopPropagation();
+  const menu=document.getElementById(id);
+  if(!menu) return;
+  const wasOpen=menu.style.display==='block';
+  closePublicFileMenus();
+  menu.style.display=wasOpen?'none':'block';
+}
+
+document.addEventListener('click',function(){
+  closePublicFileMenus();
+});
+
+function publicFolderParts(){
+  const folder=String(window.du3dPublicFolder||'').replace(/^\/+|\/+$/g,'');
+  return folder ? folder.split('/').filter(Boolean) : [];
+}
+
+function renderPublicFiles(){
+  const box=document.getElementById('publicFilesBrowser');
+  if(!box) return;
+
+  const files=Array.isArray(window.du3dPublicFiles)?window.du3dPublicFiles:[];
+  const current=String(window.du3dPublicFolder||'').replace(/^\/+|\/+$/g,'');
+  const prefix=current ? current+'/' : '';
+
+  const visibleFiles=files.filter(function(file){
+    const path=String(file.path||file.name||'').replace(/^\/+/,'');
+    if(!path.startsWith(prefix)) return false;
+    const rest=path.slice(prefix.length);
+    return rest && rest.indexOf('/')===-1;
+  });
+
+  const folderMap={};
+  files.forEach(function(file){
+    const path=String(file.path||file.name||'').replace(/^\/+/,'');
+    if(!path.startsWith(prefix)) return;
+    const rest=path.slice(prefix.length);
+    const slash=rest.indexOf('/');
+    if(slash===-1) return;
+    const folder=rest.slice(0,slash);
+    if(folder) folderMap[folder]=true;
+  });
+
+  const folders=Object.keys(folderMap).sort(function(a,b){return a.localeCompare(b);});
+  let html='';
+
+  if(current){
+    const parent=current.split('/').slice(0,-1).join('/');
+    html+='<div class="public-folder-row">'+
+      '<button class="public-folder-back" type="button" onclick="window.du3dPublicFolder='+JSON.stringify(parent)+';renderPublicFiles()">← BACK</button>'+
+      '<div class="public-folder-path">📁 /'+escapeHtml(current)+'</div>'+
+      '</div>';
+  }else{
+    html+='<div class="public-folder-path" style="margin-bottom:8px">📁 /public_files</div>';
+  }
+
+  folders.forEach(function(folder){
+    const next=current ? current+'/'+folder : folder;
+    html+='<div class="public-file-item">'+
+      '<div class="public-file-main">'+
+      '<div class="public-file-name">📁 '+escapeHtml(folder)+'</div>'+
+      '<div class="public-file-meta">Folder</div>'+
+      '</div>'+
+      '<div class="public-file-actions">'+
+      '<button class="public-file-more" type="button" aria-label="Open folder" onclick="event.stopPropagation();window.du3dPublicFolder='+JSON.stringify(next)+';renderPublicFiles()">⋮</button>'+
+      '</div></div>';
+  });
+
+  visibleFiles.sort(function(a,b){
+    return String(a.name||a.path||'').localeCompare(String(b.name||b.path||''));
+  }).forEach(function(file,index){
+    const rel=String(file.path||file.name||'').replace(/^\/+/,'');
+    const link=String(window.DU3D_PUBLIC_FILES_URL||'').replace(/\/+$/,'')+'/'+rel.split('/').map(encodeURIComponent).join('/');
+    const menuId='public-file-menu-'+index;
+    html+='<div class="public-file-item">'+
+      '<div class="public-file-main">'+
+      '<div class="public-file-name">📄 '+escapeHtml(String(file.name||rel.split('/').pop()))+'</div>'+
+      '<div class="public-file-meta">'+escapeHtml(formatPublicFileSize(file.size))+(file.modified?' • '+escapeHtml(formatDate(file.modified)):'')+'</div>'+
+      '</div>'+
+      '<div class="public-file-actions">'+
+      '<button class="public-file-more" type="button" aria-label="File options" onclick="togglePublicFileMenu(\''+menuId+'\',event)">⋮</button>'+
+      '<div class="public-file-options" id="'+menuId+'" style="display:none">'+
+      '<button type="button" onclick="window.open(\''+escapeJsString(link)+'\',\'_blank\');closePublicFileMenus()">OPEN</button>'+
+      '<button type="button" onclick="copyPublicFileLink(\''+escapeJsString(link)+'\');closePublicFileMenus()">🔗 COPY LINK</button>'+
+      '</div></div></div>';
+  });
+
+  if(!folders.length && !visibleFiles.length){
+    html+='<div class="empty" style="padding:18px">This folder is empty.</div>';
+  }
+
+  box.innerHTML=html;
+}
+
+function copyPublicFileLink(link){
+  const msg=document.getElementById('publicFilesMessage');
+  const done=function(){
+    if(msg) msg.textContent='Public file link copied.';
+  };
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(String(link)).then(done).catch(function(){
+      const ta=document.createElement('textarea');
+      ta.value=String(link); document.body.appendChild(ta); ta.select();
+      try{document.execCommand('copy');done();}catch(e){}
+      ta.remove();
+    });
+  }else{
+    const ta=document.createElement('textarea');
+    ta.value=String(link); document.body.appendChild(ta); ta.select();
+    try{document.execCommand('copy');done();}catch(e){}
+    ta.remove();
+  }
+}
+
+function loadPublicFiles(){
+  const msg=document.getElementById('publicFilesMessage');
+  const box=document.getElementById('publicFilesBrowser');
+  if(msg) msg.textContent='Loading public files...';
+
+  const start=function(){
+    const base=String(window.DU3D_PUBLIC_FILES_URL||'').replace(/\/+$/,'');
+    if(!base){
+      if(msg) msg.textContent='Public files server is not configured yet. Start the DU3D laptop server and refresh.';
+      if(box) box.innerHTML='';
+      return;
+    }
+
+    const controller=new AbortController();
+    const timer=setTimeout(function(){controller.abort();},8000);
+
+    fetch(base+'?list=1&t='+Date.now(),{
+      method:'GET',
+      cache:'no-store',
+      credentials:'omit',
+      signal:controller.signal
+    }).then(function(r){
+      return r.text().then(function(text){
+        if(!r.ok) throw new Error('HTTP '+r.status);
+        let data=null;
+        try{data=JSON.parse(text);}catch(e){throw new Error('Invalid file list response');}
+        if(!data || !data.ok) throw new Error(data && data.error ? data.error : 'Could not load public files');
+        return data;
+      });
+    }).then(function(data){
+      window.du3dPublicFiles=Array.isArray(data.files)?data.files:[];
+      if(msg) msg.textContent=window.du3dPublicFiles.length+' public file(s) available.';
+      renderPublicFiles();
+    }).catch(function(err){
+      if(msg) msg.textContent='Could not load public files: '+String(err && err.message || err);
+      if(box) box.innerHTML='';
+    }).finally(function(){
+      clearTimeout(timer);
+    });
+  };
+
+  if(typeof waitForConfig==='function') waitForConfig().then(start);
+  else start();
 }
 
 function toggleAdminAccordion(id){
