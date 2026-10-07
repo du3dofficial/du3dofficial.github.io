@@ -188,45 +188,77 @@
     .page-view{display:none}
     .page-view.active{display:block}
 
-    /* TIKTOK */
-    .tiktok-panel{
-      max-width:900px;
+    /* TOOLS */
+    .tools-panel{
+      max-width:980px;
       margin:0 auto;
-      padding:30px;
+      padding:24px;
       border:1px solid rgba(255,70,80,.24);
       border-radius:16px;
       background:linear-gradient(145deg,rgba(18,3,7,.94),rgba(5,2,4,.94));
-      box-shadow:0 20px 60px rgba(0,0,0,.5);
-      text-align:center
+      box-shadow:0 20px 60px rgba(0,0,0,.5)
     }
-    .tiktok-profile-card{
-      margin:20px auto 0;
-      max-width:520px;
-      padding:24px;
+    .tools-card{
+      padding:20px;
       border-radius:14px;
       border:1px solid rgba(255,255,255,.10);
-      background:rgba(255,255,255,.035)
+      background:rgba(255,255,255,.035);
+      margin-bottom:18px
     }
-    .tiktok-icon{font-size:48px;line-height:1;margin-bottom:12px}
-    .tiktok-profile-name{font-size:24px;font-weight:900;color:#fff;margin-bottom:7px}
-    .tiktok-profile-url{font-size:12px;color:#c58d93;word-break:break-all}
-    .tiktok-open-button{
-      display:inline-flex;
-      align-items:center;
-      justify-content:center;
-      margin-top:18px;
-      padding:12px 20px;
+    .tools-card h2{margin:0 0 8px;font-size:20px;color:#fff}
+    .tools-card p{margin:7px 0;color:#b98b91;font-size:13px;line-height:1.55}
+    .tools-destination{
+      margin-top:12px;
+      padding:12px 14px;
       border-radius:10px;
-      background:linear-gradient(135deg,#111,#333);
-      border:1px solid rgba(255,255,255,.28);
+      background:rgba(0,0,0,.28);
+      border:1px solid rgba(255,255,255,.08);
+      color:#ddd;
+      font-size:12px;
+      word-break:break-all
+    }
+    .tools-status{margin-top:10px;font-size:12px;color:#aeb0b5;line-height:1.5}
+    .tools-buttons{display:flex;flex-wrap:wrap;gap:10px;margin-top:15px}
+    .tools-button{
+      border:1px solid rgba(255,255,255,.16);
+      border-radius:10px;
+      padding:11px 16px;
+      background:linear-gradient(135deg,#171717,#303030);
       color:#fff;
-      text-decoration:none;
-      font-weight:900;
-      box-shadow:0 8px 22px rgba(0,0,0,.35);
+      font-weight:800;
+      cursor:pointer;
       transition:.18s ease
     }
-    .tiktok-open-button:hover{transform:translateY(-2px);filter:brightness(1.15)}
-    .tiktok-note{margin-top:16px;color:#a96870;font-size:12px;line-height:1.6}
+    .tools-button:hover{transform:translateY(-1px);filter:brightness(1.12)}
+    .tools-button.primary{background:linear-gradient(135deg,#6d1118,#a51d28);border-color:rgba(255,100,110,.35)}
+    .tools-button:disabled{opacity:.45;cursor:not-allowed;transform:none}
+    .tools-file-list{
+      margin-top:15px;
+      display:grid;
+      gap:7px;
+      max-height:260px;
+      overflow:auto
+    }
+    .tools-file-item{
+      padding:9px 11px;
+      border-radius:8px;
+      background:rgba(0,0,0,.25);
+      border:1px solid rgba(255,255,255,.06);
+      color:#ddd;
+      font-size:12px;
+      display:flex;
+      justify-content:space-between;
+      gap:12px
+    }
+    .tools-file-item span:last-child{color:#8e8e94;white-space:nowrap}
+    .tools-progress{margin-top:14px;height:8px;border-radius:99px;background:rgba(255,255,255,.08);overflow:hidden;display:none}
+    .tools-progress-bar{height:100%;width:0;background:linear-gradient(90deg,#8d151e,#ed3948);transition:width .15s ease}
+    .tools-warning{margin-top:13px;padding:11px 13px;border-radius:9px;background:rgba(255,170,0,.06);border:1px solid rgba(255,170,0,.16);color:#d6b477;font-size:11px;line-height:1.55}
+    @media(max-width:700px){
+      .tools-panel{padding:15px}
+      .tools-card{padding:15px}
+      .tools-file-item{flex-direction:column;gap:3px}
+    }
 
     /* GALLERY */
     #galleryBoard{
@@ -1887,7 +1919,7 @@ button[onclick*="showAdminLogin"] { display:none !important; }
 <button onclick="showPage('about')">👤 About Me</button>
 <button onclick="showPage('gallery')">♟ Chessboard Gallery</button>
 <button onclick="showPage('chess')">♟ Chess</button>
-<button onclick="showPage('tiktok')">🎵 TikTok</button>
+<button onclick="showPage('tools')">🛠️ Tools</button>
 </div>
 <div class="menu-title" id="myLinksTitle" style="display:none">MY LINKS</div>
 <div class="menu" id="myLinksMenu"></div>
@@ -1950,26 +1982,40 @@ button[onclick*="showAdminLogin"] { display:none !important; }
 <div class="empty">Loading videos...</div>
 </div>
 </section>
-<!-- TIKTOK -->
-<section class="page-view" id="tiktok">
+<!-- TOOLS -->
+<section class="page-view" id="tools">
 <div class="header">
-<div class="title">🎵 TIKTOK VIDEOS</div>
-<div class="subtitle">
-          DU3D OFFICIAL TikTok videos and updates.
-        </div>
+<div class="title">🛠️ FILE TOOLS</div>
+<div class="subtitle">Select your Android folder, choose files, then copy them directly to the game asset folder.</div>
 </div>
-<div class="tiktok-panel">
-<div class="tiktok-icon">♪</div>
-<div class="tiktok-profile-card">
-<div class="tiktok-profile-name">@du3drequest</div>
-<div class="tiktok-profile-url">TikTok: https://www.tiktok.com/@du3drequest</div>
-<blockquote class="tiktok-embed" cite="https://www.tiktok.com/@du3drequest" data-unique-id="du3drequest" data-embed-type="creator" style="max-width:780px; min-width:288px; margin:20px auto 0;">
-<section>
-<a target="_blank" href="https://www.tiktok.com/@du3drequest?refer=creator_embed">@du3drequest</a>
-</section>
-</blockquote>
-<a class="tiktok-open-button" href="https://www.tiktok.com/@du3drequest" target="_blank" rel="noopener noreferrer">🎵 OPEN TIKTOK</a>
-<div class="tiktok-note">TikTok creator videos are displayed above.</div>
+<div class="tools-panel">
+<div class="tools-card">
+<h2>📁 1. Choose Android Folder</h2>
+<p>Select the <b>Android</b> folder on your computer or accessible device. The tool automatically adds the remaining destination path.</p>
+<div class="tools-buttons">
+<button class="tools-button primary" type="button" onclick="du3dChooseAndroidFolder()">📂 CHOOSE ANDROID FOLDER</button>
+</div>
+<div class="tools-destination" id="du3dToolsDestination">Destination: Not selected</div>
+<div class="tools-status" id="du3dToolsFolderStatus">Choose the Android folder first.</div>
+</div>
+<div class="tools-card">
+<h2>📄 2. Select Files</h2>
+<p>Choose one or more files to copy. You can select files from your PC or from a device location that your browser exposes.</p>
+<div class="tools-buttons">
+<button class="tools-button" type="button" onclick="du3dChooseFiles()">📄 SELECT FILES</button>
+<button class="tools-button" type="button" onclick="du3dClearFiles()">✖ CLEAR</button>
+</div>
+<div class="tools-file-list" id="du3dToolsFileList"><div class="tools-status">No files selected.</div></div>
+</div>
+<div class="tools-card">
+<h2>📥 3. Paste / Copy Files</h2>
+<p>Press the button below to copy the selected files into the automatically built destination folder.</p>
+<div class="tools-buttons">
+<button class="tools-button primary" id="du3dToolsPasteButton" type="button" onclick="du3dPasteFiles()" disabled>📥 PASTE / COPY FILES</button>
+</div>
+<div class="tools-progress" id="du3dToolsProgress"><div class="tools-progress-bar" id="du3dToolsProgressBar"></div></div>
+<div class="tools-status" id="du3dToolsCopyStatus"></div>
+<div class="tools-warning">Browser security can limit direct access to Android phones connected by USB/MTP. If your device appears in the folder/file picker, it can be used here; if Windows/browser does not expose the device storage to the web page, the browser cannot bypass that restriction.</div>
 </div>
 </div>
 </section>
@@ -8841,7 +8887,140 @@ showPage("gallery");
   setInterval(updateDu3dPhilippinesClock,500);
 })();
 </script>
-<script async src="https://www.tiktok.com/embed.js"></script>
+<script>
+/* DU3D FILE TOOLS */
+let du3dToolsAndroidHandle=null;
+let du3dToolsDestinationHandle=null;
+let du3dToolsSelectedFiles=[];
+const DU3D_TOOLS_RELATIVE_PATH=['data','com.mobilechess.gp','files','dragon2017','assets','Art','android','p'];
+
+async function du3dGetDestinationHandle(androidHandle){
+  let current=androidHandle;
+  for(const folder of DU3D_TOOLS_RELATIVE_PATH){
+    current=await current.getDirectoryHandle(folder,{create:true});
+  }
+  return current;
+}
+
+async function du3dChooseAndroidFolder(){
+  if(!window.showDirectoryPicker){
+    du3dSetToolsStatus('du3dToolsFolderStatus','Your browser does not support folder access. Please use a current desktop Chrome or Edge browser.');
+    return;
+  }
+  try{
+    const picked=await window.showDirectoryPicker({mode:'readwrite'});
+    let android=picked;
+    if(String(picked.name||'').toLowerCase()!=='android'){
+      try{
+        android=await picked.getDirectoryHandle('Android',{create:false});
+      }catch(e){
+        throw new Error('Please select the Android folder itself, or select its parent folder containing an Android folder.');
+      }
+    }
+    du3dToolsAndroidHandle=android;
+    du3dToolsDestinationHandle=await du3dGetDestinationHandle(android);
+    const fullPath='Android\\'+DU3D_TOOLS_RELATIVE_PATH.join('\\');
+    document.getElementById('du3dToolsDestination').textContent='Destination: '+fullPath;
+    du3dSetToolsStatus('du3dToolsFolderStatus','Android folder selected. Destination folders are ready.');
+    du3dUpdatePasteButton();
+  }catch(e){
+    if(e && e.name==='AbortError') return;
+    du3dSetToolsStatus('du3dToolsFolderStatus','Could not select the folder: '+(e.message||e));
+  }
+}
+
+async function du3dChooseFiles(){
+  if(!window.showOpenFilePicker){
+    du3dSetToolsStatus('du3dToolsCopyStatus','Your browser does not support the file picker needed for this tool. Please use current Chrome or Edge.');
+    return;
+  }
+  try{
+    const handles=await window.showOpenFilePicker({multiple:true});
+    const files=[];
+    for(const handle of handles){
+      try{
+        const file=await handle.getFile();
+        files.push({handle,file});
+      }catch(e){}
+    }
+    du3dToolsSelectedFiles=files;
+    du3dRenderFileList();
+    du3dSetToolsStatus('du3dToolsCopyStatus',files.length+' file'+(files.length===1?'':'s')+' selected.');
+    du3dUpdatePasteButton();
+  }catch(e){
+    if(e && e.name==='AbortError') return;
+    du3dSetToolsStatus('du3dToolsCopyStatus','Could not select files: '+(e.message||e));
+  }
+}
+
+function du3dRenderFileList(){
+  const box=document.getElementById('du3dToolsFileList');
+  if(!du3dToolsSelectedFiles.length){
+    box.innerHTML='<div class="tools-status">No files selected.</div>';
+    return;
+  }
+  box.innerHTML=du3dToolsSelectedFiles.map(function(item){
+    const size=item.file.size;
+    const sizeText=size>=1048576?(size/1048576).toFixed(2)+' MB':size>=1024?(size/1024).toFixed(1)+' KB':size+' B';
+    return '<div class="tools-file-item"><span>'+du3dEscapeHtml(item.file.name)+'</span><span>'+sizeText+'</span></div>';
+  }).join('');
+}
+
+function du3dClearFiles(){
+  du3dToolsSelectedFiles=[];
+  du3dRenderFileList();
+  du3dSetToolsStatus('du3dToolsCopyStatus','Selection cleared.');
+  du3dUpdatePasteButton();
+}
+
+function du3dUpdatePasteButton(){
+  const button=document.getElementById('du3dToolsPasteButton');
+  if(button) button.disabled=!(du3dToolsDestinationHandle && du3dToolsSelectedFiles.length);
+}
+
+async function du3dPasteFiles(){
+  if(!du3dToolsDestinationHandle || !du3dToolsSelectedFiles.length) return;
+  const button=document.getElementById('du3dToolsPasteButton');
+  const progress=document.getElementById('du3dToolsProgress');
+  const bar=document.getElementById('du3dToolsProgressBar');
+  button.disabled=true;
+  progress.style.display='block';
+  bar.style.width='0%';
+  let copied=0;
+  let failed=0;
+  for(let i=0;i<du3dToolsSelectedFiles.length;i++){
+    const item=du3dToolsSelectedFiles[i];
+    try{
+      const file=await item.handle.getFile();
+      const target=await du3dToolsDestinationHandle.getFileHandle(file.name,{create:true});
+      const writable=await target.createWritable();
+      await file.stream().pipeTo(writable);
+      copied++;
+    }catch(e){
+      failed++;
+    }
+    bar.style.width=Math.round(((i+1)/du3dToolsSelectedFiles.length)*100)+'%';
+    du3dSetToolsStatus('du3dToolsCopyStatus','Copying '+(i+1)+' of '+du3dToolsSelectedFiles.length+'...');
+  }
+  if(failed){
+    du3dSetToolsStatus('du3dToolsCopyStatus','Finished: '+copied+' copied, '+failed+' failed. Check that the selected device/folder allows writing.');
+  }else{
+    du3dSetToolsStatus('du3dToolsCopyStatus','Finished: '+copied+' file'+(copied===1?'':'s')+' copied successfully to the destination.');
+  }
+  du3dUpdatePasteButton();
+}
+
+function du3dSetToolsStatus(id,message){
+  const el=document.getElementById(id);
+  if(el) el.textContent=message;
+}
+
+function du3dEscapeHtml(value){
+  return String(value).replace(/[&<>'"]/g,function(ch){
+    return {'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[ch];
+  });
+}
+</script>
 </body>
 </html>
 <!-- DU3D UI update: Home Headline + Posts Update + private message redesign -->
