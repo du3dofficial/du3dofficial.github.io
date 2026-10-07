@@ -444,10 +444,6 @@
     }
     .video-options button:hover{background:rgba(255,50,60,.12)}
     .video-options .remove-option{color:#ff858d}
-    .public-file-options-wrap{position:relative;flex-shrink:0}
-    .public-file-more{width:36px;height:36px;padding:0;font-size:22px;line-height:1;display:inline-flex;align-items:center;justify-content:center}
-    .public-file-options{right:0;top:calc(100% + 6px);min-width:145px}
-    .public-file-options button{text-align:left}
     .add-video-form{margin-bottom:18px}
     #addVideoButton{background:#082a5c !important;border-color:#12447f !important;color:#fff !important}
     #addVideoButton:hover{background:#0b3b7d !important;border-color:#1b5da8 !important}
@@ -558,17 +554,6 @@
     @media(max-width:700px){
       #du3dTopBar{margin:0 0 12px}
     }
-
-
-    /* PUBLIC FILE MANAGER */
-    .public-file-item{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 14px;border:1px solid rgba(90,130,190,.25);border-radius:10px;background:rgba(5,12,24,.72)}
-    .public-file-main{min-width:0;flex:1}
-    .public-file-name{font-weight:800;color:#fff;overflow-wrap:anywhere}
-    .public-file-meta{margin-top:4px;color:#8ea5c3;font-size:11px}
-    .public-file-actions{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end;flex-shrink:0}
-    .public-file-actions button,.public-file-actions a{padding:8px 10px;border-radius:7px;border:1px solid rgba(90,130,190,.35);background:#071426;color:#fff;text-decoration:none;cursor:pointer;font-size:11px;font-weight:800}
-    .public-file-actions a:hover,.public-file-actions button:hover{background:#0b2546}
-    @media(max-width:650px){.public-file-item{align-items:flex-start;flex-direction:column}.public-file-actions{width:100%;justify-content:flex-start}}
 
     /* CHESS */
     #chessGame{
@@ -1655,38 +1640,79 @@
 <script>
 /* =========================================================
    DU3D API CONNECTION
-   PRIMARY: Cloudflare Worker
-   BACKUP: DU3D Laptop Cloudflare Tunnel
+   PRIMARY: free laptop Quick Tunnel (from tunnel.json)
+   BACKUP: Cloudflare Worker -> Google Apps Script
+
+   The page never stores the changing trycloudflare.com URL.
+   It reads the current URL from /tunnel.json on GitHub Pages.
 ========================================================= */
-window.DU3D_API_URL='https://du3d-api.newjer53.workers.dev';
-window.DU3D_API_BACKUP_URL='https://scanning-atmosphere-melbourne-messenger.trycloudflare.com/api';
-// Public files are served directly from the DU3D laptop through the same Cloudflare Tunnel.
-window.DU3D_PUBLIC_FILES_URL='https://scanning-atmosphere-melbourne-messenger.trycloudflare.com/files';
+window.DU3D_API_URL='';
+window.DU3D_PUBLIC_FILES_URL='';
+window.DU3D_API_BACKUP_URL='https://du3d-api.newjer53.workers.dev';
+window.DU3D_TUNNEL_CONFIG_URL='https://du3dofficial.github.io/tunnel.json';
+
 (function(){
   var PRIMARY_COOLDOWN_MS=15000;
   var primaryDownUntil=0;
+  var configReady=false;
+  var configWaiters=[];
+
   var SAFE_FAILOVER_METHODS=new Set([
     'getSiteData','getLiveSiteState','getAdminPresence','getChessLobby',
     'getChessChat','getPrivateChat','getPrivateInbox','getCurrentUser',
     'loginUser','touchUserOnline','setAdminOnline','markPrivateChatRead',
-
-    /* Write actions that must still work when the primary Worker is
-       temporarily unreachable/rate-limited. The backup is the same
-       Apps Script backend, so this is only used after a transport/proxy
-       failure, not after a normal application error. */
     'addComment','addCommentReply','sendPrivateMessage'
   ]);
+
+  function applyTunnelConfig(data){
+    var base=String(data && (data.baseUrl || data.url || data.tunnelUrl) || '').trim().replace(/\/+$/,'');
+    if(!/^https:\/\/[^\s]+\.trycloudflare\.com$/i.test(base)) return false;
+    window.DU3D_API_URL=base+'/api';
+    window.DU3D_PUBLIC_FILES_URL=base+'/files';
+    return true;
+  }
+
+  function finishConfig(){
+    configReady=true;
+    var list=configWaiters.slice(); configWaiters=[];
+    list.forEach(function(fn){try{fn();}catch(e){}});
+  }
+
+  function waitForConfig(){
+    if(configReady) return Promise.resolve();
+    return new Promise(function(resolve){configWaiters.push(resolve);});
+  }
+
+  function loadTunnelConfig(){
+    return fetch(window.DU3D_TUNNEL_CONFIG_URL+'?t='+Date.now(),{
+      method:'GET',cache:'no-store',credentials:'omit'
+    }).then(function(r){
+      if(!r.ok) throw new Error('Tunnel config HTTP '+r.status);
+      return r.json();
+    }).then(function(data){
+      applyTunnelConfig(data);
+    }).catch(function(err){
+      console.warn('DU3D tunnel config unavailable; Worker backup will be used.',err);
+    }).then(finishConfig);
+  }
+
   function isCloudflareLimitError(response,text){
     var body=String(text||'');
     return body.indexOf('1027')!==-1 && /cloudflare|request|limit|exceed|daily/i.test(body);
   }
+
   function isRetryableProxyFailure(response,text){
     if(!response)return true;
     if(isCloudflareLimitError(response,text))return true;
     return [408,429,500,502,503,504,522,523,524].indexOf(response.status)!==-1;
   }
+
   function requestApi(url,methodName,args,timeoutMs){
     return new Promise(function(resolve,reject){
+      if(!url){
+        var e=new Error('DU3D laptop server URL is not configured.');
+        e.du3dRetryable=true; reject(e); return;
+      }
       var controller=new AbortController();
       var done=false;
       var timer=setTimeout(function(){if(!done)controller.abort();},timeoutMs);
@@ -1705,7 +1731,7 @@ window.DU3D_PUBLIC_FILES_URL='https://scanning-atmosphere-melbourne-messenger.tr
       .catch(function(error){
         done=true;clearTimeout(timer);
         if(error&&error.name==='AbortError'){
-          var e=new Error('DU3D API request timed out. Please try again.');
+          var e=new Error('DU3D API request timed out.');
           e.name='AbortError';e.du3dRetryable=true;e.du3dResponse=null;e.du3dBody='';reject(e);return;
         }
         if(error&&typeof error.du3dRetryable==='undefined')error.du3dRetryable=true;
@@ -1713,6 +1739,7 @@ window.DU3D_PUBLIC_FILES_URL='https://scanning-atmosphere-melbourne-messenger.tr
       });
     });
   }
+
   function runner(success,failure){
     return new Proxy({}, {get:function(_target,prop){
       if(prop==='withSuccessHandler')return function(fn){return runner(fn,failure);};
@@ -1721,29 +1748,37 @@ window.DU3D_PUBLIC_FILES_URL='https://scanning-atmosphere-melbourne-messenger.tr
       if(typeof prop!=='string')return undefined;
       return function(){
         var args=Array.prototype.slice.call(arguments), methodName=prop;
-        var safe=SAFE_FAILOVER_METHODS.has(methodName);
-        var backupFirst=safe&&Date.now()<primaryDownUntil;
-        var first=backupFirst?window.DU3D_API_BACKUP_URL:window.DU3D_API_URL;
-        var second=backupFirst?window.DU3D_API_URL:window.DU3D_API_BACKUP_URL;
-        requestApi(first,methodName,args,20000).then(function(result){
-          if(!backupFirst)primaryDownUntil=0;
-          if(typeof success==='function')success(result);
-        }).catch(function(firstError){
-          var failover=firstError&&firstError.du3dRetryable&&(safe||(!backupFirst&&isCloudflareLimitError(firstError.du3dResponse,firstError.du3dBody)));
-          if(!failover){if(typeof failure==='function')failure(firstError);else console.error('DU3D API:',firstError);return;}
-          if(!backupFirst)primaryDownUntil=Date.now()+PRIMARY_COOLDOWN_MS;
-          requestApi(second,methodName,args,20000).then(function(result){
+        waitForConfig().then(function(){
+          var safe=SAFE_FAILOVER_METHODS.has(methodName);
+          var laptopAvailable=!!window.DU3D_API_URL;
+          var backupFirst=!laptopAvailable || (safe&&Date.now()<primaryDownUntil);
+          var first=backupFirst?window.DU3D_API_BACKUP_URL:window.DU3D_API_URL;
+          var second=backupFirst?window.DU3D_API_URL:window.DU3D_API_BACKUP_URL;
+
+          requestApi(first,methodName,args,20000).then(function(result){
+            if(!backupFirst)primaryDownUntil=0;
             if(typeof success==='function')success(result);
-          }).catch(function(error){
-            if(typeof failure==='function')failure(error);else console.error('DU3D API backup:',error);
+          }).catch(function(firstError){
+            var failover=firstError&&firstError.du3dRetryable&&(safe||!laptopAvailable||(!backupFirst&&isCloudflareLimitError(firstError.du3dResponse,firstError.du3dBody)));
+            if(!failover){if(typeof failure==='function')failure(firstError);else console.error('DU3D API:',firstError);return;}
+            if(!backupFirst)primaryDownUntil=Date.now()+PRIMARY_COOLDOWN_MS;
+            if(!second){if(typeof failure==='function')failure(firstError);return;}
+            requestApi(second,methodName,args,20000).then(function(result){
+              if(typeof success==='function')success(result);
+            }).catch(function(error){
+              if(typeof failure==='function')failure(error);else console.error('DU3D API backup:',error);
+            });
           });
         });
       };
     }});
   }
+
   window.google=window.google||{};
   window.google.script=window.google.script||{};
   window.google.script.run=runner(null,null);
+
+  loadTunnelConfig();
 })();
 </script>
 <style id="unified-admin-ui">
@@ -1995,13 +2030,8 @@ button[onclick*="showAdminLogin"] { display:none !important; }
 </div><div class="admin-row">
 <h3>📋 SAVED VIDEOS</h3>
 <div class="admin-list" id="adminList">Loading...</div>
-</div></div></div><div class="admin-accordion" id="adminSectionPublicFiles"><button class="admin-accordion-title" onclick="toggleAdminAccordion('adminSectionPublicFiles')" type="button">2  📁 PUBLIC FILES</button><div class="admin-accordion-body"><div class="admin-row">
-<h3 class="admin-section-title"><span class="admin-section-number">2</span> 📁 PUBLIC FILES</h3>
-<small>Files inside your laptop's <b>public_files</b> folder appear here. Generate a public link for each file without uploading the file to GitHub or Google Drive.</small>
-<div class="message" id="publicFilesMessage"></div>
-<div class="admin-list" id="publicFilesList"><div class="empty">Loading public files...</div></div>
-</div></div></div><div class="admin-accordion" id="adminSectionPosts"><button class="admin-accordion-title" onclick="toggleAdminAccordion('adminSectionPosts')" type="button">3  📝 POSTS UPDATE</button><div class="admin-accordion-body"><div class="admin-row admin-post-form">
-<h3 class="admin-section-title"><span class="admin-section-number">3</span> 📝 POSTS UPDATE</h3>
+</div></div></div><div class="admin-accordion" id="adminSectionPosts"><button class="admin-accordion-title" onclick="toggleAdminAccordion('adminSectionPosts')" type="button">2  📝 POSTS UPDATE</button><div class="admin-accordion-body"><div class="admin-row admin-post-form">
+<h3 class="admin-section-title"><span class="admin-section-number">2</span> 📝 POSTS UPDATE</h3>
 <small>Posts Update controls the newest posts shown on Home. The newest update appears at the top; the Home Headline stays separately in the upper section.</small>
 <textarea id="newPostText" maxlength="5000" placeholder="Write a new Posts Update here..."></textarea>
 <input id="newPostYoutube" maxlength="500" placeholder="Optional YouTube link — https://www.youtube.com/watch?v=..." style="margin-top:8px;width:100%;padding:11px 12px;border-radius:8px;border:1px solid rgba(255,80,90,.35);background:#130407;color:#fff;outline:none;" type="url"/>
@@ -2014,8 +2044,8 @@ button[onclick*="showAdminLogin"] { display:none !important; }
 </div><div class="admin-row">
 <h3>📋 SAVED POSTS UPDATES</h3>
 <div class="admin-list" id="adminPostList">Loading...</div>
-</div></div></div><div class="admin-accordion" id="adminSectionAbout"><button class="admin-accordion-title" onclick="toggleAdminAccordion('adminSectionAbout')" type="button">4  👤 EDIT ABOUT ME</button><div class="admin-accordion-body"><div class="admin-row about-admin-form">
-<h3 class="admin-section-title"><span class="admin-section-number">4</span> 👤 EDIT ABOUT ME</h3>
+</div></div></div><div class="admin-accordion" id="adminSectionAbout"><button class="admin-accordion-title" onclick="toggleAdminAccordion('adminSectionAbout')" type="button">3  👤 EDIT ABOUT ME</button><div class="admin-accordion-body"><div class="admin-row about-admin-form">
+<h3 class="admin-section-title"><span class="admin-section-number">3</span> 👤 EDIT ABOUT ME</h3>
 <small>Edit the About Me details shown on the public About Me page. Your changes are saved to the website.</small>
 <textarea class="about-admin-textarea" id="aboutDetailsInput" maxlength="5000" placeholder="Write your About Me details..."></textarea>
 <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;">
@@ -2023,8 +2053,8 @@ button[onclick*="showAdminLogin"] { display:none !important; }
 <button class="danger" id="cancelAboutButton" onclick="loadAboutIntoAdmin()" style="display:none" type="button">CANCEL</button>
 </div>
 <div class="message" id="aboutAdminMessage"></div>
-</div></div></div><div class="admin-accordion" id="adminSectionHeadline"><button class="admin-accordion-title" onclick="toggleAdminAccordion('adminSectionHeadline')" type="button">5  ✨ CUSTOMIZE HOME HEADLINE</button><div class="admin-accordion-body"><div class="admin-row">
-<h3 class="admin-section-title"><span class="admin-section-number">5</span> ✨ CUSTOMIZE HOME HEADLINE</h3>
+</div></div></div><div class="admin-accordion" id="adminSectionHeadline"><button class="admin-accordion-title" onclick="toggleAdminAccordion('adminSectionHeadline')" type="button">4  ✨ CUSTOMIZE HOME HEADLINE</button><div class="admin-accordion-body"><div class="admin-row">
+<h3 class="admin-section-title"><span class="admin-section-number">4</span> ✨ CUSTOMIZE HOME HEADLINE</h3>
 <small>This is the permanent headline displayed in the upper part of Home. It is separate from Posts Update, which contains the newest posts.</small>
 <input id="homeHeadlineInput" maxlength="120" placeholder="Home headline — e.g. DU3D OFFICIAL" style="margin-top:10px" type="text"/>
 <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;">
@@ -2032,8 +2062,8 @@ button[onclick*="showAdminLogin"] { display:none !important; }
 <button class="danger" onclick="resetHomeHeadline()" style="margin-top:0" type="button">RESET</button>
 </div>
 <div class="message" id="homeHeadlineMessage"></div>
-</div></div></div><div class="admin-accordion" id="adminSectionLinks"><button class="admin-accordion-title" onclick="toggleAdminAccordion('adminSectionLinks')" type="button">6  🔗 CUSTOM MY LINKS</button><div class="admin-accordion-body"><div class="admin-row">
-<h3 class="admin-section-title"><span class="admin-section-number">6</span> 🔗 CUSTOM MY LINKS</h3>
+</div></div></div><div class="admin-accordion" id="adminSectionLinks"><button class="admin-accordion-title" onclick="toggleAdminAccordion('adminSectionLinks')" type="button">5  🔗 CUSTOM MY LINKS</button><div class="admin-accordion-body"><div class="admin-row">
+<h3 class="admin-section-title"><span class="admin-section-number">5</span> 🔗 CUSTOM MY LINKS</h3>
 <small>Add your own link name and URL. It will appear automatically under MY LINKS.</small>
 <input id="customLinkName" maxlength="60" placeholder="Link name — e.g. TikTok" style="margin-top:10px" type="text"/>
 <input id="customLinkUrl" maxlength="2000" placeholder="Link URL — https://..." style="margin-top:8px" type="url"/>
@@ -2042,7 +2072,7 @@ button[onclick*="showAdminLogin"] { display:none !important; }
 </div>
 <div class="message" id="customLinkMessage"></div>
 <div class="admin-list" id="customLinksAdminList" style="margin-top:10px"></div>
-</div></div></div><div class="admin-accordion" id="adminSectionAvatars"><button class="admin-accordion-title" onclick="toggleAdminAccordion('adminSectionAvatars')" type="button">7  🧑‍🎨 USER AVATARS</button><div class="admin-accordion-body"><div class="admin-row">
+</div></div></div><div class="admin-accordion" id="adminSectionAvatars"><button class="admin-accordion-title" onclick="toggleAdminAccordion('adminSectionAvatars')" type="button">6  🧑‍🎨 USER AVATARS</button><div class="admin-accordion-body"><div class="admin-row">
 <h3>🧑‍🎨 UPLOAD USER AVATAR</h3><small>Users cannot upload their own profile images. Only avatars uploaded here by DU3D can be chosen by users.</small>
 <input id="userAvatarName" maxlength="40" placeholder="Avatar name — e.g. Warrior" type="text"/>
 <input id="userAvatarFile" accept="image/png,image/jpeg,image/webp,image/gif" style="margin-top:8px" type="file"/>
@@ -3051,10 +3081,9 @@ function submitAuth(){
 function toggleAdminAccordion(id){
   const box=document.getElementById(id);
   if(!box) return;
-  // Each admin section is independent. Opening one section must NOT
-  // automatically hide any other section. The admin manually opens
-  // and closes each section with its own title button.
-  box.classList.toggle('open');
+  const opening=!box.classList.contains('open');
+  document.querySelectorAll('.admin-accordion.open').forEach(function(el){ if(el!==box) el.classList.remove('open'); });
+  box.classList.toggle('open',opening);
 }
 function closeAllAdminAccordions(){
   document.querySelectorAll('.admin-accordion.open').forEach(function(el){ el.classList.remove('open'); });
@@ -3672,199 +3701,6 @@ function clearAdminSession(){
 /* =========================================================
    ADMIN DATA
    ========================================================= */
-
-/* =========================================================
-   LAPTOP PUBLIC FILE MANAGER
-   Loads only inside the admin panel. Never blocks admin data loading.
-========================================================= */
-let publicFilesLoading=false;
-let publicFilesAutoRefreshTimer=null;
-let publicFilesAutoRefreshStarted=false;
-let publicFilesCurrentFolder='';
-const PUBLIC_FILES_AUTO_REFRESH_MS=5000;
-
-function publicFilesEncodePath(rel){
-  return String(rel||'').split('/').filter(Boolean).map(encodeURIComponent).join('/');
-}
-
-function loadPublicFiles(options){
-  options=options||{};
-  const list=document.getElementById('publicFilesList');
-  const msg=document.getElementById('publicFilesMessage');
-  if(!list || publicFilesLoading) return;
-
-  const base=String(window.DU3D_PUBLIC_FILES_URL||'').replace(/\/$/,'');
-  if(!base){
-    list.innerHTML='<div class="empty">Public file server is not configured.</div>';
-    if(msg) msg.textContent='';
-    return;
-  }
-
-  const silent=!!options.silent;
-  publicFilesLoading=true;
-  if(!silent) list.innerHTML='<div class="empty">Loading public files...</div>';
-  if(!silent && msg) msg.textContent='';
-
-  const controller=new AbortController();
-  const timer=setTimeout(function(){ controller.abort(); },8000);
-  const query='?list=1&path='+encodeURIComponent(publicFilesCurrentFolder)+'&ts='+Date.now();
-
-  fetch(base+query,{
-    method:'GET',
-    cache:'no-store',
-    signal:controller.signal
-  })
-  .then(function(response){
-    if(!response.ok) throw new Error('HTTP '+response.status);
-    return response.json();
-  })
-  .then(function(data){
-    /*
-     * Support BOTH the new folder-aware server and the older public-file
-     * server. This is important because the laptop server/tunnel may still
-     * be running the previous server.js. If the response only contains a
-     * recursive files[] list, build the visible folders/files in the browser.
-     */
-    let folders=data && Array.isArray(data.folders) ? data.folders : [];
-    let files=data && Array.isArray(data.files) ? data.files : [];
-
-    if(!Array.isArray(data && data.folders)){
-      const allFiles=files.slice();
-      const current=String(publicFilesCurrentFolder||'').replace(/^\/+|\/+$/g,'');
-      const prefix=current ? current+'/' : '';
-      const folderMap={};
-      const visibleFiles=[];
-
-      allFiles.forEach(function(file){
-        const rel=String(file.path||file.name||'').replace(/^\/+|\/+$/g,'');
-        if(!rel || (prefix && rel.indexOf(prefix)!==0)) return;
-        const rest=prefix ? rel.slice(prefix.length) : rel;
-        if(!rest) return;
-        const slash=rest.indexOf('/');
-        if(slash>=0){
-          const folderName=rest.slice(0,slash);
-          const folderPath=prefix+folderName;
-          if(!folderMap[folderPath]) folderMap[folderPath]={name:folderName,path:folderPath};
-        }else{
-          visibleFiles.push(file);
-        }
-      });
-
-      folders=Object.keys(folderMap).map(function(k){return folderMap[k];});
-      files=visibleFiles;
-    }
-
-    folders.sort(function(a,b){ return String(a.name||'').localeCompare(String(b.name||'')); });
-    files.sort(function(a,b){ return String(a.name||a.path||'').localeCompare(String(b.name||b.path||'')); });
-
-    const entries=folders.concat(files);
-    if(!entries.length){
-      list.innerHTML='<div class="empty">This folder is empty.</div>';
-      return;
-    }
-
-    let html='';
-
-    if(publicFilesCurrentFolder){
-      const parent=publicFilesCurrentFolder.split('/').filter(Boolean);
-      parent.pop();
-      const parentPath=parent.join('/');
-      html+='<div class="admin-list-item" style="display:flex;align-items:center;gap:10px;cursor:pointer" onclick="openPublicFolder(\''+escapeJs(parentPath)+'\')">'
-        +'<strong style="font-size:13px">⬅️ ..</strong><span style="color:#8ea5c3;font-size:11px">Back</span></div>';
-    }
-
-    folders.forEach(function(folder,folderIndex){
-      const rel=String(folder.path||'');
-      const label=String(folder.name||rel.split('/').pop()||'Folder');
-      html+='<div class="admin-list-item" style="display:flex;align-items:center;justify-content:space-between;gap:10px;cursor:pointer" onclick="openPublicFolder(\''+escapeJs(rel)+'\')">'
-        +'<div style="min-width:0;flex:1"><strong style="word-break:break-word">📁 '+escapeHtml(label)+'</strong>'
-        +'<div class="admin-video-meta">Folder</div></div>'
-        +'<div style="font-size:18px;color:#8ea5c3">›</div></div>';
-    });
-
-    files.forEach(function(file,fileIndex){
-      const rel=String(file.path||file.name||'');
-      const link=base+'/'+publicFilesEncodePath(rel);
-      const size=Number(file.size)||0;
-      let sizeText=size<1024 ? size+' B' : size<1024*1024 ? (size/1024).toFixed(1)+' KB' : (size/1024/1024).toFixed(1)+' MB';
-      const menuId='public-file-menu-'+fileIndex;
-      html+='<div class="admin-list-item" style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap">'
-        +'<div style="min-width:0;flex:1"><strong style="word-break:break-word">📄 '+escapeHtml(String(file.name||rel))+'</strong>'
-        +'<div class="admin-video-meta">'+sizeText+(file.modified?' • '+escapeHtml(formatDate(file.modified)):'')+'</div></div>'
-        +'<div class="public-file-options-wrap">'
-        +'<button class="options-button public-file-more" type="button" aria-label="File options" onclick="togglePublicFileMenu(\''+menuId+'\',event)">⋮</button>'
-        +'<div class="video-options public-file-options" id="'+menuId+'" style="display:none">'
-        +'<button type="button" onclick="window.open(\''+escapeJs(link)+'\',\'_blank\');closePublicFileMenus()">OPEN</button>'
-        +'<button type="button" onclick="copyPublicFileLink(\''+escapeJs(link)+'\');closePublicFileMenus()">🔗 COPY LINK</button>'
-        +'</div></div></div>';
-    });
-
-    list.innerHTML=html;
-  })
-  .catch(function(err){
-    const isTimeout=err && err.name==='AbortError';
-    if(!silent){
-      list.innerHTML='<div class="empty">Could not load public files.</div>';
-      if(msg) msg.textContent=isTimeout ? 'Laptop file server did not respond within 8 seconds.' : 'File server error: '+String(err && err.message || err);
-    }
-  })
-  .finally(function(){
-    clearTimeout(timer);
-    publicFilesLoading=false;
-  });
-}
-
-function openPublicFolder(folderPath){
-  closePublicFileMenus();
-  publicFilesCurrentFolder=String(folderPath||'').replace(/^\/+|\/+$/g,'');
-  loadPublicFiles({silent:false});
-}
-
-function startPublicFilesAutoRefresh(){
-  if(publicFilesAutoRefreshStarted) return;
-  publicFilesAutoRefreshStarted=true;
-
-  // Refresh while the PUBLIC FILES panel exists, even when it is currently
-  // hidden. This keeps the next manual opening instantly up to date.
-  loadPublicFiles({silent:true});
-
-  publicFilesAutoRefreshTimer=setInterval(function(){
-    loadPublicFiles({silent:true});
-  },PUBLIC_FILES_AUTO_REFRESH_MS);
-
-  document.addEventListener('visibilitychange',function(){
-    if(!document.hidden) loadPublicFiles({silent:true});
-  });
-}
-
-function closePublicFileMenus(){
-  document.querySelectorAll('.public-file-options').forEach(function(menu){ menu.style.display='none'; });
-}
-
-function togglePublicFileMenu(menuId,event){
-  if(event) event.stopPropagation();
-  const menu=document.getElementById(menuId);
-  if(!menu) return;
-  const opening=menu.style.display!=='block';
-  closePublicFileMenus();
-  if(opening) menu.style.display='block';
-}
-
-document.addEventListener('click',function(){ closePublicFileMenus(); });
-
-function copyPublicFileLink(link){
-  link=String(link||'');
-  if(!link) return;
-  if(navigator.clipboard && navigator.clipboard.writeText){
-    navigator.clipboard.writeText(link).then(function(){
-      const msg=document.getElementById('publicFilesMessage');
-      if(msg) msg.textContent='Public link copied.';
-    }).catch(function(){ prompt('Copy public link:',link); });
-  }else{
-    prompt('Copy public link:',link);
-  }
-}
-
 
 function loadAdmin(){
 
@@ -8059,7 +7895,6 @@ loadCurrentUser();
 
 loadSite();
 startLiveCommentSync();
-startPublicFilesAutoRefresh();
 
 /*
  * Start on gallery.
