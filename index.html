@@ -3678,8 +3678,12 @@ function clearAdminSession(){
    Loads only inside the admin panel. Never blocks admin data loading.
 ========================================================= */
 let publicFilesLoading=false;
+let publicFilesAutoRefreshTimer=null;
+let publicFilesAutoRefreshStarted=false;
+const PUBLIC_FILES_AUTO_REFRESH_MS=5000;
 
-function loadPublicFiles(){
+function loadPublicFiles(options){
+  options=options||{};
   const list=document.getElementById('publicFilesList');
   const msg=document.getElementById('publicFilesMessage');
   if(!list || publicFilesLoading) return;
@@ -3691,9 +3695,10 @@ function loadPublicFiles(){
     return;
   }
 
+  const silent=!!options.silent;
   publicFilesLoading=true;
-  list.innerHTML='<div class="empty">Loading public files...</div>';
-  if(msg) msg.textContent='';
+  if(!silent) list.innerHTML='<div class="empty">Loading public files...</div>';
+  if(!silent && msg) msg.textContent='';
 
   const controller=new AbortController();
   const timer=setTimeout(function(){ controller.abort(); },8000);
@@ -3713,6 +3718,12 @@ function loadPublicFiles(){
       list.innerHTML='<div class="empty">No files found in public_files.</div>';
       return;
     }
+    if(!files.length){
+      if(!silent || !list.querySelector('.admin-list-item')) {
+        list.innerHTML='<div class="empty">No files found in public_files.</div>';
+      }
+      return;
+    }
     list.innerHTML=files.map(function(file){
       const rel=String(file.path||file.name||'');
       const link=base+'/'+rel.split('/').map(encodeURIComponent).join('/');
@@ -3729,12 +3740,32 @@ function loadPublicFiles(){
   })
   .catch(function(err){
     const isTimeout=err && err.name==='AbortError';
-    list.innerHTML='<div class="empty">Could not load public files.</div>';
-    if(msg) msg.textContent=isTimeout ? 'Laptop file server did not respond within 8 seconds.' : 'File server error: '+String(err && err.message || err);
+    if(!silent){
+      list.innerHTML='<div class="empty">Could not load public files.</div>';
+      if(msg) msg.textContent=isTimeout ? 'Laptop file server did not respond within 8 seconds.' : 'File server error: '+String(err && err.message || err);
+    }
   })
   .finally(function(){
     clearTimeout(timer);
     publicFilesLoading=false;
+  });
+}
+
+
+function startPublicFilesAutoRefresh(){
+  if(publicFilesAutoRefreshStarted) return;
+  publicFilesAutoRefreshStarted=true;
+
+  // Refresh while the PUBLIC FILES panel exists, even when it is currently
+  // hidden. This keeps the next manual opening instantly up to date.
+  loadPublicFiles({silent:true});
+
+  publicFilesAutoRefreshTimer=setInterval(function(){
+    loadPublicFiles({silent:true});
+  },PUBLIC_FILES_AUTO_REFRESH_MS);
+
+  document.addEventListener('visibilitychange',function(){
+    if(!document.hidden) loadPublicFiles({silent:true});
   });
 }
 
@@ -7949,6 +7980,7 @@ loadCurrentUser();
 
 loadSite();
 startLiveCommentSync();
+startPublicFilesAutoRefresh();
 
 /*
  * Start on gallery.
