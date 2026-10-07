@@ -1775,7 +1775,9 @@ window.DU3D_API_BACKUP_URL='https://scanning-atmosphere-melbourne-messenger.tryc
 // Public files are served directly from the DU3D laptop through the same Cloudflare Tunnel.
 
 (function(){
-  var PRIMARY_COOLDOWN_MS=15000;
+  var PRIMARY_COOLDOWN_MS=8000;
+  var PRIMARY_TIMEOUT_MS=7000;
+  var BACKUP_TIMEOUT_MS=7000;
   var primaryDownUntil=0;
   var SAFE_FAILOVER_METHODS=new Set([
     'getSiteData','getLiveSiteState','getAdminPresence','getChessLobby',
@@ -1837,14 +1839,14 @@ window.DU3D_API_BACKUP_URL='https://scanning-atmosphere-melbourne-messenger.tryc
         var backupFirst=safe&&Date.now()<primaryDownUntil;
         var first=backupFirst?window.DU3D_API_BACKUP_URL:window.DU3D_API_URL;
         var second=backupFirst?window.DU3D_API_URL:window.DU3D_API_BACKUP_URL;
-        requestApi(first,methodName,args,20000).then(function(result){
+        requestApi(first,methodName,args,PRIMARY_TIMEOUT_MS).then(function(result){
           if(!backupFirst)primaryDownUntil=0;
           if(typeof success==='function')success(result);
         }).catch(function(firstError){
           var failover=firstError&&firstError.du3dRetryable&&(safe||(!backupFirst&&isCloudflareLimitError(firstError.du3dResponse,firstError.du3dBody)));
           if(!failover){if(typeof failure==='function')failure(firstError);else console.error('DU3D API:',firstError);return;}
           if(!backupFirst)primaryDownUntil=Date.now()+PRIMARY_COOLDOWN_MS;
-          requestApi(second,methodName,args,20000).then(function(result){
+          requestApi(second,methodName,args,BACKUP_TIMEOUT_MS).then(function(result){
             if(typeof success==='function')success(result);
           }).catch(function(error){
             if(typeof failure==='function')failure(error);else console.error('DU3D API backup:',error);
@@ -2533,19 +2535,62 @@ function hideDu3dSiteLoader(){
 // Keep the first-open loader very short; backend loading continues in the background.
 setTimeout(hideDu3dSiteLoader,250);
 
+let du3dSiteReconnectAttempts=0;
 function loadSite(){
+
+  const emptySiteData={
+    videos:[],
+    downloads:{},
+    posts:[],
+    comments:{},
+    avatarChoices:[]
+  };
+
+  /*
+   * Mobile/offline protection: render the last successful site snapshot
+   * immediately, then refresh it from the backend in the background.
+   * This prevents a slow Apps Script/Cloudflare connection from making
+   * the whole website look offline after a refresh.
+   */
+  let hasCachedSite=false;
+  try{
+    const cached=localStorage.getItem('du3d_site_data_cache_v2');
+    if(cached){
+      const parsed=JSON.parse(cached);
+      if(parsed && typeof parsed==='object'){
+        siteData=parsed;
+        hasCachedSite=true;
+        renderHome();
+        renderGallery();
+        renderAbout();
+        const cachedLogo=document.getElementById('siteLogo');
+        if(cachedLogo && siteData.logoUrl){
+          cachedLogo.src=siteData.logoUrl;
+          cachedLogo.style.display='block';
+        }
+        renderCustomLinks();
+        applyBackgroundMusic(siteData.backgroundMusic || {});
+        if(typeof window.du3dUpdateSpinnerAvatar==='function') window.du3dUpdateSpinnerAvatar();
+        hideDu3dSiteLoader();
+      }
+    }
+  }catch(e){}
 
   google.script.run
 
     .withSuccessHandler(function(data){
 
-      siteData=data || {
-        videos:[],
-        downloads:{},
-        posts:[],
-        comments:{},
-        avatarChoices:[]
-      };
+      siteData=data || emptySiteData;
+      du3dSiteReconnectAttempts=0;
+
+      /* Save only a reasonably sized snapshot so localStorage never
+         becomes the reason the mobile page fails to load. */
+      try{
+        const snapshot=JSON.stringify(siteData);
+        if(snapshot.length<1800000){
+          localStorage.setItem('du3d_site_data_cache_v2',snapshot);
+        }
+      }catch(e){}
 
       renderHome();
       renderGallery();
@@ -2572,10 +2617,22 @@ function loadSite(){
 
     .withFailureHandler(function(){
 
-      document.getElementById("galleryBoard").innerHTML=
-        '<div class="empty">Unable to load the gallery.</div>';
+      /* If cached data exists, keep the website usable and retry through
+         the normal API failover instead of replacing the page with an
+         offline error screen. */
+      if(!hasCachedSite){
+        document.getElementById("galleryBoard").innerHTML=
+          '<div class="empty">Unable to connect right now. Please try again.</div>';
+      }
       markBackendFailure();
       hideDu3dSiteLoader();
+
+      /* Automatically try again in the background after a temporary
+         mobile/network failure. The cached page remains visible. */
+      if(du3dSiteReconnectAttempts<3){
+        du3dSiteReconnectAttempts++;
+        setTimeout(function(){ loadSite(); },8000*du3dSiteReconnectAttempts);
+      }
 
     })
 
