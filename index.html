@@ -444,6 +444,10 @@
     }
     .video-options button:hover{background:rgba(255,50,60,.12)}
     .video-options .remove-option{color:#ff858d}
+    .public-file-options-wrap{position:relative;flex-shrink:0}
+    .public-file-more{width:36px;height:36px;padding:0;font-size:22px;line-height:1;display:inline-flex;align-items:center;justify-content:center}
+    .public-file-options{right:0;top:calc(100% + 6px);min-width:145px}
+    .public-file-options button{text-align:left}
     .add-video-form{margin-bottom:18px}
     #addVideoButton{background:#082a5c !important;border-color:#12447f !important;color:#fff !important}
     #addVideoButton:hover{background:#0b3b7d !important;border-color:#1b5da8 !important}
@@ -1994,12 +1998,8 @@ button[onclick*="showAdminLogin"] { display:none !important; }
 </div></div></div><div class="admin-accordion" id="adminSectionPublicFiles"><button class="admin-accordion-title" onclick="toggleAdminAccordion('adminSectionPublicFiles')" type="button">2  📁 PUBLIC FILES</button><div class="admin-accordion-body"><div class="admin-row">
 <h3 class="admin-section-title"><span class="admin-section-number">2</span> 📁 PUBLIC FILES</h3>
 <small>Files inside your laptop's <b>public_files</b> folder appear here. Generate a public link for each file without uploading the file to GitHub or Google Drive.</small>
-<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;">
-<button class="primary" id="refreshPublicFilesButton" onclick="loadPublicFiles()" style="margin-top:0" type="button">🔄 REFRESH FILES</button>
-<button class="danger" onclick="copyPublicFilesFolderHint()" style="margin-top:0" type="button">📁 FOLDER INFO</button>
-</div>
 <div class="message" id="publicFilesMessage"></div>
-<div class="admin-list" id="publicFilesList"><div class="empty">Click REFRESH FILES to load files from your laptop.</div></div>
+<div class="admin-list" id="publicFilesList"><div class="empty">Loading public files...</div></div>
 </div></div></div><div class="admin-accordion" id="adminSectionPosts"><button class="admin-accordion-title" onclick="toggleAdminAccordion('adminSectionPosts')" type="button">3  📝 POSTS UPDATE</button><div class="admin-accordion-body"><div class="admin-row admin-post-form">
 <h3 class="admin-section-title"><span class="admin-section-number">3</span> 📝 POSTS UPDATE</h3>
 <small>Posts Update controls the newest posts shown on Home. The newest update appears at the top; the Home Headline stays separately in the upper section.</small>
@@ -3724,7 +3724,7 @@ function loadPublicFiles(options){
       }
       return;
     }
-    list.innerHTML=files.map(function(file){
+    list.innerHTML=files.map(function(file,fileIndex){
       const rel=String(file.path||file.name||'');
       const link=base+'/'+rel.split('/').map(encodeURIComponent).join('/');
       const size=Number(file.size)||0;
@@ -3732,10 +3732,12 @@ function loadPublicFiles(options){
       return '<div class="admin-list-item" style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap">'
         +'<div style="min-width:0;flex:1"><strong style="word-break:break-word">'+escapeHtml(rel)+'</strong>'
         +'<div class="admin-video-meta">'+sizeText+(file.modified?' • '+escapeHtml(formatDate(file.modified)):'')+'</div></div>'
-        +'<div style="display:flex;gap:6px;flex-wrap:wrap">'
-        +'<button class="primary" type="button" onclick="window.open(\''+escapeJs(link)+'\',\'_blank\')">OPEN</button>'
-        +'<button class="options-button" type="button" onclick="copyPublicFileLink(\''+escapeJs(link)+'\')">🔗 COPY LINK</button>'
-        +'</div></div>';
+        +'<div class="public-file-options-wrap">'
+        +'<button class="options-button public-file-more" type="button" aria-label="File options" onclick="togglePublicFileMenu(\'public-file-menu-'+fileIndex+'\',event)">⋮</button>'
+        +'<div class="video-options public-file-options" id="public-file-menu-'+fileIndex+'" style="display:none">'
+        +'<button type="button" onclick="window.open(\''+escapeJs(link)+'\',\'_blank\');closePublicFileMenus()">OPEN</button>'
+        +'<button type="button" onclick="copyPublicFileLink(\''+escapeJs(link)+'\');closePublicFileMenus()">🔗 COPY LINK</button>'
+        +'</div></div></div>';
     }).join('');
   })
   .catch(function(err){
@@ -3769,6 +3771,21 @@ function startPublicFilesAutoRefresh(){
   });
 }
 
+function closePublicFileMenus(){
+  document.querySelectorAll('.public-file-options').forEach(function(menu){ menu.style.display='none'; });
+}
+
+function togglePublicFileMenu(menuId,event){
+  if(event) event.stopPropagation();
+  const menu=document.getElementById(menuId);
+  if(!menu) return;
+  const opening=menu.style.display!=='block';
+  closePublicFileMenus();
+  if(opening) menu.style.display='block';
+}
+
+document.addEventListener('click',function(){ closePublicFileMenus(); });
+
 function copyPublicFileLink(link){
   link=String(link||'');
   if(!link) return;
@@ -3782,10 +3799,6 @@ function copyPublicFileLink(link){
   }
 }
 
-function copyPublicFilesFolderHint(){
-  const msg=document.getElementById('publicFilesMessage');
-  if(msg) msg.textContent='Put files in D:\\DU3D_OFFICIAL\\public_files\\ then click REFRESH FILES.';
-}
 
 function loadAdmin(){
 
