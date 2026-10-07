@@ -7426,14 +7426,16 @@ function getServerError(err){
       move.san.indexOf("#")>=0
     ){
 
-      score+=1000000;
+      /* A real checkmate always outranks material and positional gains. */
+      score+=100000000;
 
     }else if(
       move.san &&
       move.san.indexOf("+")>=0
     ){
 
-      score+=7000;
+      /* Checks are useful mating candidates, but only after safe moves. */
+      score+=12000;
 
     }
 
@@ -7875,6 +7877,79 @@ function getServerError(err){
 
 
   /* =====================================================
+     CHECKMATE HUNTING
+     ===================================================== */
+
+  /* Dedicated forced-mate search. This is separate from the normal
+     evaluation so DU3D actively looks for checkmate instead of merely
+     winning material. The search is intentionally small and tactical. */
+  function du3dCanForceMate(depth,attackerColor){
+
+    if(game.in_checkmate())
+      return game.turn()!==attackerColor;
+
+    if(game.in_draw() || depth<=0 || checkSearchTime())
+      return false;
+
+    const moves=orderMoves(
+      game.moves({verbose:true}),
+      depth
+    );
+
+    if(!moves.length)
+      return false;
+
+    const attackerTurn=game.turn()===attackerColor;
+
+    if(attackerTurn){
+      /* The attacker needs at least one move that forces mate. */
+      for(let i=0;i<moves.length;i++){
+        if(checkSearchTime()) return false;
+        game.move(moves[i]);
+        const forced=du3dCanForceMate(depth-1,attackerColor);
+        game.undo();
+        if(forced) return true;
+      }
+      return false;
+    }
+
+    /* The defender must have NO escape. */
+    for(let i=0;i<moves.length;i++){
+      if(checkSearchTime()) return false;
+      game.move(moves[i]);
+      const stillForced=du3dCanForceMate(depth-1,attackerColor);
+      game.undo();
+      if(!stillForced) return false;
+    }
+    return true;
+  }
+
+  function du3dFindForcedMate(rootMoves,attackerColor){
+    /* First priority: mate in one. */
+    for(let i=0;i<rootMoves.length;i++){
+      if(checkSearchTime()) return null;
+      const move=rootMoves[i];
+      game.move(move);
+      const mate=game.in_checkmate() && game.turn()!==attackerColor;
+      game.undo();
+      if(mate) return move;
+    }
+
+    /* Then look for a short forced mate (up to the next attacker move). */
+    for(let i=0;i<rootMoves.length;i++){
+      if(checkSearchTime()) return null;
+      const move=rootMoves[i];
+      game.move(move);
+      const forced=du3dCanForceMate(3,attackerColor);
+      game.undo();
+      if(forced) return move;
+    }
+
+    return null;
+  }
+
+
+  /* =====================================================
      BEST MOVE
      ===================================================== */
 
@@ -7899,6 +7974,14 @@ function getServerError(err){
       game.moves({
         verbose:true
       });
+
+    /* Checkmate is the highest-priority objective. Search for a direct
+       mate and a short forced mating sequence before ordinary evaluation. */
+    const forcedMate=du3dFindForcedMate(moves,"b");
+    if(forcedMate && !aiTimedOut){
+      aiInfoElement.textContent="🧠 DU3D ULTRA • CHECKMATE FOUND";
+      return forcedMate;
+    }
 
 
     moves=
