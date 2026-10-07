@@ -214,6 +214,10 @@
     .spinner-name-count{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:20px 0 9px;color:#fff;font-size:13px;font-weight:900}
     .spinner-count{padding:4px 9px;border-radius:999px;background:rgba(255,50,65,.11);border:1px solid rgba(255,70,80,.22);color:#ff9ca4;font-size:11px}
     .spinner-names{display:flex;flex-wrap:wrap;gap:8px;max-height:330px;overflow:auto;padding:4px 2px 4px 0}
+    .spinner-picked-heading{margin-top:15px}
+    .spinner-picked-names{max-height:180px}
+    .spinner-picked-names .spinner-name{background:linear-gradient(135deg,rgba(255,190,60,.10),rgba(255,255,255,.035));border-color:rgba(255,190,60,.22)}
+    .spinner-picked-names .spinner-name:before{content:"🏆";font-size:12px}
     .spinner-name{display:flex;align-items:center;gap:7px;max-width:100%;padding:8px 10px 8px 12px;border-radius:999px;background:linear-gradient(135deg,rgba(255,255,255,.075),rgba(255,255,255,.035));border:1px solid rgba(255,255,255,.1);color:#f7e2e4;font-size:12px;font-weight:800}
     .spinner-name span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:190px}
     .spinner-remove{width:20px;height:20px;padding:0;border:0;border-radius:50%;background:rgba(255,255,255,.08);color:#ffadb4;cursor:pointer;font-weight:900}
@@ -1976,6 +1980,8 @@ button[onclick*="showAdminLogin"] { display:none !important; }
         </div>
         <div class="spinner-name-count"><span>Names in the wheel</span><span class="spinner-count" id="spinnerCount">0</span></div>
         <div class="spinner-names" id="spinnerNames"><div class="spinner-empty">No names yet. Add your first name above.</div></div>
+        <div class="spinner-name-count spinner-picked-heading"><span>🏆 Picked Names</span><span class="spinner-count" id="spinnerPickedCount">0</span></div>
+        <div class="spinner-names spinner-picked-names" id="spinnerPickedNames"><div class="spinner-empty">No winners yet.</div></div>
         <div class="spinner-actions">
           <button class="spinner-spin" id="spinnerSpinButton" type="button" disabled>🎡 SPIN THE WHEEL</button>
           <button class="spinner-clear" id="spinnerClearButton" type="button">🗑 CLEAR ALL NAMES</button>
@@ -2227,13 +2233,15 @@ function syncAdminSession(){ adminToken=(window.du3dUserToken && window.du3dCurr
    ========================================================= */
 (function(){
   var names=[];
+  var pickedNames=[];
   var rotation=0;
   var spinning=false;
   var storageKey='du3dWheelSpinnerNames';
+  var pickedStorageKey='du3dWheelSpinnerPickedNames';
   var palette=['#8d0b18','#d52235','#4a0b13','#f04b58','#74101d','#b51224','#26070c','#ef6a74','#5b0c16','#c51d30'];
   function $(id){return document.getElementById(id);}
-  function save(){try{localStorage.setItem(storageKey,JSON.stringify(names));}catch(e){}}
-  function load(){try{var v=JSON.parse(localStorage.getItem(storageKey)||'[]');if(Array.isArray(v))names=v.filter(function(n){return typeof n==='string'&&n.trim();});}catch(e){names=[];}}
+  function save(){try{localStorage.setItem(storageKey,JSON.stringify(names));localStorage.setItem(pickedStorageKey,JSON.stringify(pickedNames));}catch(e){}}
+  function load(){try{var v=JSON.parse(localStorage.getItem(storageKey)||'[]');if(Array.isArray(v))names=v.filter(function(n){return typeof n==='string'&&n.trim();});var p=JSON.parse(localStorage.getItem(pickedStorageKey)||'[]');if(Array.isArray(p))pickedNames=p.filter(function(n){return typeof n==='string'&&n.trim();});}catch(e){names=[];pickedNames=[];}}
   function draw(){
     var canvas=$('spinnerCanvas'); if(!canvas)return;
     var ctx=canvas.getContext('2d'), size=canvas.width, cx=size/2, cy=size/2, radius=size/2-7;
@@ -2255,21 +2263,28 @@ function syncAdminSession(){ adminToken=(window.du3dUserToken && window.du3dCurr
     ctx.beginPath();ctx.arc(cx,cy,radius,0,Math.PI*2);ctx.strokeStyle='rgba(255,255,255,.2)';ctx.lineWidth=5;ctx.stroke();
   }
   function updateSpinnerAvatar(){
-    var img=$('spinnerAvatar'),fallback=$('spinnerAvatarFallback');
+    var img=$('spinnerAvatar'),fallback=$('spinnerAvatarFallback'),center=$('spinnerCenter');
     var user=window.du3dCurrentUser||{};
     var src=user.avatarUrl||user.avatar||user.photoURL||user.photoUrl||user.profileImage||'';
+    if(center){ center.title=user.isAdmin?'Admin profile — '+(user.username||'Admin'):(user.username?'Profile — '+user.username:'User profile'); }
     if(img&&src){ img.src=src; img.style.display='block'; if(fallback)fallback.style.display='none'; }
     else if(img){ img.removeAttribute('src'); img.style.display='none'; if(fallback){ fallback.textContent='👤'; fallback.style.display='grid'; } }
   }
   function renderNames(){
-    var list=$('spinnerNames'),count=$('spinnerCount'),spin=$('spinnerSpinButton'),status=$('spinnerStatus');
+    var list=$('spinnerNames'),count=$('spinnerCount'),pickedList=$('spinnerPickedNames'),pickedCount=$('spinnerPickedCount'),spin=$('spinnerSpinButton'),status=$('spinnerStatus');
     if(count)count.textContent=names.length;
+    if(pickedCount)pickedCount.textContent=pickedNames.length;
     if(spin)spin.disabled=spinning||names.length===0;
     if(status)status.textContent=spinning?'The wheel is spinning…':(names.length?'Ready — good luck!':'Add at least one name to begin.');
-    if(!list)return;
-    if(!names.length){list.innerHTML='<div class="spinner-empty">No names yet. Add your first name above.</div>';draw();return;}
-    list.innerHTML=names.map(function(name,i){return '<div class="spinner-name"><span title="'+escapeHtml(name)+'">'+escapeHtml(name)+'</span><button class="spinner-remove" type="button" data-remove="'+i+'" aria-label="Remove '+escapeHtml(name)+'">×</button></div>';}).join('');
-    list.querySelectorAll('[data-remove]').forEach(function(btn){btn.addEventListener('click',function(){if(spinning)return;names.splice(Number(btn.getAttribute('data-remove')),1);save();renderNames();});});
+    if(list){
+      if(!names.length)list.innerHTML='<div class="spinner-empty">No names yet. Add your first name above.</div>';
+      else list.innerHTML=names.map(function(name,i){return '<div class="spinner-name"><span title="'+escapeHtml(name)+'">'+escapeHtml(name)+'</span><button class="spinner-remove" type="button" data-remove="'+i+'" aria-label="Remove '+escapeHtml(name)+'">×</button></div>';}).join('');
+      list.querySelectorAll('[data-remove]').forEach(function(btn){btn.addEventListener('click',function(){if(spinning)return;names.splice(Number(btn.getAttribute('data-remove')),1);save();renderNames();});});
+    }
+    if(pickedList){
+      if(!pickedNames.length)pickedList.innerHTML='<div class="spinner-empty">No winners yet.</div>';
+      else pickedList.innerHTML=pickedNames.map(function(name){return '<div class="spinner-name"><span title="'+escapeHtml(name)+'">'+escapeHtml(name)+'</span></div>';}).join('');
+    }
     draw();
   }
   function escapeHtml(v){return String(v).replace(/[&<>'"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c];});}
@@ -2294,7 +2309,9 @@ function syncAdminSession(){ adminToken=(window.du3dUserToken && window.du3dCurr
     if(wheel){wheel.style.transform='rotate('+rotation+'deg)';}
     var result=$('spinnerResult');if(result)result.innerHTML='Spinning…<strong>Good luck!</strong>';
     setTimeout(function(){
-      names.splice(winnerIndex,1);save();spinning=false;
+      names.splice(winnerIndex,1);
+      pickedNames.push(winner);
+      save();spinning=false;
       if(result)result.innerHTML='🎉 WINNER<strong>'+escapeHtml(winner)+'</strong>';
       renderNames();
     },4650);
@@ -2303,10 +2320,11 @@ function syncAdminSession(){ adminToken=(window.du3dUserToken && window.du3dCurr
     if(spinning)return;
     if(!names.length)return;
     if(!confirm('Clear all names from the spinner?'))return;
-    names=[];save();rotation=0;var wheel=$('spinnerWheel');if(wheel)wheel.style.transform='rotate(0deg)';var result=$('spinnerResult');if(result)result.innerHTML='Ready to spin.<strong>Choose a name</strong>';renderNames();
+    names=[];pickedNames=[];save();rotation=0;var wheel=$('spinnerWheel');if(wheel)wheel.style.transform='rotate(0deg)';var result=$('spinnerResult');if(result)result.innerHTML='Ready to spin.<strong>Choose a name</strong>';renderNames();
   }
   window.du3dSpinWheel=spin;
   window.du3dUpdateSpinnerAvatar=updateSpinnerAvatar;
+  window.du3dRenderSpinnerNames=renderNames;
   document.addEventListener('DOMContentLoaded',function(){
     load();updateSpinnerAvatar();renderNames();
     var add=$('spinnerAddButton'),spinButton=$('spinnerSpinButton'),clear=$('spinnerClearButton'),input=$('spinnerNameInput');
@@ -3469,6 +3487,7 @@ function updateAccountUI(){
   if(window.du3dCurrentUser && window.du3dUserToken) startUserHeartbeat(); else stopUserHeartbeat();
   if(isAdmin) startAdminHeartbeat(); else stopAdminHeartbeat();
   updatePrivateMessageFloat();
+  if(typeof window.du3dUpdateSpinnerAvatar==='function') window.du3dUpdateSpinnerAvatar();
   if(window.du3dCurrentUser && window.du3dUserToken) startPrivateNotificationPolling(); else stopPrivateNotificationPolling();
 }
 function clearUserSession(){
@@ -3500,6 +3519,7 @@ function loadCurrentUser(){
         syncAdminSession();
         updateAdminPresence(!!result.user.isAdmin);
         updateAccountUI();
+        if(typeof window.du3dUpdateSpinnerAvatar==='function') window.du3dUpdateSpinnerAvatar();
         renderHome();
         if(window.du3dCurrentUser && window.du3dCurrentUser.isAdmin){
           setTimeout(function(){ showPage('admin'); },50);
@@ -3923,6 +3943,7 @@ function updateAdminUI(){
     privateAdminSelectedUsername='';
   }
   updatePrivateMessageFloat();
+  if(typeof window.du3dUpdateSpinnerAvatar==='function') window.du3dUpdateSpinnerAvatar();
 }
 
 function clearAdminSession(){
