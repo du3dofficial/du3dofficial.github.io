@@ -3760,9 +3760,12 @@ function loadPublicFiles(options){
       return '<div class="admin-list-item" style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap">'
         +'<div style="min-width:0;flex:1"><strong style="word-break:break-word">'+escapeHtml(rel)+'</strong>'
         +'<div class="admin-video-meta">'+sizeText+(file.modified?' • '+escapeHtml(formatDate(file.modified)):'')+'</div></div>'
-        +'<div class="public-file-actions">'
-        +'<button type="button" onclick="copyPublicFileLink(\''+escapeJs(link)+'\')">🔗 COPY LINK</button>'
-        +'</div></div>';
+        +'<div class="public-file-options-wrap">'
+        +'<button class="options-button public-file-more" type="button" aria-label="File options" onclick="togglePublicFileMenu(\'public-file-menu-'+fileIndex+'\',event)">⋮</button>'
+        +'<div class="video-options public-file-options" id="public-file-menu-'+fileIndex+'" style="display:none">'
+        +'<button type="button" onclick="window.open(\''+escapeJs(link)+'\',\'_blank\');closePublicFileMenus()">OPEN</button>'
+        +'<button type="button" onclick="copyPublicFileLink(\''+escapeJs(link)+'\');closePublicFileMenus()">🔗 COPY LINK</button>'
+        +'</div></div></div>';
     }).join('');
   })
   .catch(function(err){
@@ -6773,6 +6776,59 @@ function getServerError(err){
 
 
   /* =====================================================
+     DU3D KING + QUEEN PRIORITY
+     ===================================================== */
+
+  const DU3D_QUEEN_SAFETY_BONUS=260;
+  const DU3D_QUEEN_HANG_PENALTY=1800;
+  const DU3D_QUEEN_TRADE_PENALTY=650;
+
+  function du3dSquareToCoords(square){
+    if(!square || square.length!==2) return null;
+    const file=square.charCodeAt(0)-97;
+    const rank=Number(square.charAt(1));
+    if(file<0 || file>7 || rank<1 || rank>8) return null;
+    return {row:8-rank,col:file};
+  }
+
+  function du3dIsSquareAttackedBy(square,attackerColor){
+    const target=du3dSquareToCoords(square);
+    if(!target) return false;
+    const board=game.board(), tr=target.row, tc=target.col;
+    for(let r=0;r<8;r++){
+      for(let c=0;c<8;c++){
+        const p=board[r][c];
+        if(!p || p.color!==attackerColor) continue;
+        const dr=tr-r, dc=tc-c, adr=Math.abs(dr), adc=Math.abs(dc);
+        if(p.type==='p'){ const dir=attackerColor==='w'?-1:1; if(dr===dir && adc===1) return true; continue; }
+        if(p.type==='n'){ if((adr===2&&adc===1)||(adr===1&&adc===2)) return true; continue; }
+        if(p.type==='k'){ if(adr<=1&&adc<=1&&(adr+adc)>0) return true; continue; }
+        const diagonal=adr===adc&&adr>0;
+        const straight=(dr===0&&dc!==0)||(dc===0&&dr!==0);
+        if((p.type==='b'&&diagonal)||(p.type==='r'&&straight)||(p.type==='q'&&(diagonal||straight))){
+          const sr=dr===0?0:(dr>0?1:-1), sc=dc===0?0:(dc>0?1:-1);
+          let rr=r+sr, cc=c+sc, clear=true;
+          while(rr!==tr||cc!==tc){ if(board[rr][cc]){clear=false;break;} rr+=sr;cc+=sc; }
+          if(clear) return true;
+        }
+      }
+    }
+    return false;
+  }
+
+  function du3dQueenSafetyScore(color){
+    const board=game.board(); let score=0;
+    for(let r=0;r<8;r++) for(let c=0;c<8;c++){
+      const p=board[r][c];
+      if(!p||p.color!==color||p.type!=='q') continue;
+      const sq=String.fromCharCode(97+c)+(8-r);
+      if(du3dIsSquareAttackedBy(sq,color==='w'?'b':'w')) score-=DU3D_QUEEN_HANG_PENALTY;
+      else score+=DU3D_QUEEN_SAFETY_BONUS;
+    }
+    return score;
+  }
+
+  /* =====================================================
      EVALUATION
      ===================================================== */
 
@@ -6885,6 +6941,9 @@ function getServerError(err){
     score+=
       kingSafetyScore("b") -
       kingSafetyScore("w");
+
+    /* DU3D strongly protects king and queen. */
+    score+=du3dQueenSafetyScore("b")-du3dQueenSafetyScore("w");
 
 
     /* CENTER CONTROL */
@@ -7002,6 +7061,17 @@ function getServerError(err){
           move.promotion
         ] || 0);
 
+    }
+
+    /* Never casually place DU3D's queen where a pawn/minor can take it. */
+    if(move.piece==="q" && move.to){
+      const enemyColor=game.turn()==="w"?"b":"w";
+      if(du3dIsSquareAttackedBy(move.to,enemyColor)){
+        score-=DU3D_QUEEN_HANG_PENALTY*4;
+      }
+      if(move.captured && move.captured!=="q"){
+        score-=DU3D_QUEEN_TRADE_PENALTY;
+      }
     }
 
 
