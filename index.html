@@ -188,45 +188,44 @@
     .page-view{display:none}
     .page-view.active{display:block}
 
-    /* TIKTOK */
-    .tiktok-panel{
-      max-width:900px;
-      margin:0 auto;
-      padding:30px;
-      border:1px solid rgba(255,70,80,.24);
-      border-radius:16px;
-      background:linear-gradient(145deg,rgba(18,3,7,.94),rgba(5,2,4,.94));
-      box-shadow:0 20px 60px rgba(0,0,0,.5);
-      text-align:center
-    }
-    .tiktok-profile-card{
-      margin:20px auto 0;
-      max-width:520px;
-      padding:24px;
-      border-radius:14px;
-      border:1px solid rgba(255,255,255,.10);
-      background:rgba(255,255,255,.035)
-    }
-    .tiktok-icon{font-size:48px;line-height:1;margin-bottom:12px}
-    .tiktok-profile-name{font-size:24px;font-weight:900;color:#fff;margin-bottom:7px}
-    .tiktok-profile-url{font-size:12px;color:#c58d93;word-break:break-all}
-    .tiktok-open-button{
-      display:inline-flex;
-      align-items:center;
-      justify-content:center;
-      margin-top:18px;
-      padding:12px 20px;
-      border-radius:10px;
-      background:linear-gradient(135deg,#111,#333);
-      border:1px solid rgba(255,255,255,.28);
-      color:#fff;
-      text-decoration:none;
-      font-weight:900;
-      box-shadow:0 8px 22px rgba(0,0,0,.35);
-      transition:.18s ease
-    }
-    .tiktok-open-button:hover{transform:translateY(-2px);filter:brightness(1.15)}
-    .tiktok-note{margin-top:16px;color:#a96870;font-size:12px;line-height:1.6}
+    /* WHEEL SPINNER */
+    .spinner-page{max-width:1050px;margin:0 auto}
+    .spinner-layout{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(300px,.85fr);gap:22px;align-items:stretch}
+    .spinner-card{position:relative;padding:22px;border:1px solid rgba(255,70,80,.28);border-radius:20px;background:linear-gradient(145deg,rgba(20,3,7,.96),rgba(7,3,5,.96));box-shadow:0 24px 70px rgba(0,0,0,.55),0 0 45px rgba(255,30,45,.08);overflow:hidden}
+    .spinner-card:before{content:"";position:absolute;inset:-80px;background:radial-gradient(circle at 50% 35%,rgba(255,40,55,.12),transparent 55%);pointer-events:none}
+    .spinner-wheel-wrap{position:relative;width:min(100%,520px);aspect-ratio:1;margin:0 auto;display:grid;place-items:center}
+    .spinner-wheel{width:92%;height:92%;border-radius:50%;border:9px solid #170306;box-shadow:0 0 0 3px rgba(255,255,255,.08),0 18px 45px rgba(0,0,0,.6),inset 0 0 28px rgba(0,0,0,.45);transform:rotate(0deg);transition:transform 4.6s cubic-bezier(.12,.72,.08,1);background:#241015}
+    .spinner-wheel canvas{width:100%;height:100%;display:block;border-radius:50%}
+    .spinner-pointer{position:absolute;top:0;left:50%;transform:translateX(-50%);z-index:5;width:0;height:0;border-left:17px solid transparent;border-right:17px solid transparent;border-top:34px solid #fff;filter:drop-shadow(0 4px 8px rgba(0,0,0,.75))}
+    .spinner-pointer:after{content:"";position:absolute;left:-9px;top:-31px;width:18px;height:18px;border-radius:50%;background:#ff3d4d;box-shadow:0 0 18px rgba(255,50,65,.9)}
+    .spinner-center{position:absolute;z-index:4;width:76px;height:76px;border-radius:50%;display:grid;place-items:center;background:radial-gradient(circle at 35% 30%,#ff6671,#a80e1b 60%,#43050a);border:6px solid #120204;box-shadow:0 5px 18px rgba(0,0,0,.65),0 0 20px rgba(255,35,50,.35);color:#fff;font-size:12px;font-weight:1000;letter-spacing:1px;text-align:center;pointer-events:none}
+    .spinner-result{min-height:52px;margin-top:12px;padding:12px 15px;border-radius:12px;text-align:center;border:1px solid rgba(255,70,80,.22);background:rgba(255,255,255,.035);color:#f3c8cc;font-weight:800}
+    .spinner-result strong{display:block;color:#fff;font-size:20px;margin-top:3px}
+    .spinner-form{position:relative;z-index:1}
+    .spinner-form h2{margin:0 0 7px;color:#fff;font-size:21px;font-weight:1000}
+    .spinner-form .hint{margin:0 0 16px;color:#9d7479;font-size:12px;line-height:1.5}
+    .spinner-input-row{display:flex;gap:8px}
+    .spinner-input{flex:1;min-width:0;padding:13px 14px;border-radius:11px;border:1px solid rgba(255,255,255,.12);background:#0d0608;color:#fff;outline:none;font:inherit;font-size:14px}
+    .spinner-input:focus{border-color:rgba(255,70,80,.7);box-shadow:0 0 0 3px rgba(255,40,55,.08)}
+    .spinner-add{padding:12px 17px;border:0;border-radius:11px;background:linear-gradient(135deg,#ff3949,#9d0b18);color:#fff;font-weight:1000;cursor:pointer;box-shadow:0 9px 24px rgba(190,10,25,.28)}
+    .spinner-add:hover{filter:brightness(1.08);transform:translateY(-1px)}
+    .spinner-name-count{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:20px 0 9px;color:#fff;font-size:13px;font-weight:900}
+    .spinner-count{padding:4px 9px;border-radius:999px;background:rgba(255,50,65,.11);border:1px solid rgba(255,70,80,.22);color:#ff9ca4;font-size:11px}
+    .spinner-names{display:flex;flex-wrap:wrap;gap:8px;max-height:330px;overflow:auto;padding:4px 2px 4px 0}
+    .spinner-name{display:flex;align-items:center;gap:7px;max-width:100%;padding:8px 10px 8px 12px;border-radius:999px;background:linear-gradient(135deg,rgba(255,255,255,.075),rgba(255,255,255,.035));border:1px solid rgba(255,255,255,.1);color:#f7e2e4;font-size:12px;font-weight:800}
+    .spinner-name span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:190px}
+    .spinner-remove{width:20px;height:20px;padding:0;border:0;border-radius:50%;background:rgba(255,255,255,.08);color:#ffadb4;cursor:pointer;font-weight:900}
+    .spinner-empty{padding:25px 10px;text-align:center;color:#76575c;font-size:12px;width:100%}
+    .spinner-actions{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:17px}
+    .spinner-spin,.spinner-clear{padding:14px 12px;border-radius:12px;cursor:pointer;font-weight:1000;letter-spacing:.4px}
+    .spinner-spin{border:1px solid rgba(255,80,90,.55);background:linear-gradient(135deg,#ff3547,#850714);color:#fff;box-shadow:0 12px 30px rgba(180,10,25,.28)}
+    .spinner-spin:hover:not(:disabled){filter:brightness(1.1);transform:translateY(-1px)}
+    .spinner-clear{border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.045);color:#e7c9cc}
+    .spinner-clear:hover{background:rgba(255,255,255,.08)}
+    .spinner-spin:disabled{opacity:.42;cursor:not-allowed;transform:none}
+    .spinner-status{margin-top:12px;text-align:center;color:#8f6a70;font-size:11px;line-height:1.45}
+    @media(max-width:850px){.spinner-layout{grid-template-columns:1fr}.spinner-wheel-wrap{max-width:500px}.spinner-names{max-height:230px}}
+    @media(max-width:520px){.spinner-card{padding:15px}.spinner-input-row{flex-direction:column}.spinner-add{width:100%}.spinner-actions{grid-template-columns:1fr}.spinner-center{width:62px;height:62px;font-size:10px}.spinner-pointer{border-left-width:14px;border-right-width:14px;border-top-width:29px}}
 
     /* GALLERY */
     #galleryBoard{
@@ -627,44 +626,6 @@
       #du3dTopBar{margin:0 0 12px}
     }
 
-
-    /* DEVICE STORAGE */
-    .device-storage-panel{max-width:1100px;margin:0 auto;display:grid;gap:16px}
-    .device-status-card{padding:22px;border:1px solid rgba(69,185,255,.28);border-radius:16px;background:linear-gradient(145deg,rgba(7,16,29,.94),rgba(5,8,15,.94));box-shadow:0 20px 60px rgba(0,0,0,.45)}
-    .device-status-head{display:flex;align-items:center;justify-content:space-between;gap:15px;flex-wrap:wrap}
-    .device-status-title{font-size:20px;font-weight:900;color:#fff}
-    .device-status-pill{display:inline-flex;align-items:center;gap:7px;padding:7px 10px;border-radius:999px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.04);font-size:11px;font-weight:800;color:#b9c8dc}
-    .device-status-dot{width:9px;height:9px;border-radius:50%;background:#777;box-shadow:0 0 9px currentColor}
-    .device-status-pill.connected{color:#7dff9a;border-color:rgba(53,242,123,.35)}
-    .device-status-pill.connected .device-status-dot{background:#35f27b}
-    .device-status-pill.warning{color:#ffd27d;border-color:rgba(255,190,80,.35)}
-    .device-status-pill.warning .device-status-dot{background:#ffc857}
-    .device-status-pill.error{color:#ff858d;border-color:rgba(255,70,80,.35)}
-    .device-status-pill.error .device-status-dot{background:#ff4655}
-    .device-info-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-top:16px}
-    .device-info-box{padding:12px;border-radius:10px;background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.07)}
-    .device-info-label{font-size:9px;color:#7890ad;text-transform:uppercase;letter-spacing:1px}
-    .device-info-value{margin-top:5px;color:#fff;font-size:13px;font-weight:800;overflow-wrap:anywhere}
-    .device-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:17px}
-    .device-actions .primary{margin-top:0}
-    .device-secondary{padding:12px 18px;border:1px solid rgba(90,130,190,.38);border-radius:8px;background:#071426;color:#dcecff;cursor:pointer;font-weight:800}
-    .device-secondary:hover{background:#0b2546}
-    .device-help{margin-top:14px;padding:12px 14px;border-left:3px solid #45b9ff;background:rgba(69,185,255,.055);color:#9fb4cd;font-size:12px;line-height:1.65;border-radius:0 8px 8px 0}
-    .device-breadcrumb{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:10px;color:#8ea5c3;font-size:11px}
-    .device-breadcrumb button{border:0;background:transparent;color:#7dd3fc;cursor:pointer;font-size:11px;padding:3px 4px}
-    .device-file-list{display:grid;gap:8px}
-    .device-file-item{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 14px;border:1px solid rgba(90,130,190,.22);border-radius:10px;background:rgba(5,12,24,.72)}
-    .device-file-main{min-width:0;flex:1;display:flex;align-items:center;gap:10px}
-    .device-file-icon{font-size:22px;flex:0 0 auto}
-    .device-file-name{font-weight:800;color:#fff;overflow-wrap:anywhere}
-    .device-file-meta{margin-top:3px;color:#8198b5;font-size:10px}
-    .device-file-actions{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end;flex-shrink:0}
-    .device-file-actions button{padding:8px 10px;border-radius:7px;border:1px solid rgba(90,130,190,.35);background:#071426;color:#fff;cursor:pointer;font-size:11px;font-weight:800}
-    .device-file-actions button:hover{background:#0b2546}
-    .device-empty{padding:45px 15px;text-align:center;color:#7890ad;border:1px dashed rgba(90,130,190,.22);border-radius:12px;background:rgba(5,12,24,.4)}
-    .device-storage-meter{height:8px;margin-top:10px;border-radius:999px;background:#101a29;overflow:hidden;border:1px solid rgba(255,255,255,.06)}
-    .device-storage-meter span{display:block;height:100%;width:0;background:linear-gradient(90deg,#45b9ff,#7dd3fc);box-shadow:0 0 12px rgba(69,185,255,.4)}
-    @media(max-width:700px){.device-info-grid{grid-template-columns:1fr}.device-file-item{align-items:flex-start;flex-direction:column}.device-file-actions{width:100%;justify-content:flex-start}}
 
     /* PUBLIC FILE MANAGER */
     .public-file-item{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 14px;border:1px solid rgba(90,130,190,.25);border-radius:10px;background:rgba(5,12,24,.72)}
@@ -1925,8 +1886,7 @@ button[onclick*="showAdminLogin"] { display:none !important; }
 <button onclick="showPage('about')">👤 About Me</button>
 <button onclick="showPage('gallery')">♟ Chessboard Gallery</button>
 <button onclick="showPage('chess')">♟ Chess</button>
-<button onclick="showPage('tiktok')">🎵 TikTok</button>
-<button onclick="showPage('deviceStorage')">📱 Device Storage</button>
+<button onclick="showPage('spinner')">🎡 Wheel Spinner</button>
 </div>
 <div class="menu-title" id="myLinksTitle" style="display:none">MY LINKS</div>
 <div class="menu" id="myLinksMenu"></div>
@@ -1989,65 +1949,39 @@ button[onclick*="showAdminLogin"] { display:none !important; }
 <div class="empty">Loading videos...</div>
 </div>
 </section>
-<!-- TIKTOK -->
-<section class="page-view" id="tiktok">
-<div class="header">
-<div class="title">🎵 TIKTOK VIDEOS</div>
-<div class="subtitle">
-          DU3D OFFICIAL TikTok videos and updates.
+<!-- WHEEL SPINNER -->
+<section class="page-view" id="spinner">
+  <div class="header">
+    <div class="title">🎡 WHEEL SPINNER</div>
+    <div class="subtitle">Add names, spin the wheel, and the winner is automatically removed.</div>
+  </div>
+  <div class="spinner-page">
+    <div class="spinner-layout">
+      <div class="spinner-card">
+        <div class="spinner-wheel-wrap">
+          <div class="spinner-pointer"></div>
+          <div class="spinner-wheel" id="spinnerWheel"><canvas id="spinnerCanvas" width="700" height="700"></canvas></div>
+          <div class="spinner-center">SPIN</div>
         </div>
-</div>
-<div class="tiktok-panel">
-<div class="tiktok-icon">♪</div>
-<div class="tiktok-profile-card">
-<div class="tiktok-profile-name">@du3drequest</div>
-<div class="tiktok-profile-url">TikTok: https://www.tiktok.com/@du3drequest</div>
-<a class="tiktok-open-button" href="https://www.tiktok.com/@du3drequest" target="_blank" rel="noopener noreferrer">🎵 OPEN TIKTOK</a>
-<div class="tiktok-note">Open the profile to watch the latest DU3D TikTok videos. Individual TikTok video embed links can be added here when provided.</div>
-</div>
-</div>
-</section>
-<!-- DEVICE STORAGE -->
-<section class="page-view" id="deviceStorage">
-<div class="header">
-<div class="title">📱 DEVICE STORAGE</div>
-<div class="subtitle">Connect an Android/USB device and choose the storage that your browser is allowed to access.</div>
-</div>
-<div class="device-storage-panel">
-  <div class="device-status-card">
-    <div class="device-status-head">
-      <div class="device-status-title">Device Connection</div>
-      <div class="device-status-pill warning" id="deviceStorageStatusPill"><span class="device-status-dot"></span><span id="deviceStorageStatusText">Not detected</span></div>
-    </div>
-    <div class="device-info-grid">
-      <div class="device-info-box"><div class="device-info-label">Device</div><div class="device-info-value" id="deviceStorageDeviceName">No device selected</div></div>
-      <div class="device-info-box"><div class="device-info-label">USB</div><div class="device-info-value" id="deviceStorageUsbStatus">Not connected</div></div>
-      <div class="device-info-box"><div class="device-info-label">Storage Access</div><div class="device-info-value" id="deviceStorageAccessStatus">Not granted</div></div>
-    </div>
-    <div class="device-actions">
-      <button class="primary" id="deviceStorageDetectButton" type="button">🔌 Detect USB Device</button>
-      <button class="device-secondary" id="deviceStorageChooseButton" type="button">📁 Choose Storage</button>
-      <button class="device-secondary" id="deviceStorageRefreshButton" type="button">↻ Refresh</button>
-      <button class="device-secondary" id="deviceStorageClearButton" type="button">✕ Clear</button>
-    </div>
-    <div class="device-help" id="deviceStorageHelp">
-      If your Android device is connected but says <b>Charging only</b>, unlock the phone and select <b>File Transfer / Android Auto</b> from its USB preferences. A normal webpage cannot silently switch Android USB mode or bypass the phone's permission.
-    </div>
-  </div>
-
-  <div class="panel">
-    <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap">
-      <div>
-        <h2 style="margin:0">📂 Accessible Storage</h2>
-        <div class="subtitle" style="margin-top:5px">Only files/folders you explicitly grant to this browser are shown here.</div>
+        <div class="spinner-result" id="spinnerResult">Ready to spin.<strong>Choose a name</strong></div>
       </div>
-      <div id="deviceStorageRootName" style="font-size:11px;color:#7dd3fc"></div>
+      <div class="spinner-card spinner-form">
+        <h2>🎟 Add Names</h2>
+        <p class="hint">Enter a name and press Add. Each winner disappears automatically after the spin.</p>
+        <div class="spinner-input-row">
+          <input class="spinner-input" id="spinnerNameInput" type="text" maxlength="40" autocomplete="off" placeholder="Enter a name…" aria-label="Name">
+          <button class="spinner-add" id="spinnerAddButton" type="button">＋ ADD</button>
+        </div>
+        <div class="spinner-name-count"><span>Names in the wheel</span><span class="spinner-count" id="spinnerCount">0</span></div>
+        <div class="spinner-names" id="spinnerNames"><div class="spinner-empty">No names yet. Add your first name above.</div></div>
+        <div class="spinner-actions">
+          <button class="spinner-spin" id="spinnerSpinButton" type="button" disabled>🎡 SPIN THE WHEEL</button>
+          <button class="spinner-clear" id="spinnerClearButton" type="button">🗑 CLEAR ALL NAMES</button>
+        </div>
+        <div class="spinner-status" id="spinnerStatus">Add at least one name to begin.</div>
+      </div>
     </div>
-    <div id="deviceStorageBreadcrumb" class="device-breadcrumb" style="margin-top:15px"></div>
-    <div id="deviceStorageFileList" class="device-file-list"><div class="device-empty">No storage folder selected yet.</div></div>
   </div>
-</div>
-<input id="deviceStorageFallbackInput" type="file" webkitdirectory directory multiple style="display:none" />
 </section>
 
 <!-- CHESS -->
@@ -2287,160 +2221,88 @@ function syncAdminSession(){ adminToken=(window.du3dUserToken && window.du3dCurr
 
 
 /* =========================================================
-   DEVICE STORAGE
-   Browser-only device/storage access. Android MTP/USB mode remains
-   controlled by Android and cannot be switched silently by a webpage.
+   WHEEL SPINNER
    ========================================================= */
 (function(){
-  var deviceState={device:null,root:null,current:null,stack:[],entries:[]};
+  var names=[];
+  var rotation=0;
+  var spinning=false;
+  var storageKey='du3dWheelSpinnerNames';
+  var palette=['#8d0b18','#d52235','#4a0b13','#f04b58','#74101d','#b51224','#26070c','#ef6a74','#5b0c16','#c51d30'];
   function $(id){return document.getElementById(id);}
-  function setStatus(kind,text){
-    var pill=$('deviceStorageStatusPill'), label=$('deviceStorageStatusText');
-    if(!pill||!label)return;
-    pill.className='device-status-pill '+(kind||'warning');
-    label.textContent=text||'Not detected';
-  }
-  function humanSize(bytes){
-    if(typeof bytes!=='number' || !isFinite(bytes))return '—';
-    if(bytes<1024)return bytes+' B';
-    if(bytes<1048576)return (bytes/1024).toFixed(1)+' KB';
-    if(bytes<1073741824)return (bytes/1048576).toFixed(1)+' MB';
-    return (bytes/1073741824).toFixed(2)+' GB';
-  }
-  function escapeHtml(value){
-    return String(value==null?'':value).replace(/[&<>'"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c];});
-  }
-  function updateDeviceInfo(){
-    var name=$('deviceStorageDeviceName'), usb=$('deviceStorageUsbStatus'), access=$('deviceStorageAccessStatus');
-    if(name)name.textContent=deviceState.device?(deviceState.device.productName||deviceState.device.manufacturerName||'USB device'):'No device selected';
-    if(usb)usb.textContent=deviceState.device?'USB device visible to browser':'Not connected';
-    if(access)access.textContent=deviceState.root?'Storage folder granted':'Not granted';
-  }
-  function renderBreadcrumb(){
-    var el=$('deviceStorageBreadcrumb'); if(!el)return;
-    if(!deviceState.root){el.innerHTML='';return;}
-    var html='<button type="button" onclick="window.du3dDeviceStorageGoRoot()">📁 '+escapeHtml(deviceState.root.name)+'</button>';
-    for(var i=0;i<deviceState.stack.length;i++){
-      html+=' <span>/</span> <button type="button" data-device-breadcrumb="'+i+'">'+escapeHtml(deviceState.stack[i].name)+'</button>';
+  function save(){try{localStorage.setItem(storageKey,JSON.stringify(names));}catch(e){}}
+  function load(){try{var v=JSON.parse(localStorage.getItem(storageKey)||'[]');if(Array.isArray(v))names=v.filter(function(n){return typeof n==='string'&&n.trim();});}catch(e){names=[];}}
+  function draw(){
+    var canvas=$('spinnerCanvas'); if(!canvas)return;
+    var ctx=canvas.getContext('2d'), size=canvas.width, cx=size/2, cy=size/2, radius=size/2-7;
+    ctx.clearRect(0,0,size,size);
+    var total=names.length;
+    if(!total){
+      ctx.beginPath();ctx.arc(cx,cy,radius,0,Math.PI*2);ctx.fillStyle='#26080d';ctx.fill();
+      ctx.strokeStyle='rgba(255,255,255,.16)';ctx.lineWidth=4;ctx.stroke();
+      ctx.fillStyle='rgba(255,255,255,.28)';ctx.font='900 30px Arial';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText('ADD NAMES',cx,cy);return;
     }
-    el.innerHTML=html;
-    el.querySelectorAll('[data-device-breadcrumb]').forEach(function(btn){
-      btn.addEventListener('click',function(){window.du3dDeviceStorageGoIndex(Number(btn.getAttribute('data-device-breadcrumb')));});
-    });
+    var step=Math.PI*2/total;
+    for(var i=0;i<total;i++){
+      var a=-Math.PI/2+i*step;
+      ctx.beginPath();ctx.moveTo(cx,cy);ctx.arc(cx,cy,radius,a,a+step);ctx.closePath();ctx.fillStyle=palette[i%palette.length];ctx.fill();ctx.strokeStyle='rgba(255,255,255,.18)';ctx.lineWidth=3;ctx.stroke();
+      ctx.save();ctx.translate(cx,cy);ctx.rotate(a+step/2);ctx.textAlign='right';ctx.textBaseline='middle';
+      var label=names[i].length>18?names[i].slice(0,17)+'…':names[i];
+      ctx.font='900 '+Math.max(14,Math.min(25,210/Math.max(5,total)))+'px Arial';ctx.fillStyle='#fff';ctx.shadowColor='rgba(0,0,0,.65)';ctx.shadowBlur=4;ctx.fillText(label,radius-25,0);ctx.restore();
+    }
+    ctx.beginPath();ctx.arc(cx,cy,radius,0,Math.PI*2);ctx.strokeStyle='rgba(255,255,255,.2)';ctx.lineWidth=5;ctx.stroke();
   }
-  async function renderDirectory(dir){
-    if(!dir)return;
-    deviceState.current=dir;
-    var list=$('deviceStorageFileList'), rootName=$('deviceStorageRootName');
-    if(rootName)rootName.textContent='Storage: '+dir.name;
-    renderBreadcrumb();
+  function renderNames(){
+    var list=$('spinnerNames'),count=$('spinnerCount'),spin=$('spinnerSpinButton'),status=$('spinnerStatus');
+    if(count)count.textContent=names.length;
+    if(spin)spin.disabled=spinning||names.length===0;
+    if(status)status.textContent=spinning?'The wheel is spinning…':(names.length?'Ready — good luck!':'Add at least one name to begin.');
     if(!list)return;
-    list.innerHTML='<div class="device-empty">Reading folder…</div>';
-    var entries=[];
-    try{
-      for await (var entry of dir.values()) entries.push(entry);
-      entries.sort(function(a,b){if(a.kind!==b.kind)return a.kind==='directory'?-1:1;return a.name.localeCompare(b.name);});
-      deviceState.entries=entries;
-    }catch(e){
-      list.innerHTML='<div class="device-empty">This folder could not be read. The browser may not have permission.</div>';
-      return;
-    }
-    if(!entries.length){list.innerHTML='<div class="device-empty">This folder is empty.</div>';return;}
-    list.innerHTML=entries.map(function(entry,i){
-      var icon=entry.kind==='directory'?'📁':'📄';
-      var action=entry.kind==='directory'?'<button type="button" data-open-dir="'+i+'">Open</button>':'<button type="button" data-download-file="'+i+'">Download</button>';
-      return '<div class="device-file-item"><div class="device-file-main"><div class="device-file-icon">'+icon+'</div><div><div class="device-file-name">'+escapeHtml(entry.name)+'</div><div class="device-file-meta">'+(entry.kind==='directory'?'Folder':'File')+'</div></div></div><div class="device-file-actions">'+action+'</div></div>';
-    }).join('');
-    list.querySelectorAll('[data-open-dir]').forEach(function(btn){
-      btn.addEventListener('click',async function(){
-        var entry=deviceState.entries[Number(btn.getAttribute('data-open-dir'))];
-        if(!entry)return;
-        deviceState.stack.push(entry);
-        await renderDirectory(entry);
-      });
-    });
-    list.querySelectorAll('[data-download-file]').forEach(function(btn){
-      btn.addEventListener('click',async function(){
-        var entry=deviceState.entries[Number(btn.getAttribute('data-download-file'))];
-        if(!entry)return;
-        try{
-          var file=await entry.getFile();
-          var url=URL.createObjectURL(file);
-          var a=document.createElement('a');a.href=url;a.download=file.name;document.body.appendChild(a);a.click();a.remove();
-          setTimeout(function(){URL.revokeObjectURL(url);},1000);
-        }catch(e){alert('The browser could not read this file. Please grant access again.');}
-      });
-    });
+    if(!names.length){list.innerHTML='<div class="spinner-empty">No names yet. Add your first name above.</div>';draw();return;}
+    list.innerHTML=names.map(function(name,i){return '<div class="spinner-name"><span title="'+escapeHtml(name)+'">'+escapeHtml(name)+'</span><button class="spinner-remove" type="button" data-remove="'+i+'" aria-label="Remove '+escapeHtml(name)+'">×</button></div>';}).join('');
+    list.querySelectorAll('[data-remove]').forEach(function(btn){btn.addEventListener('click',function(){if(spinning)return;names.splice(Number(btn.getAttribute('data-remove')),1);save();renderNames();});});
+    draw();
   }
-  async function chooseStorage(){
-    try{
-      if(window.showDirectoryPicker){
-        var root=await window.showDirectoryPicker({mode:'read'});
-        deviceState.root=root;deviceState.current=root;deviceState.stack=[];
-        setStatus('connected','Storage selected');updateDeviceInfo();await renderDirectory(root);return;
-      }
-      var input=$('deviceStorageFallbackInput');
-      if(input){input.value='';input.click();}
-    }catch(e){
-      if(e&&e.name==='AbortError')return;
-      setStatus('error','Storage access failed');
-      var help=$('deviceStorageHelp');if(help)help.innerHTML='<b>Storage permission was not granted.</b> '+escapeHtml(e&&e.message?e.message:'Please try again.');
-    }
+  function escapeHtml(v){return String(v).replace(/[&<>'"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c];});}
+  function addName(){
+    if(spinning)return;
+    var input=$('spinnerNameInput'); if(!input)return;
+    var name=input.value.trim(); if(!name)return;
+    if(names.some(function(n){return n.toLowerCase()===name.toLowerCase();})){input.select();return;}
+    names.push(name);input.value='';save();renderNames();input.focus();
   }
-  async function detectUsb(){
-    if(!navigator.usb){
-      setStatus('warning','WebUSB not supported');updateDeviceInfo();
-      var help=$('deviceStorageHelp');if(help)help.innerHTML='<b>This browser does not expose WebUSB.</b> Use Chrome/Edge on a supported desktop and then choose Storage. Android USB mode still must be set to File Transfer on the phone.';
-      return;
-    }
-    try{
-      var devices=await navigator.usb.getDevices();
-      if(!devices.length){
-        var chosen=await navigator.usb.requestDevice({filters:[]});
-        devices=[chosen];
-      }
-      deviceState.device=devices[0];
-      setStatus('connected','USB device detected');updateDeviceInfo();
-      var help=$('deviceStorageHelp');if(help)help.innerHTML='<b>Device detected.</b> If this is your Android phone/tablet, you still need to select <b>File Transfer</b> on the device before its storage can be exposed to Windows/browser file pickers.';
-    }catch(e){
-      if(e&&e.name==='NotFoundError')return;
-      setStatus('error','USB detection failed');updateDeviceInfo();
-    }
+  function spin(){
+    if(spinning||!names.length)return;
+    spinning=true;renderNames();
+    var winnerIndex=Math.floor(Math.random()*names.length);
+    var winner=names[winnerIndex];
+    var segment=360/names.length;
+    var target=360-(winnerIndex*segment+segment/2);
+    var current=((rotation%360)+360)%360;
+    var delta=((target-current)+360)%360;
+    rotation+=360*6+delta;
+    var wheel=$('spinnerWheel');
+    if(wheel){wheel.style.transform='rotate('+rotation+'deg)';}
+    var result=$('spinnerResult');if(result)result.innerHTML='Spinning…<strong>Good luck!</strong>';
+    setTimeout(function(){
+      names.splice(winnerIndex,1);save();spinning=false;
+      if(result)result.innerHTML='🎉 WINNER<strong>'+escapeHtml(winner)+'</strong>';
+      renderNames();
+    },4650);
   }
-  function goRoot(){if(deviceState.root){deviceState.stack=[];renderDirectory(deviceState.root);}}
-  function goIndex(index){
-    if(!deviceState.root)return;
-    var dir=deviceState.root;
-    var next=[];
-    for(var i=0;i<=index;i++){dir=deviceState.stack[i];next.push(deviceState.stack[i]);}
-    deviceState.stack=next;renderDirectory(dir);
+  function clearAll(){
+    if(spinning)return;
+    if(!names.length)return;
+    if(!confirm('Clear all names from the spinner?'))return;
+    names=[];save();rotation=0;var wheel=$('spinnerWheel');if(wheel)wheel.style.transform='rotate(0deg)';var result=$('spinnerResult');if(result)result.innerHTML='Ready to spin.<strong>Choose a name</strong>';renderNames();
   }
-  function clearStorage(){deviceState.root=null;deviceState.current=null;deviceState.stack=[];deviceState.entries=[];$('deviceStorageFileList').innerHTML='<div class="device-empty">No storage folder selected yet.</div>';$('deviceStorageRootName').textContent='';setStatus('warning','Not detected');updateDeviceInfo();}
-  window.du3dDeviceStorageGoRoot=goRoot;
-  window.du3dDeviceStorageGoIndex=goIndex;
-  window.du3dRefreshDeviceStorage=async function(){
-    if(deviceState.current)await renderDirectory(deviceState.current);
-    else await detectUsb();
-  };
   document.addEventListener('DOMContentLoaded',function(){
-    var d=$('deviceStorageDetectButton'), c=$('deviceStorageChooseButton'), r=$('deviceStorageRefreshButton'), x=$('deviceStorageClearButton'), input=$('deviceStorageFallbackInput');
-    if(d)d.addEventListener('click',detectUsb);
-    if(c)c.addEventListener('click',chooseStorage);
-    if(r)r.addEventListener('click',window.du3dRefreshDeviceStorage);
-    if(x)x.addEventListener('click',clearStorage);
-    if(input)input.addEventListener('change',function(){
-      if(!input.files.length)return;
-      setStatus('connected','Files selected');
-      $('deviceStorageDeviceName').textContent='Browser file selection';
-      $('deviceStorageUsbStatus').textContent='Not directly detected';
-      $('deviceStorageAccessStatus').textContent=input.files.length+' file(s) granted';
-      var list=$('deviceStorageFileList');
-      list.innerHTML=Array.from(input.files).map(function(f){return '<div class="device-file-item"><div class="device-file-main"><div class="device-file-icon">📄</div><div><div class="device-file-name">'+escapeHtml(f.webkitRelativePath||f.name)+'</div><div class="device-file-meta">'+humanSize(f.size)+'</div></div></div></div>';}).join('');
-    });
-    if(navigator.usb){
-      navigator.usb.addEventListener('connect',function(){setStatus('connected','USB connected');});
-      navigator.usb.addEventListener('disconnect',function(){if(!deviceState.device){setStatus('warning','USB disconnected');}updateDeviceInfo();});
-    }
+    load();renderNames();
+    var add=$('spinnerAddButton'),spin=$('spinnerSpinButton'),clear=$('spinnerClearButton'),input=$('spinnerNameInput');
+    if(add)add.addEventListener('click',addName);
+    if(spin)spin.addEventListener('click',spin);
+    if(clear)clear.addEventListener('click',clearAll);
+    if(input)input.addEventListener('keydown',function(e){if(e.key==='Enter')addName();});
   });
 })();
 
