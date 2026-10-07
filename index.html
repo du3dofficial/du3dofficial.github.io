@@ -555,6 +555,17 @@
       #du3dTopBar{margin:0 0 12px}
     }
 
+
+    /* PUBLIC FILE MANAGER */
+    .public-file-item{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 14px;border:1px solid rgba(90,130,190,.25);border-radius:10px;background:rgba(5,12,24,.72)}
+    .public-file-main{min-width:0;flex:1}
+    .public-file-name{font-weight:800;color:#fff;overflow-wrap:anywhere}
+    .public-file-meta{margin-top:4px;color:#8ea5c3;font-size:11px}
+    .public-file-actions{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end;flex-shrink:0}
+    .public-file-actions button,.public-file-actions a{padding:8px 10px;border-radius:7px;border:1px solid rgba(90,130,190,.35);background:#071426;color:#fff;text-decoration:none;cursor:pointer;font-size:11px;font-weight:800}
+    .public-file-actions a:hover,.public-file-actions button:hover{background:#0b2546}
+    @media(max-width:650px){.public-file-item{align-items:flex-start;flex-direction:column}.public-file-actions{width:100%;justify-content:flex-start}}
+
     /* CHESS */
     #chessGame{
       width:100%;
@@ -1641,10 +1652,12 @@
 /* =========================================================
    DU3D API CONNECTION
    PRIMARY: Cloudflare Worker
-   BACKUP: Laptop Cloudflare Tunnel
+   BACKUP: DU3D Laptop Cloudflare Tunnel
 ========================================================= */
 window.DU3D_API_URL='https://du3d-api.newjer53.workers.dev';
 window.DU3D_API_BACKUP_URL='https://modelling-started-true-authentic.trycloudflare.com/api';
+// Public files are served directly from the DU3D laptop through the same Cloudflare Tunnel.
+window.DU3D_PUBLIC_FILES_URL='https://modelling-started-true-authentic.trycloudflare.com/files';
 (function(){
   var PRIMARY_COOLDOWN_MS=15000;
   var primaryDownUntil=0;
@@ -1978,8 +1991,17 @@ button[onclick*="showAdminLogin"] { display:none !important; }
 </div><div class="admin-row">
 <h3>📋 SAVED VIDEOS</h3>
 <div class="admin-list" id="adminList">Loading...</div>
-</div></div></div><div class="admin-accordion" id="adminSectionPosts"><button class="admin-accordion-title" onclick="toggleAdminAccordion('adminSectionPosts')" type="button">2  📝 POSTS UPDATE</button><div class="admin-accordion-body"><div class="admin-row admin-post-form">
-<h3 class="admin-section-title"><span class="admin-section-number">2</span> 📝 POSTS UPDATE</h3>
+</div></div></div><div class="admin-accordion" id="adminSectionPublicFiles"><button class="admin-accordion-title" onclick="toggleAdminAccordion('adminSectionPublicFiles')" type="button">2  📁 PUBLIC FILES</button><div class="admin-accordion-body"><div class="admin-row">
+<h3 class="admin-section-title"><span class="admin-section-number">2</span> 📁 PUBLIC FILES</h3>
+<small>Files inside your laptop's <b>public_files</b> folder appear here. Generate a public link for each file without uploading the file to GitHub or Google Drive.</small>
+<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;">
+<button class="primary" id="refreshPublicFilesButton" onclick="loadPublicFiles()" style="margin-top:0" type="button">🔄 REFRESH FILES</button>
+<button class="danger" onclick="copyPublicFilesFolderHint()" style="margin-top:0" type="button">📁 FOLDER INFO</button>
+</div>
+<div class="message" id="publicFilesMessage"></div>
+<div class="admin-list" id="publicFilesList"><div class="empty">Loading public files...</div></div>
+</div></div></div><div class="admin-accordion" id="adminSectionPosts"><button class="admin-accordion-title" onclick="toggleAdminAccordion('adminSectionPosts')" type="button">3  📝 POSTS UPDATE</button><div class="admin-accordion-body"><div class="admin-row admin-post-form">
+<h3 class="admin-section-title"><span class="admin-section-number">3</span> 📝 POSTS UPDATE</h3>
 <small>Posts Update controls the newest posts shown on Home. The newest update appears at the top; the Home Headline stays separately in the upper section.</small>
 <textarea id="newPostText" maxlength="5000" placeholder="Write a new Posts Update here..."></textarea>
 <input id="newPostYoutube" maxlength="500" placeholder="Optional YouTube link — https://www.youtube.com/watch?v=..." style="margin-top:8px;width:100%;padding:11px 12px;border-radius:8px;border:1px solid rgba(255,80,90,.35);background:#130407;color:#fff;outline:none;" type="url"/>
@@ -1992,8 +2014,8 @@ button[onclick*="showAdminLogin"] { display:none !important; }
 </div><div class="admin-row">
 <h3>📋 SAVED POSTS UPDATES</h3>
 <div class="admin-list" id="adminPostList">Loading...</div>
-</div></div></div><div class="admin-accordion" id="adminSectionAbout"><button class="admin-accordion-title" onclick="toggleAdminAccordion('adminSectionAbout')" type="button">3  👤 EDIT ABOUT ME</button><div class="admin-accordion-body"><div class="admin-row about-admin-form">
-<h3 class="admin-section-title"><span class="admin-section-number">3</span> 👤 EDIT ABOUT ME</h3>
+</div></div></div><div class="admin-accordion" id="adminSectionAbout"><button class="admin-accordion-title" onclick="toggleAdminAccordion('adminSectionAbout')" type="button">4  👤 EDIT ABOUT ME</button><div class="admin-accordion-body"><div class="admin-row about-admin-form">
+<h3 class="admin-section-title"><span class="admin-section-number">4</span> 👤 EDIT ABOUT ME</h3>
 <small>Edit the About Me details shown on the public About Me page. Your changes are saved to the website.</small>
 <textarea class="about-admin-textarea" id="aboutDetailsInput" maxlength="5000" placeholder="Write your About Me details..."></textarea>
 <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;">
@@ -2001,8 +2023,8 @@ button[onclick*="showAdminLogin"] { display:none !important; }
 <button class="danger" id="cancelAboutButton" onclick="loadAboutIntoAdmin()" style="display:none" type="button">CANCEL</button>
 </div>
 <div class="message" id="aboutAdminMessage"></div>
-</div></div></div><div class="admin-accordion" id="adminSectionHeadline"><button class="admin-accordion-title" onclick="toggleAdminAccordion('adminSectionHeadline')" type="button">4  ✨ CUSTOMIZE HOME HEADLINE</button><div class="admin-accordion-body"><div class="admin-row">
-<h3 class="admin-section-title"><span class="admin-section-number">4</span> ✨ CUSTOMIZE HOME HEADLINE</h3>
+</div></div></div><div class="admin-accordion" id="adminSectionHeadline"><button class="admin-accordion-title" onclick="toggleAdminAccordion('adminSectionHeadline')" type="button">5  ✨ CUSTOMIZE HOME HEADLINE</button><div class="admin-accordion-body"><div class="admin-row">
+<h3 class="admin-section-title"><span class="admin-section-number">5</span> ✨ CUSTOMIZE HOME HEADLINE</h3>
 <small>This is the permanent headline displayed in the upper part of Home. It is separate from Posts Update, which contains the newest posts.</small>
 <input id="homeHeadlineInput" maxlength="120" placeholder="Home headline — e.g. DU3D OFFICIAL" style="margin-top:10px" type="text"/>
 <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;">
@@ -2010,8 +2032,8 @@ button[onclick*="showAdminLogin"] { display:none !important; }
 <button class="danger" onclick="resetHomeHeadline()" style="margin-top:0" type="button">RESET</button>
 </div>
 <div class="message" id="homeHeadlineMessage"></div>
-</div></div></div><div class="admin-accordion" id="adminSectionLinks"><button class="admin-accordion-title" onclick="toggleAdminAccordion('adminSectionLinks')" type="button">5  🔗 CUSTOM MY LINKS</button><div class="admin-accordion-body"><div class="admin-row">
-<h3 class="admin-section-title"><span class="admin-section-number">5</span> 🔗 CUSTOM MY LINKS</h3>
+</div></div></div><div class="admin-accordion" id="adminSectionLinks"><button class="admin-accordion-title" onclick="toggleAdminAccordion('adminSectionLinks')" type="button">6  🔗 CUSTOM MY LINKS</button><div class="admin-accordion-body"><div class="admin-row">
+<h3 class="admin-section-title"><span class="admin-section-number">6</span> 🔗 CUSTOM MY LINKS</h3>
 <small>Add your own link name and URL. It will appear automatically under MY LINKS.</small>
 <input id="customLinkName" maxlength="60" placeholder="Link name — e.g. TikTok" style="margin-top:10px" type="text"/>
 <input id="customLinkUrl" maxlength="2000" placeholder="Link URL — https://..." style="margin-top:8px" type="url"/>
@@ -2020,7 +2042,7 @@ button[onclick*="showAdminLogin"] { display:none !important; }
 </div>
 <div class="message" id="customLinkMessage"></div>
 <div class="admin-list" id="customLinksAdminList" style="margin-top:10px"></div>
-</div></div></div><div class="admin-accordion" id="adminSectionAvatars"><button class="admin-accordion-title" onclick="toggleAdminAccordion('adminSectionAvatars')" type="button">6  🧑‍🎨 USER AVATARS</button><div class="admin-accordion-body"><div class="admin-row">
+</div></div></div><div class="admin-accordion" id="adminSectionAvatars"><button class="admin-accordion-title" onclick="toggleAdminAccordion('adminSectionAvatars')" type="button">7  🧑‍🎨 USER AVATARS</button><div class="admin-accordion-body"><div class="admin-row">
 <h3>🧑‍🎨 UPLOAD USER AVATAR</h3><small>Users cannot upload their own profile images. Only avatars uploaded here by DU3D can be chosen by users.</small>
 <input id="userAvatarName" maxlength="40" placeholder="Avatar name — e.g. Warrior" type="text"/>
 <input id="userAvatarFile" accept="image/png,image/jpeg,image/webp,image/gif" style="margin-top:8px" type="file"/>
@@ -3664,6 +3686,7 @@ function loadAdmin(){
       };
 
       renderAdminList();
+      loadPublicFiles();
       renderAdminPosts();
       renderAbout();
       loadAboutIntoAdmin();
