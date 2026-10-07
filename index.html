@@ -7229,9 +7229,75 @@ function getServerError(err){
   }
 
 
+  /* =====================================================
+     DU3D OPENING STRATEGIES
+     RED  = Sicilian-style counterplay
+     BLUE = Queen's Gambit / QGD-style structure
+     The opening is a preference, not a forced script: tactical safety,
+     king safety and material always remain more important.
+     ===================================================== */
+
+  function du3dOpeningStrategyScore(move){
+    if(chessMode!=="ai" || !move || game.turn()!=="b") return 0;
+
+    const aiColor=getAiDisplayColor();
+    const history=game.history({verbose:true}) || [];
+    const ply=history.length;
+    if(ply>10) return 0;
+
+    let score=0;
+    const from=move.from, to=move.to;
+
+    // RED DU3D: Sicilian Defense — answer 1.e4 with ...c5 and
+    // continue with flexible Sicilian development instead of grabbing pawns.
+    if(aiColor==="red"){
+      const whiteFirst=history.length>=1 && history[0].color==="w" && history[0].from==="e2" && history[0].to==="e4";
+      if(whiteFirst){
+        if(from==="c7" && to==="c5") score+=9000;
+        if(from==="g8" && to==="f6") score+=2200;
+        if(from==="d7" && to==="d6") score+=2100;
+        if(from==="e7" && to==="e6") score+=1900;
+        if(from==="b8" && to==="c6") score+=1500;
+      }
+      // After ...c5, favor natural Sicilian development when available.
+      const playedC5=history.some(function(m){ return m.color==="b" && m.from==="c7" && m.to==="c5"; });
+      if(playedC5){
+        if(from==="g8" && to==="f6") score+=3200;
+        if(from==="d7" && to==="d6") score+=3000;
+        if(from==="e7" && to==="e6") score+=2600;
+        if(from==="b8" && to==="c6") score+=2200;
+      }
+    }
+
+    // BLUE DU3D: Queen's Gambit structure from Black's side.
+    // Since DU3D currently plays Black internally, this means it answers
+    // 1.d4 with ...d5 and then builds a Queen's Gambit Declined-style setup
+    // after c4, rather than pretending Black can make White's 2.c4 move.
+    if(aiColor==="blue"){
+      const whiteD4=history.length>=1 && history[0].color==="w" && history[0].from==="d2" && history[0].to==="d4";
+      if(whiteD4){
+        if(from==="d7" && to==="d5") score+=9000;
+        if(from==="g8" && to==="f6") score+=1700;
+        if(from==="e7" && to==="e6") score+=1500;
+      }
+      const whiteC4=history.some(function(m){ return m.color==="w" && m.from==="c2" && m.to==="c4"; });
+      const blackD5=history.some(function(m){ return m.color==="b" && m.from==="d7" && m.to==="d5"; });
+      if(whiteC4 && blackD5){
+        if(from==="e7" && to==="e6") score+=4200;
+        if(from==="g8" && to==="f6") score+=3600;
+        if(from==="c7" && to==="c6") score+=2500;
+        if(from==="f8" && to==="e7") score+=2200;
+      }
+    }
+
+    return score;
+  }
+
   function movePriority(move,depth){
 
     let score=0;
+
+    score+=du3dOpeningStrategyScore(move);
 
 
     /* Captures: MVV-LVA */
