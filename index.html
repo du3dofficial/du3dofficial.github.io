@@ -7,6 +7,31 @@
 <meta content="#080204" name="theme-color"/>
 <meta content="DU3D OFFICIAL — MCGG CHESSBOARD, Chess, Gallery and Community." name="description"/>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
+
+	<script>
+	window.DU3D_API_BACKUP_URL = '';
+	window.DU3D_PUBLIC_FILES_URL = '';
+
+	fetch('tunnel.json?t=' + Date.now(), {
+	  cache: 'no-store'
+	})
+	.then(function(response) {
+	  if (!response.ok) {
+		throw new Error('tunnel.json not found');
+	  }
+	  return response.json();
+	})
+	.then(function(config) {
+	  window.DU3D_API_BACKUP_URL = config.apiUrl || '';
+	  window.DU3D_PUBLIC_FILES_URL = config.publicFilesUrl || '';
+
+	  console.log('DU3D tunnel loaded:', config.tunnelUrl);
+	})
+	.catch(function(error) {
+	  console.error('Could not load tunnel.json:', error);
+	});
+	</script>
 <style>
     *{box-sizing:border-box}
     :root{
@@ -444,10 +469,6 @@
     }
     .video-options button:hover{background:rgba(255,50,60,.12)}
     .video-options .remove-option{color:#ff858d}
-    .public-file-options-wrap{position:relative;flex-shrink:0}
-    .public-file-more{width:36px;height:36px;padding:0;font-size:22px;line-height:1;display:inline-flex;align-items:center;justify-content:center}
-    .public-file-options{right:0;top:calc(100% + 6px);min-width:145px}
-    .public-file-options button{text-align:left}
     .add-video-form{margin-bottom:18px}
     #addVideoButton{background:#082a5c !important;border-color:#12447f !important;color:#fff !important}
     #addVideoButton:hover{background:#0b3b7d !important;border-color:#1b5da8 !important}
@@ -1659,9 +1680,9 @@
    BACKUP: DU3D Laptop Cloudflare Tunnel
 ========================================================= */
 window.DU3D_API_URL='https://du3d-api.newjer53.workers.dev';
-window.DU3D_API_BACKUP_URL='https://scanning-atmosphere-melbourne-messenger.trycloudflare.com/api';
+window.DU3D_API_BACKUP_URL='https://modelling-started-true-authentic.trycloudflare.com/api';
 // Public files are served directly from the DU3D laptop through the same Cloudflare Tunnel.
-window.DU3D_PUBLIC_FILES_URL='https://talent-queries-cabinets-springer.trycloudflare.com/files';
+
 (function(){
   var PRIMARY_COOLDOWN_MS=15000;
   var primaryDownUntil=0;
@@ -1998,6 +2019,10 @@ button[onclick*="showAdminLogin"] { display:none !important; }
 </div></div></div><div class="admin-accordion" id="adminSectionPublicFiles"><button class="admin-accordion-title" onclick="toggleAdminAccordion('adminSectionPublicFiles')" type="button">2  📁 PUBLIC FILES</button><div class="admin-accordion-body"><div class="admin-row">
 <h3 class="admin-section-title"><span class="admin-section-number">2</span> 📁 PUBLIC FILES</h3>
 <small>Files inside your laptop's <b>public_files</b> folder appear here. Generate a public link for each file without uploading the file to GitHub or Google Drive.</small>
+<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;">
+<button class="primary" id="refreshPublicFilesButton" onclick="loadPublicFiles()" style="margin-top:0" type="button">🔄 REFRESH FILES</button>
+<button class="danger" onclick="copyPublicFilesFolderHint()" style="margin-top:0" type="button">📁 FOLDER INFO</button>
+</div>
 <div class="message" id="publicFilesMessage"></div>
 <div class="admin-list" id="publicFilesList"><div class="empty">Loading public files...</div></div>
 </div></div></div><div class="admin-accordion" id="adminSectionPosts"><button class="admin-accordion-title" onclick="toggleAdminAccordion('adminSectionPosts')" type="button">3  📝 POSTS UPDATE</button><div class="admin-accordion-body"><div class="admin-row admin-post-form">
@@ -3051,10 +3076,9 @@ function submitAuth(){
 function toggleAdminAccordion(id){
   const box=document.getElementById(id);
   if(!box) return;
-  // Each admin section is independent. Opening one section must NOT
-  // automatically hide any other section. The admin manually opens
-  // and closes each section with its own title button.
-  box.classList.toggle('open');
+  const opening=!box.classList.contains('open');
+  document.querySelectorAll('.admin-accordion.open').forEach(function(el){ if(el!==box) el.classList.remove('open'); });
+  box.classList.toggle('open',opening);
 }
 function closeAllAdminAccordions(){
   document.querySelectorAll('.admin-accordion.open').forEach(function(el){ el.classList.remove('open'); });
@@ -3673,133 +3697,6 @@ function clearAdminSession(){
    ADMIN DATA
    ========================================================= */
 
-/* =========================================================
-   LAPTOP PUBLIC FILE MANAGER
-   Loads only inside the admin panel. Never blocks admin data loading.
-========================================================= */
-let publicFilesLoading=false;
-let publicFilesAutoRefreshTimer=null;
-let publicFilesAutoRefreshStarted=false;
-const PUBLIC_FILES_AUTO_REFRESH_MS=5000;
-
-function loadPublicFiles(options){
-  options=options||{};
-  const list=document.getElementById('publicFilesList');
-  const msg=document.getElementById('publicFilesMessage');
-  if(!list || publicFilesLoading) return;
-
-  const base=String(window.DU3D_PUBLIC_FILES_URL||'').replace(/\/$/,'');
-  if(!base){
-    list.innerHTML='<div class="empty">Public file server is not configured.</div>';
-    if(msg) msg.textContent='';
-    return;
-  }
-
-  const silent=!!options.silent;
-  publicFilesLoading=true;
-  if(!silent) list.innerHTML='<div class="empty">Loading public files...</div>';
-  if(!silent && msg) msg.textContent='';
-
-  const controller=new AbortController();
-  const timer=setTimeout(function(){ controller.abort(); },8000);
-
-  fetch(base+'?list=1&ts='+Date.now(),{
-    method:'GET',
-    cache:'no-store',
-    signal:controller.signal
-  })
-  .then(function(response){
-    if(!response.ok) throw new Error('HTTP '+response.status);
-    return response.json();
-  })
-  .then(function(data){
-    const files=data && Array.isArray(data.files) ? data.files : [];
-    if(!files.length){
-      list.innerHTML='<div class="empty">No files found in public_files.</div>';
-      return;
-    }
-    if(!files.length){
-      if(!silent || !list.querySelector('.admin-list-item')) {
-        list.innerHTML='<div class="empty">No files found in public_files.</div>';
-      }
-      return;
-    }
-    list.innerHTML=files.map(function(file,fileIndex){
-      const rel=String(file.path||file.name||'');
-      const link=base+'/'+rel.split('/').map(encodeURIComponent).join('/');
-      const size=Number(file.size)||0;
-      let sizeText=size<1024 ? size+' B' : size<1024*1024 ? (size/1024).toFixed(1)+' KB' : (size/1024/1024).toFixed(1)+' MB';
-      return '<div class="admin-list-item" style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap">'
-        +'<div style="min-width:0;flex:1"><strong style="word-break:break-word">'+escapeHtml(rel)+'</strong>'
-        +'<div class="admin-video-meta">'+sizeText+(file.modified?' • '+escapeHtml(formatDate(file.modified)):'')+'</div></div>'
-        +'<div class="public-file-options-wrap">'
-        +'<button class="options-button public-file-more" type="button" aria-label="File options" onclick="togglePublicFileMenu(\'public-file-menu-'+fileIndex+'\',event)">⋮</button>'
-        +'<div class="video-options public-file-options" id="public-file-menu-'+fileIndex+'" style="display:none">'
-        +'<button type="button" onclick="window.open(\''+escapeJs(link)+'\',\'_blank\');closePublicFileMenus()">OPEN</button>'
-        +'<button type="button" onclick="copyPublicFileLink(\''+escapeJs(link)+'\');closePublicFileMenus()">🔗 COPY LINK</button>'
-        +'</div></div></div>';
-    }).join('');
-  })
-  .catch(function(err){
-    const isTimeout=err && err.name==='AbortError';
-    if(!silent){
-      list.innerHTML='<div class="empty">Could not load public files.</div>';
-      if(msg) msg.textContent=isTimeout ? 'Laptop file server did not respond within 8 seconds.' : 'File server error: '+String(err && err.message || err);
-    }
-  })
-  .finally(function(){
-    clearTimeout(timer);
-    publicFilesLoading=false;
-  });
-}
-
-
-function startPublicFilesAutoRefresh(){
-  if(publicFilesAutoRefreshStarted) return;
-  publicFilesAutoRefreshStarted=true;
-
-  // Refresh while the PUBLIC FILES panel exists, even when it is currently
-  // hidden. This keeps the next manual opening instantly up to date.
-  loadPublicFiles({silent:true});
-
-  publicFilesAutoRefreshTimer=setInterval(function(){
-    loadPublicFiles({silent:true});
-  },PUBLIC_FILES_AUTO_REFRESH_MS);
-
-  document.addEventListener('visibilitychange',function(){
-    if(!document.hidden) loadPublicFiles({silent:true});
-  });
-}
-
-function closePublicFileMenus(){
-  document.querySelectorAll('.public-file-options').forEach(function(menu){ menu.style.display='none'; });
-}
-
-function togglePublicFileMenu(menuId,event){
-  if(event) event.stopPropagation();
-  const menu=document.getElementById(menuId);
-  if(!menu) return;
-  const opening=menu.style.display!=='block';
-  closePublicFileMenus();
-  if(opening) menu.style.display='block';
-}
-
-document.addEventListener('click',function(){ closePublicFileMenus(); });
-
-function copyPublicFileLink(link){
-  link=String(link||'');
-  if(!link) return;
-  if(navigator.clipboard && navigator.clipboard.writeText){
-    navigator.clipboard.writeText(link).then(function(){
-      const msg=document.getElementById('publicFilesMessage');
-      if(msg) msg.textContent='Public link copied.';
-    }).catch(function(){ prompt('Copy public link:',link); });
-  }else{
-    prompt('Copy public link:',link);
-  }
-}
-
-
 function loadAdmin(){
 
   if(!adminToken) return;
@@ -3814,6 +3711,7 @@ function loadAdmin(){
       };
 
       renderAdminList();
+      loadPublicFiles();
       renderAdminPosts();
       renderAbout();
       loadAboutIntoAdmin();
@@ -7993,7 +7891,6 @@ loadCurrentUser();
 
 loadSite();
 startLiveCommentSync();
-startPublicFilesAutoRefresh();
 
 /*
  * Start on gallery.
