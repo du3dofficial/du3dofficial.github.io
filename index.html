@@ -7,27 +7,7 @@
 <meta content="#080204" name="theme-color"/>
 <meta content="DU3D OFFICIAL — MCGG CHESSBOARD, Chess, Gallery and Community." name="description"/>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
-	window.DU3D_API_BACKUP_URL = '';
-	window.DU3D_PUBLIC_FILES_URL = '';
 
-	fetch('tunnel.json?t=' + Date.now(), {
-	  cache: 'no-store'
-	})
-	.then(function(response) {
-	  if (!response.ok) {
-		throw new Error('tunnel.json not found');
-	  }
-	  return response.json();
-	})
-	.then(function(config) {
-	  window.DU3D_API_BACKUP_URL = config.apiUrl || '';
-	  window.DU3D_PUBLIC_FILES_URL = config.publicFilesUrl || '';
-
-	  console.log('DU3D tunnel loaded:', config.tunnelUrl);
-	})
-	.catch(function(error) {
-	  console.error('Could not load tunnel.json:', error);
-	});
 <style>
     *{box-sizing:border-box}
     :root{
