@@ -4249,12 +4249,7 @@ function loadPublicFiles(options){
       return '<div class="admin-list-item" style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap">'
         +'<div style="min-width:0;flex:1"><strong style="word-break:break-word">'+escapeHtml(rel)+'</strong>'
         +'<div class="admin-video-meta">'+sizeText+(file.modified?' • '+escapeHtml(formatDate(file.modified)):'')+'</div></div>'
-        +'<div class="public-file-options-wrap">'
-        +'<button class="options-button public-file-more" type="button" aria-label="File options" onclick="togglePublicFileMenu(\'public-file-menu-'+fileIndex+'\',event)">⋮</button>'
-        +'<div class="video-options public-file-options" id="public-file-menu-'+fileIndex+'" style="display:none">'
-        +'<button type="button" onclick="window.open(\''+escapeJs(link)+'\',\'_blank\');closePublicFileMenus()">OPEN</button>'
-        +'<button type="button" onclick="copyPublicFileLink(\''+escapeJs(link)+'\');closePublicFileMenus()">🔗 COPY LINK</button>'
-        +'</div></div></div>';
+        +'<button class="options-button" type="button" onclick="copyPublicFileLink(\''+escapeJs(link)+'\')">🔗 COPY LINK</button></div>';
     }).join('');
   })
   .catch(function(err){
