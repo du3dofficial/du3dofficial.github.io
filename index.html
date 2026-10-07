@@ -198,7 +198,7 @@
     .spinner-wheel canvas{width:100%;height:100%;display:block;border-radius:50%}
     .spinner-pointer{position:absolute;top:0;left:50%;transform:translateX(-50%);z-index:5;width:0;height:0;border-left:17px solid transparent;border-right:17px solid transparent;border-top:34px solid #fff;filter:drop-shadow(0 4px 8px rgba(0,0,0,.75))}
     .spinner-pointer:after{content:"";position:absolute;left:-9px;top:-31px;width:18px;height:18px;border-radius:50%;background:#ff3d4d;box-shadow:0 0 18px rgba(255,50,65,.9)}
-    .spinner-center{position:absolute;z-index:4;width:82px;height:82px;border-radius:50%;display:grid;place-items:center;background:radial-gradient(circle at 35% 30%,#ff6671,#a80e1b 60%,#43050a);border:6px solid #120204;box-shadow:0 5px 18px rgba(0,0,0,.65),0 0 20px rgba(255,35,50,.35);color:#fff;font-size:12px;font-weight:1000;letter-spacing:1px;text-align:center;pointer-events:none;overflow:hidden}
+    .spinner-center{position:absolute;z-index:4;width:82px;height:82px;border-radius:50%;display:grid;place-items:center;background:radial-gradient(circle at 35% 30%,#ff6671,#a80e1b 60%,#43050a);border:6px solid #120204;box-shadow:0 5px 18px rgba(0,0,0,.65),0 0 20px rgba(255,35,50,.35);color:#fff;font-size:12px;font-weight:1000;letter-spacing:1px;text-align:center;cursor:pointer;overflow:hidden;transition:transform .16s ease,filter .16s ease,box-shadow .16s ease}.spinner-center:hover{transform:scale(1.06);filter:brightness(1.12);box-shadow:0 5px 18px rgba(0,0,0,.65),0 0 28px rgba(255,45,60,.55)}.spinner-center:active{transform:scale(.96)}.spinner-center:focus-visible{outline:3px solid rgba(255,255,255,.9);outline-offset:4px}.spinner-center.disabled{cursor:not-allowed;opacity:.72;filter:grayscale(.2)}.spinner-center.disabled:hover{transform:none;filter:grayscale(.2);box-shadow:0 5px 18px rgba(0,0,0,.65),0 0 20px rgba(255,35,50,.35)}
     .spinner-center img{width:100%;height:100%;object-fit:cover;border-radius:50%;display:none}.spinner-center .spinner-avatar-fallback{}
     .spinner-center span{position:absolute;inset:0;display:grid;place-items:center;font-size:30px}
     .spinner-result{min-height:52px;margin-top:12px;padding:12px 15px;border-radius:12px;text-align:center;border:1px solid rgba(255,70,80,.22);background:rgba(255,255,255,.035);color:#f3c8cc;font-weight:800}
@@ -1967,7 +1967,7 @@ button[onclick*="showAdminLogin"] { display:none !important; }
         <div class="spinner-wheel-wrap">
           <div class="spinner-pointer"></div>
           <div class="spinner-wheel" id="spinnerWheel"><canvas id="spinnerCanvas" width="700" height="700"></canvas></div>
-          <div class="spinner-center" id="spinnerCenter" aria-label="User profile"><img id="spinnerAvatar" alt="User profile avatar"><span id="spinnerAvatarFallback">👤</span></div>
+          <div class="spinner-center" id="spinnerCenter" role="button" tabindex="0" aria-label="Spin the wheel" aria-disabled="true" title="Add names to enable spin"><img id="spinnerAvatar" alt="User profile avatar"><span id="spinnerAvatarFallback">👤</span></div>
         </div>
         <div class="spinner-result" id="spinnerResult">Ready to spin.<strong>Choose a name</strong></div>
       </div>
@@ -2314,6 +2314,13 @@ function syncAdminSession(){ adminToken=(window.du3dUserToken && window.du3dCurr
     if(count)count.textContent=names.length;
     if(pickedCount)pickedCount.textContent=pickedNames.length;
     if(spin)spin.disabled=spinning||names.length===0;
+    var center=$('spinnerCenter');
+    if(center){
+      var centerDisabled=spinning||names.length===0;
+      center.classList.toggle('disabled',centerDisabled);
+      center.setAttribute('aria-disabled',centerDisabled?'true':'false');
+      center.title=centerDisabled?(spinning?'Wheel is spinning…':'Add names to enable spin'):'Click the profile to spin the wheel';
+    }
     if(status)status.textContent=spinning?'The wheel is spinning…':(names.length?'Ready — good luck!':'Add at least one name to begin.');
     if(list){
       if(!names.length)list.innerHTML='<div class="spinner-empty">No names yet. Add your first name above.</div>';
@@ -2443,6 +2450,11 @@ function syncAdminSession(){ adminToken=(window.du3dUserToken && window.du3dCurr
     if(add)add.addEventListener('click',addName);
     if(spinButton)spinButton.addEventListener('click',spin);
     if(clear)clear.addEventListener('click',clearAll);
+    var center=$('spinnerCenter');
+    if(center){
+      center.addEventListener('click',function(){if(!spinning&&names.length)spin();});
+      center.addEventListener('keydown',function(e){if((e.key==='Enter'||e.key===' ')&&!spinning&&names.length){e.preventDefault();spin();}});
+    }
     if(input)input.addEventListener('keydown',function(e){if(e.key==='Enter')addName();});
   });
 })();
