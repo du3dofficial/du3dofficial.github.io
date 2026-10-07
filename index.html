@@ -1793,6 +1793,21 @@
 </style>
 <script>
 /* =========================================================
+   DU3D GLOBAL SITE DATA
+   Always defined before any function can use it.
+========================================================= */
+let siteData = {
+  videos: [],
+  downloads: {},
+  posts: [],
+  comments: {},
+  avatarChoices: [],
+  customLinks: [],
+  backgroundMusic: {},
+  aboutMe: {details: ''}
+};
+
+/* =========================================================
    DU3D API CONNECTION
    PRIMARY: Cloudflare Worker
    BACKUP: DU3D Laptop Cloudflare Tunnel
@@ -1826,6 +1841,12 @@ window.DU3D_API_BACKUP_URL='https://scanning-atmosphere-melbourne-messenger.tryc
   }
   function requestApi(url,methodName,args,timeoutMs){
     return new Promise(function(resolve,reject){
+      if(!url){
+        var missing=new Error('DU3D API endpoint is not configured.');
+        missing.du3dRetryable=false;
+        reject(missing);
+        return;
+      }
       var controller=new AbortController();
       var done=false;
       var timer=setTimeout(function(){if(!done)controller.abort();},timeoutMs);
@@ -2324,54 +2345,65 @@ function hideDu3dSiteLoader(){
 // Keep the first-open loader very short; backend loading continues in the background.
 setTimeout(hideDu3dSiteLoader,250);
 
-function loadSite(){
+function du3dLoadCachedSiteData(){
+  try{
+    const raw=localStorage.getItem('du3d_site_data_cache');
+    if(!raw) return false;
+    const cached=JSON.parse(raw);
+    if(!cached || typeof cached!=='object') return false;
+    siteData=Object.assign({videos:[],downloads:{},posts:[],comments:{},avatarChoices:[],customLinks:[],backgroundMusic:{},aboutMe:{details:''}},cached);
+    renderHome();
+    renderGallery();
+    renderAbout();
+    renderCustomLinks();
+    applyBackgroundMusic(siteData.backgroundMusic || {});
+    return true;
+  }catch(e){ return false; }
+}
 
+function du3dCacheSiteData(data){
+  try{ localStorage.setItem('du3d_site_data_cache',JSON.stringify(data)); }catch(e){}
+}
+
+function du3dLoadSiteDataWithRetry(attempt){
+  attempt=Number(attempt)||0;
   google.script.run
-
     .withSuccessHandler(function(data){
-
-      siteData=data || {
-        videos:[],
-        downloads:{},
-        posts:[],
-        comments:{},
-        avatarChoices:[]
-      };
-
+      siteData=Object.assign({videos:[],downloads:{},posts:[],comments:{},avatarChoices:[],customLinks:[],backgroundMusic:{},aboutMe:{details:''}},data||{});
+      du3dCacheSiteData(siteData);
       renderHome();
       renderGallery();
       renderAbout();
-
-      const logo=document.getElementById("siteLogo");
-      if(logo && siteData.logoUrl){
-        logo.src=siteData.logoUrl;
-        logo.style.display="block";
-      }
+      const logo=document.getElementById('siteLogo');
+      if(logo && siteData.logoUrl){ logo.src=siteData.logoUrl; logo.style.display='block'; }
       renderCustomLinks();
       applyBackgroundMusic(siteData.backgroundMusic || {});
       markBackendSuccess();
       updateAdminPresence(!!(window.du3dCurrentUser && window.du3dCurrentUser.isAdmin));
       hideDu3dSiteLoader();
-
-      if(adminToken){
-        loadAdmin();
-        setTimeout(renderAvatarAdminList,50);
-      }
-
+      if(adminToken){ loadAdmin(); setTimeout(renderAvatarAdminList,50); }
     })
-
-    .withFailureHandler(function(){
-
-      document.getElementById("galleryBoard").innerHTML=
-        '<div class="empty">Unable to load the gallery.</div>';
+    .withFailureHandler(function(err){
+      if(attempt<3){
+        setTimeout(function(){ du3dLoadSiteDataWithRetry(attempt+1); },1000*(attempt+1));
+        return;
+      }
+      const usedCache=du3dLoadCachedSiteData();
+      if(!usedCache){
+        const board=document.getElementById('galleryBoard');
+        if(board) board.innerHTML='<div class=\"empty\">Server temporarily unavailable. Please try again in a moment.</div>';
+      }
       markBackendFailure();
       hideDu3dSiteLoader();
-
+      console.warn('DU3D site data temporarily unavailable:',err);
     })
-
     .getSiteData();
 }
 
+function loadSite(){
+  du3dLoadCachedSiteData();
+  du3dLoadSiteDataWithRetry(0);
+}
 
 /* =========================================================
    SECURITY / HTML HELPERS
@@ -4007,10 +4039,8 @@ function loadAdmin(){
 
     .withSuccessHandler(function(data){
 
-      siteData=data || {
-        videos:[],
-        downloads:{}
-      };
+      siteData=Object.assign({videos:[],downloads:{},posts:[],comments:{},avatarChoices:[],customLinks:[],backgroundMusic:{},aboutMe:{details:''}},data||{});
+      du3dCacheSiteData(siteData);
 
       renderAdminList();
       renderAdminPosts();
