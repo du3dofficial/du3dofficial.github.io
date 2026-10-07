@@ -667,48 +667,35 @@
       color:#ff7777;
       font-size:13px
     }
-    #chessGame .chess-board-clock-wrap{
-      width:min(100%,760px);
-      margin:0 auto;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      gap:14px;
-    }
-    #chessGame .du3d-ph-clock{
-      flex:0 0 132px;
+    .du3d-sidebar-clock{
+      width:calc(100% - 20px);
+      margin:10px auto 14px;
+      padding:10px 8px;
       box-sizing:border-box;
-      padding:12px 10px;
       border-radius:12px;
       background:linear-gradient(145deg,rgba(8,12,20,.98),rgba(18,24,35,.96));
       border:1px solid rgba(69,185,255,.28);
-      box-shadow:0 10px 28px rgba(0,0,0,.38),inset 0 0 18px rgba(69,185,255,.05);
+      box-shadow:0 8px 22px rgba(0,0,0,.32),inset 0 0 18px rgba(69,185,255,.05);
       text-align:center;
-      align-self:center;
     }
-    #chessGame .du3d-ph-clock-label{
+    .du3d-ph-clock-label{
       display:block;
       margin-bottom:5px;
       font-size:9px;
       font-weight:900;
-      letter-spacing:1.2px;
+      letter-spacing:1.1px;
       color:#7dd3fc;
     }
-    #chessGame .du3d-ph-clock-time{
+    .du3d-ph-clock-time{
       display:block;
       font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono",monospace;
-      font-size:24px;
-      line-height:1;
+      font-size:20px;
+      line-height:1.05;
       font-weight:900;
-      letter-spacing:1px;
+      letter-spacing:.5px;
       color:#f8fafc;
       text-shadow:0 0 8px rgba(125,211,252,.35);
       white-space:nowrap;
-    }
-    @media(max-width:760px){
-      #chessGame .chess-board-clock-wrap{flex-direction:column;gap:8px}
-      #chessGame .du3d-ph-clock{width:100%;max-width:260px;flex-basis:auto;padding:9px 10px}
-      #chessGame .du3d-ph-clock-time{font-size:22px}
     }
     #chessGame .board{
       width:min(100%,620px)!important;
@@ -1850,6 +1837,10 @@ button[onclick*="showAdminLogin"] { display:none !important; }
 <div class="logo-name">DU3D OFFICIAL</div>
 </a>
 <div class="logo-sub">MCGG CHESSBOARD</div>
+<div class="du3d-sidebar-clock" aria-label="Philippines digital time">
+  <span class="du3d-ph-clock-label">PHILIPPINES TIME</span>
+  <span class="du3d-ph-clock-time" id="du3dPhilippinesClock">12:00:00 AM</span>
+</div>
 <div class="menu-title">NAVIGATION</div>
 <div class="menu">
 <button onclick="showPage('home')">📝 Posts Update</button>
@@ -2027,13 +2018,7 @@ button[onclick*="showAdminLogin"] { display:none !important; }
 <div class="ai-info" id="aiInfo">
             🧠 DU3D PRO AI ready
           </div>
-<div class="chess-board-clock-wrap">
-  <div class="du3d-ph-clock" aria-label="Philippines digital time">
-    <span class="du3d-ph-clock-label">PHILIPPINES TIME</span>
-    <span class="du3d-ph-clock-time" id="du3dPhilippinesClock">00:00:00</span>
-  </div>
-  <div class="board" id="chessBoard"></div>
-</div>
+<div class="board" id="chessBoard"></div>
 <div class="chess-chat" id="chessChatBox">
   <div class="chess-chat-head">💬 MATCH CHAT <span style="font-weight:500;color:#7f5b60">• temporary • deleted when the match ends or you leave</span></div>
   <div class="chess-chat-messages" id="chessChatMessages"><div class="chess-chat-empty">Chat is available when two players are matched.</div></div>
@@ -8614,11 +8599,11 @@ showPage("gallery");
       var now=new Date();
       var parts=new Intl.DateTimeFormat('en-PH',{
         timeZone:'Asia/Manila',
-        hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false
+        hour:'numeric',minute:'2-digit',second:'2-digit',hour12:true
       }).formatToParts(now);
       var out={};
       parts.forEach(function(p){out[p.type]=p.value;});
-      el.textContent=(out.hour||'00')+':'+(out.minute||'00')+':'+(out.second||'00');
+      el.textContent=(out.hour||'12')+':'+(out.minute||'00')+':'+(out.second||'00')+' '+(out.dayPeriod||'AM');
     }catch(e){
       el.textContent=new Date().toLocaleTimeString('en-PH',{hour12:false});
     }
