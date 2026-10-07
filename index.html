@@ -188,6 +188,46 @@
     .page-view{display:none}
     .page-view.active{display:block}
 
+    /* TIKTOK */
+    .tiktok-panel{
+      max-width:900px;
+      margin:0 auto;
+      padding:30px;
+      border:1px solid rgba(255,70,80,.24);
+      border-radius:16px;
+      background:linear-gradient(145deg,rgba(18,3,7,.94),rgba(5,2,4,.94));
+      box-shadow:0 20px 60px rgba(0,0,0,.5);
+      text-align:center
+    }
+    .tiktok-profile-card{
+      margin:20px auto 0;
+      max-width:520px;
+      padding:24px;
+      border-radius:14px;
+      border:1px solid rgba(255,255,255,.10);
+      background:rgba(255,255,255,.035)
+    }
+    .tiktok-icon{font-size:48px;line-height:1;margin-bottom:12px}
+    .tiktok-profile-name{font-size:24px;font-weight:900;color:#fff;margin-bottom:7px}
+    .tiktok-profile-url{font-size:12px;color:#c58d93;word-break:break-all}
+    .tiktok-open-button{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      margin-top:18px;
+      padding:12px 20px;
+      border-radius:10px;
+      background:linear-gradient(135deg,#111,#333);
+      border:1px solid rgba(255,255,255,.28);
+      color:#fff;
+      text-decoration:none;
+      font-weight:900;
+      box-shadow:0 8px 22px rgba(0,0,0,.35);
+      transition:.18s ease
+    }
+    .tiktok-open-button:hover{transform:translateY(-2px);filter:brightness(1.15)}
+    .tiktok-note{margin-top:16px;color:#a96870;font-size:12px;line-height:1.6}
+
     /* GALLERY */
     #galleryBoard{
       display:grid;
@@ -1847,6 +1887,7 @@ button[onclick*="showAdminLogin"] { display:none !important; }
 <button onclick="showPage('about')">👤 About Me</button>
 <button onclick="showPage('gallery')">♟ Chessboard Gallery</button>
 <button onclick="showPage('chess')">♟ Chess</button>
+<button onclick="showPage('tiktok')">🎵 TikTok</button>
 </div>
 <div class="menu-title" id="myLinksTitle" style="display:none">MY LINKS</div>
 <div class="menu" id="myLinksMenu"></div>
@@ -1907,6 +1948,24 @@ button[onclick*="showAdminLogin"] { display:none !important; }
 </div>
 <div id="galleryBoard">
 <div class="empty">Loading videos...</div>
+</div>
+</section>
+<!-- TIKTOK -->
+<section class="page-view" id="tiktok">
+<div class="header">
+<div class="title">🎵 TIKTOK VIDEOS</div>
+<div class="subtitle">
+          DU3D OFFICIAL TikTok videos and updates.
+        </div>
+</div>
+<div class="tiktok-panel">
+<div class="tiktok-icon">♪</div>
+<div class="tiktok-profile-card">
+<div class="tiktok-profile-name">@du3drequest</div>
+<div class="tiktok-profile-url">TikTok: https://www.tiktok.com/@du3drequest</div>
+<a class="tiktok-open-button" href="https://www.tiktok.com/@du3drequest" target="_blank" rel="noopener noreferrer">🎵 OPEN TIKTOK</a>
+<div class="tiktok-note">Open the profile to watch the latest DU3D TikTok videos. Individual TikTok video embed links can be added here when provided.</div>
+</div>
 </div>
 </section>
 <!-- CHESS -->
