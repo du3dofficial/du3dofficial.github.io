@@ -4916,6 +4916,107 @@ function getServerError(err){
 
 
   /* =====================================================
+     DU3D ADAPTIVE OPPONENT LEARNING
+     -----------------------------------------------------
+     DU3D remembers recurring opponent move patterns locally
+     and learns which replies performed best in completed games.
+     It supplements the existing search without replacing the
+     current king/queen safety and tactical rules.
+     ===================================================== */
+
+  const DU3D_ADAPTIVE_MEMORY_KEY="du3d_ai_adaptive_memory_v1";
+  const DU3D_ADAPTIVE_MAX_PAIRS=1800;
+  let du3dAdaptiveMemory=du3dLoadAdaptiveMemory();
+  let du3dCurrentLearningPairs=[];
+  let du3dLastOpponentLearningMove=null;
+
+  function du3dLoadAdaptiveMemory(){
+    try{
+      const raw=localStorage.getItem(DU3D_ADAPTIVE_MEMORY_KEY);
+      const data=raw?JSON.parse(raw):null;
+      if(data && data.pairs && typeof data.pairs==="object"){
+        return {version:1,games:Number(data.games)||0,pairs:data.pairs};
+      }
+    }catch(e){ console.warn("DU3D adaptive memory load failed",e); }
+    return {version:1,games:0,pairs:{}};
+  }
+
+  function du3dSaveAdaptiveMemory(){
+    try{
+      const keys=Object.keys(du3dAdaptiveMemory.pairs||{});
+      if(keys.length>DU3D_ADAPTIVE_MAX_PAIRS){
+        keys.sort(function(a,b){
+          return Number(du3dAdaptiveMemory.pairs[a].uses||0)-Number(du3dAdaptiveMemory.pairs[b].uses||0);
+        });
+        for(let i=0;i<keys.length-DU3D_ADAPTIVE_MAX_PAIRS;i++) delete du3dAdaptiveMemory.pairs[keys[i]];
+      }
+      localStorage.setItem(DU3D_ADAPTIVE_MEMORY_KEY,JSON.stringify(du3dAdaptiveMemory));
+    }catch(e){ console.warn("DU3D adaptive memory save failed",e); }
+  }
+
+  function du3dAdaptivePhase(){
+    const ply=game.history().length;
+    if(ply<12) return "opening";
+    if(ply<32) return "middlegame";
+    return "endgame";
+  }
+
+  function du3dMovePattern(move){
+    if(!move) return "";
+    const tactical=move.captured ? "capture-"+String(move.captured) : "quiet";
+    const check=move.san && move.san.indexOf("#")>=0 ? "mate" : (move.san && move.san.indexOf("+")>=0 ? "check" : "normal");
+    return [du3dAdaptivePhase(),String(move.piece||""),String(move.to||""),tactical,check,String(move.promotion||"")].join(":");
+  }
+
+  function du3dRecordOpponentLearningMove(move){
+    if(chessMode!=="ai" || !move) return;
+    du3dLastOpponentLearningMove={pattern:du3dMovePattern(move)};
+  }
+
+  function du3dRecordAiLearningResponse(move){
+    if(chessMode!=="ai" || !move || !du3dLastOpponentLearningMove) return;
+    const key=du3dLastOpponentLearningMove.pattern+"=>"+du3dMovePattern(move);
+    const pair=du3dAdaptiveMemory.pairs[key] || {wins:0,losses:0,uses:0};
+    pair.uses=Number(pair.uses||0)+1;
+    du3dAdaptiveMemory.pairs[key]=pair;
+    du3dCurrentLearningPairs.push(key);
+    du3dSaveAdaptiveMemory();
+  }
+
+  function du3dFinishAdaptiveGame(outcome){
+    if(chessMode!=="ai" || !du3dCurrentLearningPairs.length) return;
+    const seen={};
+    du3dCurrentLearningPairs.forEach(function(key){
+      if(seen[key]) return;
+      seen[key]=true;
+      const pair=du3dAdaptiveMemory.pairs[key];
+      if(!pair) return;
+      if(outcome>0) pair.wins=Number(pair.wins||0)+1;
+      else if(outcome<0) pair.losses=Number(pair.losses||0)+1;
+    });
+    du3dAdaptiveMemory.games=Number(du3dAdaptiveMemory.games||0)+1;
+    du3dCurrentLearningPairs=[];
+    du3dLastOpponentLearningMove=null;
+    du3dSaveAdaptiveMemory();
+  }
+
+  function du3dAdaptiveResponseScore(move){
+    if(chessMode!=="ai" || !move || !du3dLastOpponentLearningMove) return 0;
+    const key=du3dLastOpponentLearningMove.pattern+"=>"+du3dMovePattern(move);
+    const pair=du3dAdaptiveMemory.pairs[key];
+    if(!pair) return 0;
+    const wins=Number(pair.wins||0), losses=Number(pair.losses||0), uses=Number(pair.uses||0);
+    if(!uses) return 0;
+    const confidence=Math.min(1,uses/6);
+    return Math.max(-90,Math.min(90,(wins-losses)*24*confidence));
+  }
+
+  function du3dAdaptiveMemoryCount(){
+    return Object.keys(du3dAdaptiveMemory.pairs||{}).length;
+  }
+
+
+  /* =====================================================
      PLAYER COLOR / PROMOTION HELPERS
      ===================================================== */
 
@@ -5341,6 +5442,8 @@ function getServerError(err){
     gameStarted=false;
     game.reset();
     resetCapturedPieces();
+    du3dCurrentLearningPairs=[];
+    du3dLastOpponentLearningMove=null;
     selectedSquare=null;
     legalMoves=[];
     pendingPromotion=null;
@@ -5963,6 +6066,7 @@ function getServerError(err){
       setLastAiMove(completedMove,playerDisplayColor);
       recordCapturedPiece(completedMove,playerDisplayColor);
       playMoveSound(completedMove,false);
+      du3dRecordOpponentLearningMove(completedMove);
     }catch(e){
       console.error(e);
       return;
@@ -5972,7 +6076,11 @@ function getServerError(err){
     legalMoves=[];
     drawBoard();
     updateStatus();
-    if(!game.game_over()) setTimeout(aiMove,120);
+    if(game.game_over()){
+      du3dFinishAdaptiveGame(game.in_checkmate() ? (game.turn()==="w" ? 1 : -1) : 0);
+    }else{
+      setTimeout(aiMove,120);
+    }
   }
 
 
@@ -6100,7 +6208,8 @@ function getServerError(err){
             );
           pieceElement.dataset.playerColor=displayColor;
 
-          if(lastAiMove && lastMoveColor && squareName===lastAiMove.to){
+          // Pawns must never glow on the last-move highlight.
+          if(lastAiMove && lastMoveColor && squareName===lastAiMove.to && piece.type!=="p"){
             pieceElement.classList.add("last-opponent-piece-"+lastMoveColor);
           }
 
@@ -6258,6 +6367,7 @@ function getServerError(err){
       setLastAiMove(completedMove,playerDisplayColor);
       recordCapturedPiece(completedMove,playerDisplayColor);
       playMoveSound(completedMove,false);
+      du3dRecordOpponentLearningMove(completedMove);
     }catch(e){
       console.error(e);
       return;
@@ -6267,7 +6377,11 @@ function getServerError(err){
     legalMoves=[];
     drawBoard();
     updateStatus();
-    if(!game.game_over()) setTimeout(aiMove,120);
+    if(game.game_over()){
+      du3dFinishAdaptiveGame(game.in_checkmate() ? (game.turn()==="w" ? 1 : -1) : 0);
+    }else{
+      setTimeout(aiMove,120);
+    }
 
   }
 
@@ -6806,9 +6920,12 @@ function getServerError(err){
      DU3D KING + QUEEN PRIORITY
      ===================================================== */
 
-  const DU3D_QUEEN_SAFETY_BONUS=260;
-  const DU3D_QUEEN_HANG_PENALTY=1800;
-  const DU3D_QUEEN_TRADE_PENALTY=650;
+  const DU3D_QUEEN_SAFETY_BONUS=520;
+  const DU3D_QUEEN_HANG_PENALTY=3200;
+  const DU3D_QUEEN_TRADE_PENALTY=950;
+  const DU3D_QUEEN_ACTIVITY_BONUS=95;
+  const DU3D_QUEEN_DEFENDER_BONUS=120;
+  const DU3D_QUEEN_FREE_TRADE_BONUS=180;
   const DU3D_EARLY_KING_MOVE_PENALTY=950;
   const DU3D_UNSAFE_KING_MOVE_PENALTY=1800;
 
@@ -6884,8 +7001,22 @@ function getServerError(err){
       const p=board[r][c];
       if(!p||p.color!==color||p.type!=='q') continue;
       const sq=String.fromCharCode(97+c)+(8-r);
-      if(du3dIsSquareAttackedBy(sq,color==='w'?'b':'w')) score-=DU3D_QUEEN_HANG_PENALTY;
-      else score+=DU3D_QUEEN_SAFETY_BONUS;
+      const enemy=color==='w'?'b':'w';
+      const attacked=du3dIsSquareAttackedBy(sq,enemy);
+      if(attacked){ score-=DU3D_QUEEN_HANG_PENALTY; continue; }
+      score+=DU3D_QUEEN_SAFETY_BONUS;
+      // Reward a queen that has useful influence instead of simply hiding.
+      const legal=game.moves({square:sq,verbose:true}) || [];
+      score+=Math.min(legal.length,12)*DU3D_QUEEN_ACTIVITY_BONUS;
+      // Reward queens that are defended by at least one friendly piece.
+      let defended=false;
+      for(let rr=0;rr<8&&!defended;rr++) for(let cc=0;cc<8&&!defended;cc++){
+        const q=board[rr][cc]; if(!q||q.color!==color||q.type==='q') continue;
+        const from=String.fromCharCode(97+cc)+(8-rr);
+        const moves=game.moves({square:from,verbose:true}) || [];
+        defended=moves.some(function(m){return m.to===sq;});
+      }
+      if(defended) score+=DU3D_QUEEN_DEFENDER_BONUS;
     }
     return score;
   }
@@ -7148,12 +7279,20 @@ function getServerError(err){
     /* Never casually place DU3D's queen where a pawn/minor can take it. */
     if(move.piece==="q" && move.to){
       const enemyColor=game.turn()==="w"?"b":"w";
-      if(du3dIsSquareAttackedBy(move.to,enemyColor)){
-        score-=DU3D_QUEEN_HANG_PENALTY*4;
+      const queenDestinationIsAttacked=du3dIsSquareAttackedBy(move.to,enemyColor);
+      // A queen may trade with the enemy queen when the exchange is safe/equal.
+      // What DU3D must avoid is feeding its queen to pawns, minors or rooks.
+      if(queenDestinationIsAttacked && move.captured!=="q"){
+        score-=DU3D_QUEEN_HANG_PENALTY*5;
       }
       if(move.captured && move.captured!=="q"){
-        score-=DU3D_QUEEN_TRADE_PENALTY;
+        score-=DU3D_QUEEN_TRADE_PENALTY*2;
       }
+      if(move.captured==="q"){
+        score+=DU3D_QUEEN_FREE_TRADE_BONUS;
+      }
+      // Prefer useful queen activity when it does not expose the queen.
+      if(!queenDestinationIsAttacked) score+=140;
     }
 
 
@@ -7656,13 +7795,17 @@ function getServerError(err){
         game.move(move);
 
 
-        const score=
+        const searchScore=
           -minimax(
             depth-1,
             -Infinity,
             Infinity,
             1
           );
+
+        /* Experience gently nudges the root choice toward replies
+           that historically worked against this opponent's pattern. */
+        const score=searchScore+du3dAdaptiveResponseScore(move);
 
 
         game.undo();
@@ -7745,7 +7888,9 @@ function getServerError(err){
       "🧠 DU3D ULTRA • Depth "+
       completedDepth+
       " • Evaluation "+
-      Math.round(bestScore);
+      Math.round(bestScore)+
+      " • Adaptive Memory "+
+      du3dAdaptiveMemoryCount();
 
 
     return bestMove;
@@ -7802,6 +7947,7 @@ function getServerError(err){
           const completedAiMove=game.move(bestMove);
           setLastAiMove(completedAiMove || bestMove,getAiDisplayColor());
           recordCapturedPiece(completedAiMove || bestMove,getAiDisplayColor());
+          du3dRecordAiLearningResponse(completedAiMove || bestMove);
           // Enemy/AI moves are silent. Only the player's own move has sound.
 
         }catch(e){
@@ -7823,6 +7969,9 @@ function getServerError(err){
 
       drawBoard();
       updateStatus();
+      if(game.game_over()){
+        du3dFinishAdaptiveGame(game.in_checkmate() ? (game.turn()==="w" ? 1 : -1) : 0);
+      }
 
 
     },80);
