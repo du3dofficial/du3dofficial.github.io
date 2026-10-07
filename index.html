@@ -2265,10 +2265,49 @@ function syncAdminSession(){ adminToken=(window.du3dUserToken && window.du3dCurr
   function updateSpinnerAvatar(){
     var img=$('spinnerAvatar'),fallback=$('spinnerAvatarFallback'),center=$('spinnerCenter');
     var user=window.du3dCurrentUser||{};
-    var src=user.avatarUrl||user.avatar||user.photoURL||user.photoUrl||user.profileImage||'';
-    if(center){ center.title=user.isAdmin?'Admin profile — '+(user.username||'Admin'):(user.username?'Profile — '+user.username:'User profile'); }
-    if(img&&src){ img.src=src; img.style.display='block'; if(fallback)fallback.style.display='none'; }
-    else if(img){ img.removeAttribute('src'); img.style.display='none'; if(fallback){ fallback.textContent='👤'; fallback.style.display='grid'; } }
+    var isAdmin=!!user.isAdmin;
+
+    /*
+       The admin account does not necessarily store its profile image in
+       user.avatarUrl. The rest of the site uses the DU3D logo/admin
+       profile for the admin account, so the spinner must use that same
+       source. Normal users continue to use their own selected avatar.
+    */
+    var userSrc=user.avatarUrl||user.avatar||user.photoURL||user.photoUrl||user.profileImage||'';
+    var adminSrc=(typeof siteData!=='undefined' && siteData && siteData.logoUrl)
+      ? siteData.logoUrl
+      : 'https://yt3.googleusercontent.com/TMiXMEDHiO7nG_-Alg9_mrD1fRZ7N-lvhpRJgtIrnLaiK3EfbW79I93SbeJ9fqIGHLbnuz4gBQ=s160-c-k-c0x00ffffff-no-rj';
+    var src=isAdmin ? (userSrc||adminSrc) : userSrc;
+
+    if(center){
+      center.title=isAdmin
+        ? 'Admin profile — '+(user.username||'Admin')
+        : (user.username?'Profile — '+user.username:'User profile');
+      center.setAttribute('aria-label',isAdmin?'Admin profile':'User profile');
+    }
+
+    if(img&&src){
+      img.onerror=function(){
+        img.onerror=null;
+        img.removeAttribute('src');
+        img.style.display='none';
+        if(fallback){
+          fallback.textContent=isAdmin?'🛡️':'👤';
+          fallback.style.display='grid';
+        }
+      };
+      img.src=src;
+      img.style.display='block';
+      if(fallback)fallback.style.display='none';
+    }
+    else if(img){
+      img.removeAttribute('src');
+      img.style.display='none';
+      if(fallback){
+        fallback.textContent=isAdmin?'🛡️':'👤';
+        fallback.style.display='grid';
+      }
+    }
   }
   function renderNames(){
     var list=$('spinnerNames'),count=$('spinnerCount'),pickedList=$('spinnerPickedNames'),pickedCount=$('spinnerPickedCount'),spin=$('spinnerSpinButton'),status=$('spinnerStatus');
@@ -2295,9 +2334,81 @@ function syncAdminSession(){ adminToken=(window.du3dUserToken && window.du3dCurr
     if(names.some(function(n){return n.toLowerCase()===name.toLowerCase();})){input.select();return;}
     names.push(name);input.value='';save();renderNames();input.focus();
   }
+  var spinAudioCtx=null;
+  var spinSoundTimer=null;
+  var spinSoundStartedAt=0;
+  function getSpinAudio(){
+    try{
+      if(!spinAudioCtx){
+        var AC=window.AudioContext||window.webkitAudioContext;
+        if(!AC)return null;
+        spinAudioCtx=new AC();
+      }
+      if(spinAudioCtx.state==='suspended')spinAudioCtx.resume();
+      return spinAudioCtx;
+    }catch(e){return null;}
+  }
+  function playWheelTick(){
+    var ctx=getSpinAudio();
+    if(!ctx)return;
+    try{
+      var now=ctx.currentTime;
+      var osc=ctx.createOscillator();
+      var gain=ctx.createGain();
+      osc.type='square';
+      osc.frequency.setValueAtTime(150+Math.random()*45,now);
+      gain.gain.setValueAtTime(0.0001,now);
+      gain.gain.exponentialRampToValueAtTime(0.055,now+0.008);
+      gain.gain.exponentialRampToValueAtTime(0.0001,now+0.065);
+      osc.connect(gain);gain.connect(ctx.destination);
+      osc.start(now);osc.stop(now+0.07);
+    }catch(e){}
+  }
+  function startSpinSound(){
+    getSpinAudio();
+    if(spinSoundTimer)clearInterval(spinSoundTimer);
+    spinSoundStartedAt=Date.now();
+    var delay=85;
+    spinSoundTimer=setInterval(function(){
+      var elapsed=Date.now()-spinSoundStartedAt;
+      if(elapsed>=4550){
+        clearInterval(spinSoundTimer);spinSoundTimer=null;return;
+      }
+      playWheelTick();
+      delay=Math.min(190,85+Math.floor(elapsed/450)*14);
+      clearInterval(spinSoundTimer);
+      spinSoundTimer=setInterval(function(){
+        var e=Date.now()-spinSoundStartedAt;
+        if(e>=4550){clearInterval(spinSoundTimer);spinSoundTimer=null;return;}
+        playWheelTick();
+      },delay);
+    },delay);
+    playWheelTick();
+  }
+  function playWinnerSound(){
+    if(spinSoundTimer){clearInterval(spinSoundTimer);spinSoundTimer=null;}
+    var ctx=getSpinAudio();
+    if(!ctx)return;
+    try{
+      var notes=[523.25,659.25,783.99,1046.5];
+      notes.forEach(function(freq,i){
+        var now=ctx.currentTime+i*0.11;
+        var osc=ctx.createOscillator();
+        var gain=ctx.createGain();
+        osc.type='sine';
+        osc.frequency.setValueAtTime(freq,now);
+        gain.gain.setValueAtTime(0.0001,now);
+        gain.gain.exponentialRampToValueAtTime(0.12,now+0.025);
+        gain.gain.exponentialRampToValueAtTime(0.0001,now+0.22);
+        osc.connect(gain);gain.connect(ctx.destination);
+        osc.start(now);osc.stop(now+0.24);
+      });
+    }catch(e){}
+  }
   function spin(){
     if(spinning||!names.length)return;
     spinning=true;renderNames();
+    startSpinSound();
     var winnerIndex=Math.floor(Math.random()*names.length);
     var winner=names[winnerIndex];
     var segment=360/names.length;
@@ -2311,6 +2422,7 @@ function syncAdminSession(){ adminToken=(window.du3dUserToken && window.du3dCurr
     setTimeout(function(){
       names.splice(winnerIndex,1);
       pickedNames.push(winner);
+      playWinnerSound();
       save();spinning=false;
       if(result)result.innerHTML='🎉 WINNER<strong>'+escapeHtml(winner)+'</strong>';
       renderNames();
@@ -2436,6 +2548,7 @@ function loadSite(){
       applyBackgroundMusic(siteData.backgroundMusic || {});
       markBackendSuccess();
       updateAdminPresence(!!(window.du3dCurrentUser && window.du3dCurrentUser.isAdmin));
+      if(typeof window.du3dUpdateSpinnerAvatar==='function') window.du3dUpdateSpinnerAvatar();
       hideDu3dSiteLoader();
 
       if(adminToken){
