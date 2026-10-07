@@ -1679,6 +1679,15 @@
 @media(max-width:520px){
   .du3d-chat-drawer{width:100%!important}
 }
+
+    /* DU3D FIRST-OPEN LOADING SCREEN */
+    #du3dSiteLoader{position:fixed;inset:0;z-index:99999;display:flex;align-items:center;justify-content:center;background:radial-gradient(circle at center,#21060a 0%,#090103 55%,#020102 100%);opacity:1;visibility:visible;transition:opacity .12s ease,visibility .12s ease;}
+    #du3dSiteLoader.hide{opacity:0;visibility:hidden;pointer-events:none;}
+    .du3d-loader-card{text-align:center;padding:28px 34px;border:1px solid rgba(255,70,80,.28);border-radius:18px;background:rgba(10,2,4,.72);box-shadow:0 20px 70px rgba(0,0,0,.65),0 0 35px rgba(255,45,60,.12);backdrop-filter:blur(8px);}
+    .du3d-loader-logo{font-size:28px;font-weight:900;letter-spacing:2px;color:#fff;text-shadow:0 0 18px rgba(255,70,80,.5);}
+    .du3d-loader-spinner{width:42px;height:42px;margin:18px auto 12px;border:4px solid rgba(255,255,255,.14);border-top-color:#ff4655;border-right-color:#ff4655;border-radius:50%;animation:du3dLoaderSpin .45s linear infinite;}
+    .du3d-loader-text{font-size:11px;font-weight:800;letter-spacing:1.5px;color:#d99aa0;}
+    @keyframes du3dLoaderSpin{to{transform:rotate(360deg);}}
 </style>
 <script>
 /* =========================================================
@@ -1783,6 +1792,14 @@ button[onclick*="showAdminLogin"] { display:none !important; }
 </style>
 </head>
 <body>
+<div id="du3dSiteLoader" aria-label="Loading DU3D website">
+  <div class="du3d-loader-card">
+    <div class="du3d-loader-logo">♟ DU3D OFFICIAL</div>
+    <div class="du3d-loader-spinner"></div>
+    <div class="du3d-loader-text">LOADING WEBSITE...</div>
+  </div>
+</div>
+
 <div class="page">
 <aside class="sidebar">
 <a aria-label="Open DU3D OFFICIAL YouTube channel" class="logo logo-link" href="https://www.youtube.com/@newjer53" rel="noopener noreferrer" target="_blank">
@@ -2155,6 +2172,14 @@ function showPage(page){
    LOAD WEBSITE
    ========================================================= */
 
+function hideDu3dSiteLoader(){
+  const loader=document.getElementById('du3dSiteLoader');
+  if(loader) loader.classList.add('hide');
+}
+
+// Keep the first-open loader very short; backend loading continues in the background.
+setTimeout(hideDu3dSiteLoader,250);
+
 function loadSite(){
 
   google.script.run
@@ -2182,6 +2207,7 @@ function loadSite(){
       applyBackgroundMusic(siteData.backgroundMusic || {});
       markBackendSuccess();
       updateAdminPresence(!!(window.du3dCurrentUser && window.du3dCurrentUser.isAdmin));
+      hideDu3dSiteLoader();
 
       if(adminToken){
         loadAdmin();
@@ -2195,6 +2221,7 @@ function loadSite(){
       document.getElementById("galleryBoard").innerHTML=
         '<div class="empty">Unable to load the gallery.</div>';
       markBackendFailure();
+      hideDu3dSiteLoader();
 
     })
 
