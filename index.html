@@ -7,34 +7,6 @@
 <meta content="#080204" name="theme-color"/>
 <meta content="DU3D OFFICIAL — MCGG CHESSBOARD, Chess, Gallery and Community." name="description"/>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
-
-    <!-- TUNNEL CONFIG -->
-    <script>
-    window.DU3D_API_BACKUP_URL = '';
-    window.DU3D_PUBLIC_FILES_URL = '';
-
-    fetch('tunnel.json?t=' + Date.now(), {
-      cache: 'no-store'
-    })
-    .then(function(response) {
-      if (!response.ok) {
-        throw new Error('tunnel.json not found');
-      }
-      return response.json();
-    })
-    .then(function(config) {
-      window.DU3D_API_BACKUP_URL = config.apiUrl || '';
-      window.DU3D_PUBLIC_FILES_URL = config.publicFilesUrl || '';
-
-      console.log('DU3D tunnel loaded:', config.tunnelUrl);
-    })
-    .catch(function(error) {
-      console.error('Could not load tunnel.json:', error);
-    });
-    </script>
-
-    <!-- your other existing scripts -->
-
 <style>
     *{box-sizing:border-box}
     :root{
@@ -187,66 +159,6 @@
 
     .page-view{display:none}
     .page-view.active{display:block}
-
-    /* WHEEL SPINNER */
-    .spinner-page{max-width:1050px;margin:0 auto}
-    .spinner-layout{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(300px,.85fr);gap:22px;align-items:stretch}
-    .spinner-card{position:relative;padding:22px;border:1px solid rgba(255,70,80,.28);border-radius:20px;background:linear-gradient(145deg,rgba(20,3,7,.96),rgba(7,3,5,.96));box-shadow:0 24px 70px rgba(0,0,0,.55),0 0 45px rgba(255,30,45,.08);overflow:hidden}
-    .spinner-card:before{content:"";position:absolute;inset:-80px;background:radial-gradient(circle at 50% 35%,rgba(255,40,55,.12),transparent 55%);pointer-events:none}
-    .spinner-wheel-wrap{position:relative;width:min(100%,520px);aspect-ratio:1;margin:0 auto;display:grid;place-items:center}
-    .spinner-wheel{width:92%;height:92%;border-radius:50%;border:9px solid #170306;box-shadow:0 0 0 3px rgba(255,255,255,.08),0 18px 45px rgba(0,0,0,.6),inset 0 0 28px rgba(0,0,0,.45);transform:rotate(0deg);transition:transform 4.6s cubic-bezier(.12,.72,.08,1);background:#241015}
-    .spinner-wheel canvas{width:100%;height:100%;display:block;border-radius:50%}
-    .spinner-pointer{position:absolute;top:0;left:50%;transform:translateX(-50%);z-index:5;width:0;height:0;border-left:17px solid transparent;border-right:17px solid transparent;border-top:34px solid #fff;filter:drop-shadow(0 4px 8px rgba(0,0,0,.75))}
-    .spinner-pointer:after{content:"";position:absolute;left:-9px;top:-31px;width:18px;height:18px;border-radius:50%;background:#ff3d4d;box-shadow:0 0 18px rgba(255,50,65,.9)}
-    .spinner-center{position:absolute;z-index:4;width:82px;height:82px;border-radius:50%;display:grid;place-items:center;background:radial-gradient(circle at 35% 30%,#ff6671,#a80e1b 60%,#43050a);border:6px solid #120204;box-shadow:0 5px 18px rgba(0,0,0,.65),0 0 20px rgba(255,35,50,.35);color:#fff;font-size:12px;font-weight:1000;letter-spacing:1px;text-align:center;cursor:pointer;overflow:hidden;transition:transform .16s ease,filter .16s ease,box-shadow .16s ease}.spinner-center:hover{transform:scale(1.06);filter:brightness(1.12);box-shadow:0 5px 18px rgba(0,0,0,.65),0 0 28px rgba(255,45,60,.55)}.spinner-center:active{transform:scale(.96)}.spinner-center:focus-visible{outline:3px solid rgba(255,255,255,.9);outline-offset:4px}.spinner-center.disabled{cursor:not-allowed;opacity:.72;filter:grayscale(.2)}.spinner-center.disabled:hover{transform:none;filter:grayscale(.2);box-shadow:0 5px 18px rgba(0,0,0,.65),0 0 20px rgba(255,35,50,.35)}
-    .spinner-center img{width:100%;height:100%;object-fit:cover;border-radius:50%;display:none}.spinner-center .spinner-avatar-fallback{}
-    .spinner-center span{position:absolute;inset:0;display:grid;place-items:center;font-size:30px}
-    .spinner-result{min-height:52px;margin-top:12px;padding:12px 15px;border-radius:12px;text-align:center;border:1px solid rgba(255,70,80,.22);background:rgba(255,255,255,.035);color:#f3c8cc;font-weight:800}
-    .spinner-result strong{display:block;color:#fff;font-size:20px;margin-top:3px}
-    .spinner-form{position:relative;z-index:1}
-    .spinner-form h2{margin:0 0 7px;color:#fff;font-size:21px;font-weight:1000}
-    .spinner-form .hint{margin:0 0 16px;color:#9d7479;font-size:12px;line-height:1.5}
-    .spinner-input-row{display:flex;gap:8px}
-    .spinner-input{flex:1;min-width:0;padding:13px 14px;border-radius:11px;border:1px solid rgba(255,255,255,.12);background:#0d0608;color:#fff;outline:none;font:inherit;font-size:14px}
-    .spinner-input:focus{border-color:rgba(255,70,80,.7);box-shadow:0 0 0 3px rgba(255,40,55,.08)}
-    .spinner-add{padding:12px 17px;border:0;border-radius:11px;background:linear-gradient(135deg,#ff3949,#9d0b18);color:#fff;font-weight:1000;cursor:pointer;box-shadow:0 9px 24px rgba(190,10,25,.28)}
-    .spinner-add:hover{filter:brightness(1.08);transform:translateY(-1px)}
-    .spinner-name-count{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:20px 0 9px;color:#fff;font-size:13px;font-weight:900}
-    .spinner-count{padding:4px 9px;border-radius:999px;background:rgba(255,50,65,.11);border:1px solid rgba(255,70,80,.22);color:#ff9ca4;font-size:11px}
-    .spinner-names{display:flex;flex-wrap:wrap;gap:8px;max-height:330px;overflow:auto;padding:4px 2px 4px 0}
-    .spinner-picked-heading{margin-top:15px}
-    .spinner-picked-names{max-height:180px}
-    .spinner-picked-names .spinner-name{background:linear-gradient(135deg,rgba(255,190,60,.10),rgba(255,255,255,.035));border-color:rgba(255,190,60,.22)}
-    .spinner-picked-names .spinner-name:before{content:"🏆";font-size:12px}
-    .spinner-name{display:flex;align-items:center;gap:7px;max-width:100%;padding:8px 10px 8px 12px;border-radius:999px;background:linear-gradient(135deg,rgba(255,255,255,.075),rgba(255,255,255,.035));border:1px solid rgba(255,255,255,.1);color:#f7e2e4;font-size:12px;font-weight:800}
-    .spinner-name span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:190px}
-    .spinner-remove{width:20px;height:20px;padding:0;border:0;border-radius:50%;background:rgba(255,255,255,.08);color:#ffadb4;cursor:pointer;font-weight:900}
-    .spinner-empty{padding:25px 10px;text-align:center;color:#76575c;font-size:12px;width:100%}
-    .spinner-actions{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:17px}
-    .spinner-clear-modal{position:fixed;inset:0;z-index:10060;display:none;align-items:center;justify-content:center;padding:20px;background:rgba(2,0,1,.78);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
-    .spinner-clear-modal.show{display:flex;animation:spinnerModalFade .18s ease}
-    .spinner-clear-card{width:min(420px,94vw);padding:25px 24px 22px;border:1px solid rgba(255,70,80,.42);border-radius:20px;background:linear-gradient(145deg,rgba(39,5,10,.98),rgba(9,2,4,.99));box-shadow:0 28px 90px rgba(0,0,0,.78),0 0 45px rgba(255,35,50,.16);text-align:center;animation:spinnerModalPop .22s cubic-bezier(.2,.8,.2,1)}
-    .spinner-clear-icon{width:62px;height:62px;margin:0 auto 13px;border-radius:50%;display:grid;place-items:center;background:radial-gradient(circle at 35% 30%,#ff6874,#a90d1b 62%,#41050a);border:2px solid rgba(255,130,140,.38);box-shadow:0 0 25px rgba(255,45,60,.28);font-size:27px}
-    .spinner-clear-title{margin:0;color:#fff;font-size:21px;font-weight:1000}
-    .spinner-clear-message{margin:9px 0 0;color:#c9959a;font-size:12px;line-height:1.55}
-    .spinner-clear-message strong{color:#fff}
-    .spinner-clear-actions{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:20px}
-    .spinner-modal-cancel,.spinner-modal-confirm{min-height:45px;padding:11px 14px;border-radius:11px;font-weight:1000;cursor:pointer;letter-spacing:.3px}
-    .spinner-modal-cancel{border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.055);color:#ead8da}
-    .spinner-modal-cancel:hover{background:rgba(255,255,255,.09);transform:translateY(-1px)}
-    .spinner-modal-confirm{border:1px solid rgba(255,85,95,.6);background:linear-gradient(135deg,#ff394b,#920916);color:#fff;box-shadow:0 10px 25px rgba(180,10,25,.28)}
-    .spinner-modal-confirm:hover{filter:brightness(1.1);transform:translateY(-1px)}
-    @keyframes spinnerModalFade{from{opacity:0}to{opacity:1}}
-    @keyframes spinnerModalPop{from{opacity:0;transform:translateY(10px) scale(.96)}to{opacity:1;transform:translateY(0) scale(1)}}
-    .spinner-spin,.spinner-clear{padding:14px 12px;border-radius:12px;cursor:pointer;font-weight:1000;letter-spacing:.4px}
-    .spinner-spin{border:1px solid rgba(255,80,90,.55);background:linear-gradient(135deg,#ff3547,#850714);color:#fff;box-shadow:0 12px 30px rgba(180,10,25,.28)}
-    .spinner-spin:hover:not(:disabled){filter:brightness(1.1);transform:translateY(-1px)}
-    .spinner-clear{border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.045);color:#e7c9cc}
-    .spinner-clear:hover{background:rgba(255,255,255,.08)}
-    .spinner-spin:disabled{opacity:.42;cursor:not-allowed;transform:none}
-    .spinner-status{margin-top:12px;text-align:center;color:#8f6a70;font-size:11px;line-height:1.45}
-    @media(max-width:850px){.spinner-layout{grid-template-columns:1fr}.spinner-wheel-wrap{max-width:500px}.spinner-names{max-height:230px}}
-    @media(max-width:520px){.spinner-card{padding:15px}.spinner-input-row{flex-direction:column}.spinner-add{width:100%}.spinner-actions{grid-template-columns:1fr 1fr}.spinner-center{width:64px;height:64px}.spinner-center span{font-size:23px}.spinner-pointer{border-left-width:14px;border-right-width:14px;border-top-width:29px}}
 
     /* GALLERY */
     #galleryBoard{
@@ -726,36 +638,6 @@
       margin-bottom:10px;
       color:#ff7777;
       font-size:13px
-    }
-    .du3d-sidebar-clock{
-      width:calc(100% - 20px);
-      margin:10px auto 14px;
-      padding:10px 8px;
-      box-sizing:border-box;
-      border-radius:12px;
-      background:linear-gradient(145deg,rgba(8,12,20,.98),rgba(18,24,35,.96));
-      border:1px solid rgba(69,185,255,.28);
-      box-shadow:0 8px 22px rgba(0,0,0,.32),inset 0 0 18px rgba(69,185,255,.05);
-      text-align:center;
-    }
-    .du3d-ph-clock-label{
-      display:block;
-      margin-bottom:5px;
-      font-size:9px;
-      font-weight:900;
-      letter-spacing:1.1px;
-      color:#7dd3fc;
-    }
-    .du3d-ph-clock-time{
-      display:block;
-      font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono",monospace;
-      font-size:20px;
-      line-height:1.05;
-      font-weight:900;
-      letter-spacing:.5px;
-      color:#f8fafc;
-      text-shadow:0 0 8px rgba(125,211,252,.35);
-      white-space:nowrap;
     }
     #chessGame .board{
       width:min(100%,620px)!important;
@@ -1769,15 +1651,6 @@
 @media(max-width:520px){
   .du3d-chat-drawer{width:100%!important}
 }
-
-    /* DU3D FIRST-OPEN LOADING SCREEN */
-    #du3dSiteLoader{position:fixed;inset:0;z-index:99999;display:flex;align-items:center;justify-content:center;background:radial-gradient(circle at center,#21060a 0%,#090103 55%,#020102 100%);opacity:1;visibility:visible;transition:opacity .12s ease,visibility .12s ease;}
-    #du3dSiteLoader.hide{opacity:0;visibility:hidden;pointer-events:none;}
-    .du3d-loader-card{text-align:center;padding:28px 34px;border:1px solid rgba(255,70,80,.28);border-radius:18px;background:rgba(10,2,4,.72);box-shadow:0 20px 70px rgba(0,0,0,.65),0 0 35px rgba(255,45,60,.12);backdrop-filter:blur(8px);}
-    .du3d-loader-logo{font-size:28px;font-weight:900;letter-spacing:2px;color:#fff;text-shadow:0 0 18px rgba(255,70,80,.5);}
-    .du3d-loader-spinner{width:42px;height:42px;margin:18px auto 12px;border:4px solid rgba(255,255,255,.14);border-top-color:#ff4655;border-right-color:#ff4655;border-radius:50%;animation:du3dLoaderSpin .45s linear infinite;}
-    .du3d-loader-text{font-size:11px;font-weight:800;letter-spacing:1.5px;color:#d99aa0;}
-    @keyframes du3dLoaderSpin{to{transform:rotate(360deg);}}
 </style>
 <script>
 /* =========================================================
@@ -1786,13 +1659,23 @@
    BACKUP: DU3D Laptop Cloudflare Tunnel
 ========================================================= */
 window.DU3D_API_URL='https://du3d-api.newjer53.workers.dev';
-window.DU3D_API_BACKUP_URL='https://scanning-atmosphere-melbourne-messenger.trycloudflare.com/api';
-// Public files are served directly from the DU3D laptop through the same Cloudflare Tunnel.
-
+window.DU3D_API_BACKUP_URL='';
+// Public files and API backup are loaded automatically from tunnel.json.
+window.DU3D_PUBLIC_FILES_URL='';
 (function(){
-  var PRIMARY_COOLDOWN_MS=8000;
-  var PRIMARY_TIMEOUT_MS=7000;
-  var BACKUP_TIMEOUT_MS=7000;
+  fetch('tunnel.json?t='+Date.now(),{cache:'no-store'})
+    .then(function(r){if(!r.ok) throw new Error('tunnel.json HTTP '+r.status); return r.json();})
+    .then(function(config){
+      window.DU3D_API_BACKUP_URL=config.apiUrl||'';
+      window.DU3D_PUBLIC_FILES_URL=config.publicFilesUrl||'';
+      window.DU3D_TUNNEL_URL=config.tunnelUrl||'';
+      console.log('DU3D tunnel loaded:',window.DU3D_TUNNEL_URL);
+      if(typeof loadPublicFiles==='function') loadPublicFiles({silent:true});
+    })
+    .catch(function(err){console.error('Could not load tunnel.json:',err);});
+})();
+(function(){
+  var PRIMARY_COOLDOWN_MS=15000;
   var primaryDownUntil=0;
   var SAFE_FAILOVER_METHODS=new Set([
     'getSiteData','getLiveSiteState','getAdminPresence','getChessLobby',
@@ -1854,14 +1737,14 @@ window.DU3D_API_BACKUP_URL='https://scanning-atmosphere-melbourne-messenger.tryc
         var backupFirst=safe&&Date.now()<primaryDownUntil;
         var first=backupFirst?window.DU3D_API_BACKUP_URL:window.DU3D_API_URL;
         var second=backupFirst?window.DU3D_API_URL:window.DU3D_API_BACKUP_URL;
-        requestApi(first,methodName,args,PRIMARY_TIMEOUT_MS).then(function(result){
+        requestApi(first,methodName,args,20000).then(function(result){
           if(!backupFirst)primaryDownUntil=0;
           if(typeof success==='function')success(result);
         }).catch(function(firstError){
           var failover=firstError&&firstError.du3dRetryable&&(safe||(!backupFirst&&isCloudflareLimitError(firstError.du3dResponse,firstError.du3dBody)));
           if(!failover){if(typeof failure==='function')failure(firstError);else console.error('DU3D API:',firstError);return;}
           if(!backupFirst)primaryDownUntil=Date.now()+PRIMARY_COOLDOWN_MS;
-          requestApi(second,methodName,args,BACKUP_TIMEOUT_MS).then(function(result){
+          requestApi(second,methodName,args,20000).then(function(result){
             if(typeof success==='function')success(result);
           }).catch(function(error){
             if(typeof failure==='function')failure(error);else console.error('DU3D API backup:',error);
@@ -1884,14 +1767,6 @@ button[onclick*="showAdminLogin"] { display:none !important; }
 </style>
 </head>
 <body>
-<div id="du3dSiteLoader" aria-label="Loading DU3D website">
-  <div class="du3d-loader-card">
-    <div class="du3d-loader-logo">♟ DU3D OFFICIAL</div>
-    <div class="du3d-loader-spinner"></div>
-    <div class="du3d-loader-text">LOADING WEBSITE...</div>
-  </div>
-</div>
-
 <div class="page">
 <aside class="sidebar">
 <a aria-label="Open DU3D OFFICIAL YouTube channel" class="logo logo-link" href="https://www.youtube.com/@newjer53" rel="noopener noreferrer" target="_blank">
@@ -1899,17 +1774,12 @@ button[onclick*="showAdminLogin"] { display:none !important; }
 <div class="logo-name">DU3D OFFICIAL</div>
 </a>
 <div class="logo-sub">MCGG CHESSBOARD</div>
-<div class="du3d-sidebar-clock" aria-label="Philippines digital time">
-  <span class="du3d-ph-clock-label">PHILIPPINES TIME</span>
-  <span class="du3d-ph-clock-time" id="du3dPhilippinesClock">12:00:00 AM</span>
-</div>
 <div class="menu-title">NAVIGATION</div>
 <div class="menu">
 <button onclick="showPage('home')">📝 Posts Update</button>
 <button onclick="showPage('about')">👤 About Me</button>
 <button onclick="showPage('gallery')">♟ Chessboard Gallery</button>
 <button onclick="showPage('chess')">♟ Chess</button>
-<button onclick="showPage('spinner')">🎡 Wheel Spinner</button>
 </div>
 <div class="menu-title" id="myLinksTitle" style="display:none">MY LINKS</div>
 <div class="menu" id="myLinksMenu"></div>
@@ -1972,55 +1842,6 @@ button[onclick*="showAdminLogin"] { display:none !important; }
 <div class="empty">Loading videos...</div>
 </div>
 </section>
-<!-- WHEEL SPINNER -->
-<section class="page-view" id="spinner">
-  <div class="header">
-    <div class="title">🎡 WHEEL SPINNER</div>
-    <div class="subtitle">Add names, spin the wheel, and the winner is automatically removed.</div>
-  </div>
-  <div class="spinner-page">
-    <div class="spinner-layout">
-      <div class="spinner-card">
-        <div class="spinner-wheel-wrap">
-          <div class="spinner-pointer"></div>
-          <div class="spinner-wheel" id="spinnerWheel"><canvas id="spinnerCanvas" width="700" height="700"></canvas></div>
-          <div class="spinner-center" id="spinnerCenter" role="button" tabindex="0" aria-label="Spin the wheel" aria-disabled="true" title="Add names to enable spin"><img id="spinnerAvatar" alt="User profile avatar"><span id="spinnerAvatarFallback">👤</span></div>
-        </div>
-        <div class="spinner-result" id="spinnerResult">Ready to spin.<strong>Choose a name</strong></div>
-      </div>
-      <div class="spinner-card spinner-form">
-        <h2>🎟 Add Names</h2>
-        <p class="hint">Enter a name and press Add. Each winner disappears automatically after the spin.</p>
-        <div class="spinner-input-row">
-          <input class="spinner-input" id="spinnerNameInput" type="text" maxlength="40" autocomplete="off" placeholder="Enter a name…" aria-label="Name">
-          <button class="spinner-add" id="spinnerAddButton" type="button">＋ ADD</button>
-        </div>
-        <div class="spinner-actions">
-          <button class="spinner-spin" id="spinnerSpinButton" type="button" disabled>🎡 SPIN THE WHEEL</button>
-          <button class="spinner-clear" id="spinnerClearButton" type="button">🗑 CLEAR ALL NAMES</button>
-        </div>
-        <div class="spinner-name-count spinner-picked-heading"><span>🏆 Picked Names</span><span class="spinner-count" id="spinnerPickedCount">0</span></div>
-        <div class="spinner-names spinner-picked-names" id="spinnerPickedNames"><div class="spinner-empty">No winners yet.</div></div>
-        <div class="spinner-name-count"><span>Names in the wheel</span><span class="spinner-count" id="spinnerCount">0</span></div>
-        <div class="spinner-names" id="spinnerNames"><div class="spinner-empty">No names yet. Add your first name above.</div></div>
-        <div class="spinner-status" id="spinnerStatus">Add at least one name to begin.</div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<div class="spinner-clear-modal" id="spinnerClearModal" role="dialog" aria-modal="true" aria-labelledby="spinnerClearTitle" aria-describedby="spinnerClearMessage">
-  <div class="spinner-clear-card">
-    <div class="spinner-clear-icon">🗑️</div>
-    <h3 class="spinner-clear-title" id="spinnerClearTitle">Clear All Names?</h3>
-    <p class="spinner-clear-message" id="spinnerClearMessage">This will remove <strong>all names from the wheel</strong> and clear the Picked Names list. This action cannot be undone.</p>
-    <div class="spinner-clear-actions">
-      <button class="spinner-modal-cancel" id="spinnerModalCancel" type="button">CANCEL</button>
-      <button class="spinner-modal-confirm" id="spinnerModalConfirm" type="button">🗑 CLEAR ALL</button>
-    </div>
-  </div>
-</div>
-
 <!-- CHESS -->
 <section class="page-view" id="chess">
 <div id="chessGame">
@@ -2258,252 +2079,6 @@ function syncAdminSession(){ adminToken=(window.du3dUserToken && window.du3dCurr
 
 
 /* =========================================================
-   WHEEL SPINNER
-   ========================================================= */
-(function(){
-  var names=[];
-  var pickedNames=[];
-  var rotation=0;
-  var spinning=false;
-  var storageKey='du3dWheelSpinnerNames';
-  var pickedStorageKey='du3dWheelSpinnerPickedNames';
-  var palette=['#8d0b18','#d52235','#4a0b13','#f04b58','#74101d','#b51224','#26070c','#ef6a74','#5b0c16','#c51d30'];
-  function $(id){return document.getElementById(id);}
-  function save(){try{localStorage.setItem(storageKey,JSON.stringify(names));localStorage.setItem(pickedStorageKey,JSON.stringify(pickedNames));}catch(e){}}
-  function load(){try{var v=JSON.parse(localStorage.getItem(storageKey)||'[]');if(Array.isArray(v))names=v.filter(function(n){return typeof n==='string'&&n.trim();});var p=JSON.parse(localStorage.getItem(pickedStorageKey)||'[]');if(Array.isArray(p))pickedNames=p.filter(function(n){return typeof n==='string'&&n.trim();});}catch(e){names=[];pickedNames=[];}}
-  function draw(){
-    var canvas=$('spinnerCanvas'); if(!canvas)return;
-    var ctx=canvas.getContext('2d'), size=canvas.width, cx=size/2, cy=size/2, radius=size/2-7;
-    ctx.clearRect(0,0,size,size);
-    var total=names.length;
-    if(!total){
-      ctx.beginPath();ctx.arc(cx,cy,radius,0,Math.PI*2);ctx.fillStyle='#26080d';ctx.fill();
-      ctx.strokeStyle='rgba(255,255,255,.16)';ctx.lineWidth=4;ctx.stroke();
-      ctx.fillStyle='rgba(255,255,255,.28)';ctx.font='900 30px Arial';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText('ADD NAMES',cx,cy);return;
-    }
-    var step=Math.PI*2/total;
-    for(var i=0;i<total;i++){
-      var a=-Math.PI/2+i*step;
-      ctx.beginPath();ctx.moveTo(cx,cy);ctx.arc(cx,cy,radius,a,a+step);ctx.closePath();ctx.fillStyle=palette[i%palette.length];ctx.fill();ctx.strokeStyle='rgba(255,255,255,.18)';ctx.lineWidth=3;ctx.stroke();
-      ctx.save();ctx.translate(cx,cy);ctx.rotate(a+step/2);ctx.textAlign='right';ctx.textBaseline='middle';
-      var label=names[i].length>18?names[i].slice(0,17)+'…':names[i];
-      ctx.font='900 '+Math.max(14,Math.min(25,210/Math.max(5,total)))+'px Arial';ctx.fillStyle='#fff';ctx.shadowColor='rgba(0,0,0,.65)';ctx.shadowBlur=4;ctx.fillText(label,radius-25,0);ctx.restore();
-    }
-    ctx.beginPath();ctx.arc(cx,cy,radius,0,Math.PI*2);ctx.strokeStyle='rgba(255,255,255,.2)';ctx.lineWidth=5;ctx.stroke();
-  }
-  function updateSpinnerAvatar(){
-    var img=$('spinnerAvatar'),fallback=$('spinnerAvatarFallback'),center=$('spinnerCenter');
-    var user=window.du3dCurrentUser||{};
-    var isAdmin=!!user.isAdmin;
-
-    /*
-       The admin account does not necessarily store its profile image in
-       user.avatarUrl. The rest of the site uses the DU3D logo/admin
-       profile for the admin account, so the spinner must use that same
-       source. Normal users continue to use their own selected avatar.
-    */
-    var userSrc=user.avatarUrl||user.avatar||user.photoURL||user.photoUrl||user.profileImage||'';
-    var adminSrc=(typeof siteData!=='undefined' && siteData && siteData.logoUrl)
-      ? siteData.logoUrl
-      : 'https://yt3.googleusercontent.com/TMiXMEDHiO7nG_-Alg9_mrD1fRZ7N-lvhpRJgtIrnLaiK3EfbW79I93SbeJ9fqIGHLbnuz4gBQ=s160-c-k-c0x00ffffff-no-rj';
-    var src=isAdmin ? (userSrc||adminSrc) : userSrc;
-
-    if(center){
-      center.title=isAdmin
-        ? 'Admin profile — '+(user.username||'Admin')
-        : (user.username?'Profile — '+user.username:'User profile');
-      center.setAttribute('aria-label',isAdmin?'Admin profile':'User profile');
-    }
-
-    if(img&&src){
-      img.onerror=function(){
-        img.onerror=null;
-        img.removeAttribute('src');
-        img.style.display='none';
-        if(fallback){
-          fallback.textContent=isAdmin?'🛡️':'👤';
-          fallback.style.display='grid';
-        }
-      };
-      img.src=src;
-      img.style.display='block';
-      if(fallback)fallback.style.display='none';
-    }
-    else if(img){
-      img.removeAttribute('src');
-      img.style.display='none';
-      if(fallback){
-        fallback.textContent=isAdmin?'🛡️':'👤';
-        fallback.style.display='grid';
-      }
-    }
-  }
-  function renderNames(){
-    var list=$('spinnerNames'),count=$('spinnerCount'),pickedList=$('spinnerPickedNames'),pickedCount=$('spinnerPickedCount'),spin=$('spinnerSpinButton'),status=$('spinnerStatus');
-    if(count)count.textContent=names.length;
-    if(pickedCount)pickedCount.textContent=pickedNames.length;
-    if(spin)spin.disabled=spinning||names.length===0;
-    var center=$('spinnerCenter');
-    if(center){
-      var centerDisabled=spinning||names.length===0;
-      center.classList.toggle('disabled',centerDisabled);
-      center.setAttribute('aria-disabled',centerDisabled?'true':'false');
-      center.title=centerDisabled?(spinning?'Wheel is spinning…':'Add names to enable spin'):'Click the profile to spin the wheel';
-    }
-    if(status)status.textContent=spinning?'The wheel is spinning…':(names.length?'Ready — good luck!':'Add at least one name to begin.');
-    if(list){
-      if(!names.length)list.innerHTML='<div class="spinner-empty">No names yet. Add your first name above.</div>';
-      else list.innerHTML=names.map(function(name,i){return '<div class="spinner-name"><span title="'+escapeHtml(name)+'">'+escapeHtml(name)+'</span><button class="spinner-remove" type="button" data-remove="'+i+'" aria-label="Remove '+escapeHtml(name)+'">×</button></div>';}).join('');
-      list.querySelectorAll('[data-remove]').forEach(function(btn){btn.addEventListener('click',function(){if(spinning)return;names.splice(Number(btn.getAttribute('data-remove')),1);save();renderNames();});});
-    }
-    if(pickedList){
-      if(!pickedNames.length)pickedList.innerHTML='<div class="spinner-empty">No winners yet.</div>';
-      else pickedList.innerHTML=pickedNames.map(function(name){return '<div class="spinner-name"><span title="'+escapeHtml(name)+'">'+escapeHtml(name)+'</span></div>';}).join('');
-    }
-    draw();
-  }
-  function escapeHtml(v){return String(v).replace(/[&<>'"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c];});}
-  function addName(){
-    if(spinning)return;
-    var input=$('spinnerNameInput'); if(!input)return;
-    var name=input.value.trim(); if(!name)return;
-    if(names.some(function(n){return n.toLowerCase()===name.toLowerCase();})){input.select();return;}
-    names.push(name);input.value='';save();renderNames();input.focus();
-  }
-  var spinAudioCtx=null;
-  var spinSoundTimer=null;
-  var spinSoundStartedAt=0;
-  function getSpinAudio(){
-    try{
-      if(!spinAudioCtx){
-        var AC=window.AudioContext||window.webkitAudioContext;
-        if(!AC)return null;
-        spinAudioCtx=new AC();
-      }
-      if(spinAudioCtx.state==='suspended')spinAudioCtx.resume();
-      return spinAudioCtx;
-    }catch(e){return null;}
-  }
-  function playWheelTick(){
-    var ctx=getSpinAudio();
-    if(!ctx)return;
-    try{
-      var now=ctx.currentTime;
-      var osc=ctx.createOscillator();
-      var gain=ctx.createGain();
-      osc.type='square';
-      osc.frequency.setValueAtTime(150+Math.random()*45,now);
-      gain.gain.setValueAtTime(0.0001,now);
-      gain.gain.exponentialRampToValueAtTime(0.055,now+0.008);
-      gain.gain.exponentialRampToValueAtTime(0.0001,now+0.065);
-      osc.connect(gain);gain.connect(ctx.destination);
-      osc.start(now);osc.stop(now+0.07);
-    }catch(e){}
-  }
-  function startSpinSound(){
-    getSpinAudio();
-    if(spinSoundTimer)clearInterval(spinSoundTimer);
-    spinSoundStartedAt=Date.now();
-    var delay=85;
-    spinSoundTimer=setInterval(function(){
-      var elapsed=Date.now()-spinSoundStartedAt;
-      if(elapsed>=4550){
-        clearInterval(spinSoundTimer);spinSoundTimer=null;return;
-      }
-      playWheelTick();
-      delay=Math.min(190,85+Math.floor(elapsed/450)*14);
-      clearInterval(spinSoundTimer);
-      spinSoundTimer=setInterval(function(){
-        var e=Date.now()-spinSoundStartedAt;
-        if(e>=4550){clearInterval(spinSoundTimer);spinSoundTimer=null;return;}
-        playWheelTick();
-      },delay);
-    },delay);
-    playWheelTick();
-  }
-  function playWinnerSound(){
-    if(spinSoundTimer){clearInterval(spinSoundTimer);spinSoundTimer=null;}
-    var ctx=getSpinAudio();
-    if(!ctx)return;
-    try{
-      var notes=[523.25,659.25,783.99,1046.5];
-      notes.forEach(function(freq,i){
-        var now=ctx.currentTime+i*0.11;
-        var osc=ctx.createOscillator();
-        var gain=ctx.createGain();
-        osc.type='sine';
-        osc.frequency.setValueAtTime(freq,now);
-        gain.gain.setValueAtTime(0.0001,now);
-        gain.gain.exponentialRampToValueAtTime(0.12,now+0.025);
-        gain.gain.exponentialRampToValueAtTime(0.0001,now+0.22);
-        osc.connect(gain);gain.connect(ctx.destination);
-        osc.start(now);osc.stop(now+0.24);
-      });
-    }catch(e){}
-  }
-  function spin(){
-    if(spinning||!names.length)return;
-    spinning=true;renderNames();
-    startSpinSound();
-    var winnerIndex=Math.floor(Math.random()*names.length);
-    var winner=names[winnerIndex];
-    var segment=360/names.length;
-    var target=360-(winnerIndex*segment+segment/2);
-    var current=((rotation%360)+360)%360;
-    var delta=((target-current)+360)%360;
-    rotation+=360*6+delta;
-    var wheel=$('spinnerWheel');
-    if(wheel){wheel.style.transform='rotate('+rotation+'deg)';}
-    var result=$('spinnerResult');if(result)result.innerHTML='Spinning…<strong>Good luck!</strong>';
-    setTimeout(function(){
-      names.splice(winnerIndex,1);
-      pickedNames.push(winner);
-      playWinnerSound();
-      save();spinning=false;
-      if(result)result.innerHTML='🎉 WINNER<strong>'+escapeHtml(winner)+'</strong>';
-      renderNames();
-    },4650);
-  }
-  function closeClearModal(){
-    var modal=$('spinnerClearModal');
-    if(modal)modal.classList.remove('show');
-  }
-  function performClearAll(){
-    if(spinning)return;
-    names=[];pickedNames=[];save();rotation=0;var wheel=$('spinnerWheel');if(wheel)wheel.style.transform='rotate(0deg)';var result=$('spinnerResult');if(result)result.innerHTML='Ready to spin.<strong>Choose a name</strong>';renderNames();closeClearModal();
-  }
-  function clearAll(){
-    if(spinning)return;
-    if(!names.length)return;
-    var modal=$('spinnerClearModal');
-    if(!modal)return;
-    modal.classList.add('show');
-    setTimeout(function(){var confirmButton=$('spinnerModalConfirm');if(confirmButton)confirmButton.focus();},20);
-  }
-  window.du3dSpinWheel=spin;
-  window.du3dUpdateSpinnerAvatar=updateSpinnerAvatar;
-  window.du3dRenderSpinnerNames=renderNames;
-  document.addEventListener('DOMContentLoaded',function(){
-    load();updateSpinnerAvatar();renderNames();
-    var add=$('spinnerAddButton'),spinButton=$('spinnerSpinButton'),clear=$('spinnerClearButton'),input=$('spinnerNameInput');
-    if(add)add.addEventListener('click',addName);
-    if(spinButton)spinButton.addEventListener('click',spin);
-    if(clear)clear.addEventListener('click',clearAll);
-    var modal=$('spinnerClearModal'),modalCancel=$('spinnerModalCancel'),modalConfirm=$('spinnerModalConfirm');
-    if(modalCancel)modalCancel.addEventListener('click',closeClearModal);
-    if(modalConfirm)modalConfirm.addEventListener('click',performClearAll);
-    if(modal)modal.addEventListener('click',function(e){if(e.target===modal)closeClearModal();});
-    document.addEventListener('keydown',function(e){if(e.key==='Escape'){var m=$('spinnerClearModal');if(m&&m.classList.contains('show'))closeClearModal();}});
-    var center=$('spinnerCenter');
-    if(center){
-      center.addEventListener('click',function(){if(!spinning&&names.length)spin();});
-      center.addEventListener('keydown',function(e){if((e.key==='Enter'||e.key===' ')&&!spinning&&names.length){e.preventDefault();spin();}});
-    }
-    if(input)input.addEventListener('keydown',function(e){if(e.key==='Enter')addName();});
-  });
-})();
-
-/* =========================================================
    PAGE NAVIGATION
    ========================================================= */
 
@@ -2526,11 +2101,6 @@ function showPage(page){
 
   if(page==="gallery"){
     renderGallery();
-  }
-
-  if(page==="spinner"){
-    if(typeof updateSpinnerAvatar === "function") updateSpinnerAvatar();
-    if(typeof renderNames === "function") renderNames();
   }
 
   if(page==="admin"){
@@ -2569,70 +2139,19 @@ function showPage(page){
    LOAD WEBSITE
    ========================================================= */
 
-function hideDu3dSiteLoader(){
-  const loader=document.getElementById('du3dSiteLoader');
-  if(loader) loader.classList.add('hide');
-}
-
-// Keep the first-open loader very short; backend loading continues in the background.
-setTimeout(hideDu3dSiteLoader,250);
-
-let du3dSiteReconnectAttempts=0;
 function loadSite(){
-
-  const emptySiteData={
-    videos:[],
-    downloads:{},
-    posts:[],
-    comments:{},
-    avatarChoices:[]
-  };
-
-  /*
-   * Mobile/offline protection: render the last successful site snapshot
-   * immediately, then refresh it from the backend in the background.
-   * This prevents a slow Apps Script/Cloudflare connection from making
-   * the whole website look offline after a refresh.
-   */
-  let hasCachedSite=false;
-  try{
-    const cached=localStorage.getItem('du3d_site_data_cache_v2');
-    if(cached){
-      const parsed=JSON.parse(cached);
-      if(parsed && typeof parsed==='object'){
-        siteData=parsed;
-        hasCachedSite=true;
-        renderHome();
-        renderGallery();
-        renderAbout();
-        const cachedLogo=document.getElementById('siteLogo');
-        if(cachedLogo && siteData.logoUrl){
-          cachedLogo.src=siteData.logoUrl;
-          cachedLogo.style.display='block';
-        }
-        renderCustomLinks();
-        applyBackgroundMusic(siteData.backgroundMusic || {});
-        if(typeof window.du3dUpdateSpinnerAvatar==='function') window.du3dUpdateSpinnerAvatar();
-        hideDu3dSiteLoader();
-      }
-    }
-  }catch(e){}
 
   google.script.run
 
     .withSuccessHandler(function(data){
 
-      siteData=data || emptySiteData;
-      du3dSiteReconnectAttempts=0;
-
-      /* Save only a reasonably sized snapshot so localStorage never
-         becomes the reason the mobile page fails to load. */
-      try{
-        const snapshot=JSON.stringify(siteData);
-        if(snapshot.length<1800000){
-          localStorage.setItem('du3d_site_data_cache_v2',snapshot);
-        }
-      }catch(e){}
+      siteData=data || {
+        videos:[],
+        downloads:{},
+        posts:[],
+        comments:{},
+        avatarChoices:[]
+      };
 
       renderHome();
       renderGallery();
@@ -2647,8 +2166,6 @@ function loadSite(){
       applyBackgroundMusic(siteData.backgroundMusic || {});
       markBackendSuccess();
       updateAdminPresence(!!(window.du3dCurrentUser && window.du3dCurrentUser.isAdmin));
-      if(typeof window.du3dUpdateSpinnerAvatar==='function') window.du3dUpdateSpinnerAvatar();
-      hideDu3dSiteLoader();
 
       if(adminToken){
         loadAdmin();
@@ -2659,22 +2176,9 @@ function loadSite(){
 
     .withFailureHandler(function(){
 
-      /* If cached data exists, keep the website usable and retry through
-         the normal API failover instead of replacing the page with an
-         offline error screen. */
-      if(!hasCachedSite){
-        document.getElementById("galleryBoard").innerHTML=
-          '<div class="empty">Unable to connect right now. Please try again.</div>';
-      }
+      document.getElementById("galleryBoard").innerHTML=
+        '<div class="empty">Unable to load the gallery.</div>';
       markBackendFailure();
-      hideDu3dSiteLoader();
-
-      /* Automatically try again in the background after a temporary
-         mobile/network failure. The cached page remains visible. */
-      if(du3dSiteReconnectAttempts<3){
-        du3dSiteReconnectAttempts++;
-        setTimeout(function(){ loadSite(); },8000*du3dSiteReconnectAttempts);
-      }
 
     })
 
@@ -3711,7 +3215,6 @@ function updateAccountUI(){
   if(window.du3dCurrentUser && window.du3dUserToken) startUserHeartbeat(); else stopUserHeartbeat();
   if(isAdmin) startAdminHeartbeat(); else stopAdminHeartbeat();
   updatePrivateMessageFloat();
-  if(typeof window.du3dUpdateSpinnerAvatar==='function') window.du3dUpdateSpinnerAvatar();
   if(window.du3dCurrentUser && window.du3dUserToken) startPrivateNotificationPolling(); else stopPrivateNotificationPolling();
 }
 function clearUserSession(){
@@ -3743,7 +3246,6 @@ function loadCurrentUser(){
         syncAdminSession();
         updateAdminPresence(!!result.user.isAdmin);
         updateAccountUI();
-        if(typeof window.du3dUpdateSpinnerAvatar==='function') window.du3dUpdateSpinnerAvatar();
         renderHome();
         if(window.du3dCurrentUser && window.du3dCurrentUser.isAdmin){
           setTimeout(function(){ showPage('admin'); },50);
@@ -4167,7 +3669,6 @@ function updateAdminUI(){
     privateAdminSelectedUsername='';
   }
   updatePrivateMessageFloat();
-  if(typeof window.du3dUpdateSpinnerAvatar==='function') window.du3dUpdateSpinnerAvatar();
 }
 
 function clearAdminSession(){
@@ -4191,7 +3692,12 @@ function clearAdminSession(){
 let publicFilesLoading=false;
 let publicFilesAutoRefreshTimer=null;
 let publicFilesAutoRefreshStarted=false;
+let publicFilesCurrentFolder='';
 const PUBLIC_FILES_AUTO_REFRESH_MS=5000;
+
+function publicFilesEncodePath(rel){
+  return String(rel||'').split('/').filter(Boolean).map(encodeURIComponent).join('/');
+}
 
 function loadPublicFiles(options){
   options=options||{};
@@ -4213,8 +3719,9 @@ function loadPublicFiles(options){
 
   const controller=new AbortController();
   const timer=setTimeout(function(){ controller.abort(); },8000);
+  const query='?list=1&path='+encodeURIComponent(publicFilesCurrentFolder)+'&ts='+Date.now();
 
-  fetch(base+'?list=1&ts='+Date.now(),{
+  fetch(base+query,{
     method:'GET',
     cache:'no-store',
     signal:controller.signal
@@ -4224,32 +3731,87 @@ function loadPublicFiles(options){
     return response.json();
   })
   .then(function(data){
-    const files=data && Array.isArray(data.files) ? data.files : [];
-    if(!files.length){
-      list.innerHTML='<div class="empty">No files found in public_files.</div>';
+    /*
+     * Support BOTH the new folder-aware server and the older public-file
+     * server. This is important because the laptop server/tunnel may still
+     * be running the previous server.js. If the response only contains a
+     * recursive files[] list, build the visible folders/files in the browser.
+     */
+    let folders=data && Array.isArray(data.folders) ? data.folders : [];
+    let files=data && Array.isArray(data.files) ? data.files : [];
+
+    if(!Array.isArray(data && data.folders)){
+      const allFiles=files.slice();
+      const current=String(publicFilesCurrentFolder||'').replace(/^\/+|\/+$/g,'');
+      const prefix=current ? current+'/' : '';
+      const folderMap={};
+      const visibleFiles=[];
+
+      allFiles.forEach(function(file){
+        const rel=String(file.path||file.name||'').replace(/^\/+|\/+$/g,'');
+        if(!rel || (prefix && rel.indexOf(prefix)!==0)) return;
+        const rest=prefix ? rel.slice(prefix.length) : rel;
+        if(!rest) return;
+        const slash=rest.indexOf('/');
+        if(slash>=0){
+          const folderName=rest.slice(0,slash);
+          const folderPath=prefix+folderName;
+          if(!folderMap[folderPath]) folderMap[folderPath]={name:folderName,path:folderPath};
+        }else{
+          visibleFiles.push(file);
+        }
+      });
+
+      folders=Object.keys(folderMap).map(function(k){return folderMap[k];});
+      files=visibleFiles;
+    }
+
+    folders.sort(function(a,b){ return String(a.name||'').localeCompare(String(b.name||'')); });
+    files.sort(function(a,b){ return String(a.name||a.path||'').localeCompare(String(b.name||b.path||'')); });
+
+    const entries=folders.concat(files);
+    if(!entries.length){
+      list.innerHTML='<div class="empty">This folder is empty.</div>';
       return;
     }
-    if(!files.length){
-      if(!silent || !list.querySelector('.admin-list-item')) {
-        list.innerHTML='<div class="empty">No files found in public_files.</div>';
-      }
-      return;
+
+    let html='';
+
+    if(publicFilesCurrentFolder){
+      const parent=publicFilesCurrentFolder.split('/').filter(Boolean);
+      parent.pop();
+      const parentPath=parent.join('/');
+      html+='<div class="admin-list-item" style="display:flex;align-items:center;gap:10px;cursor:pointer" onclick="openPublicFolder(\''+escapeJs(parentPath)+'\')">'
+        +'<strong style="font-size:13px">⬅️ ..</strong><span style="color:#8ea5c3;font-size:11px">Back</span></div>';
     }
-    list.innerHTML=files.map(function(file,fileIndex){
+
+    folders.forEach(function(folder,folderIndex){
+      const rel=String(folder.path||'');
+      const label=String(folder.name||rel.split('/').pop()||'Folder');
+      html+='<div class="admin-list-item" style="display:flex;align-items:center;justify-content:space-between;gap:10px;cursor:pointer" onclick="openPublicFolder(\''+escapeJs(rel)+'\')">'
+        +'<div style="min-width:0;flex:1"><strong style="word-break:break-word">📁 '+escapeHtml(label)+'</strong>'
+        +'<div class="admin-video-meta">Folder</div></div>'
+        +'<div style="font-size:18px;color:#8ea5c3">›</div></div>';
+    });
+
+    files.forEach(function(file,fileIndex){
       const rel=String(file.path||file.name||'');
-      const link=base+'/'+rel.split('/').map(encodeURIComponent).join('/');
+      const link=base+'/'+publicFilesEncodePath(rel);
       const size=Number(file.size)||0;
       let sizeText=size<1024 ? size+' B' : size<1024*1024 ? (size/1024).toFixed(1)+' KB' : (size/1024/1024).toFixed(1)+' MB';
-      return '<div class="admin-list-item" style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap">'
-        +'<div style="min-width:0;flex:1"><strong style="word-break:break-word">'+escapeHtml(rel)+'</strong>'
+      const menuId='public-file-menu-'+fileIndex;
+      html+='<div class="admin-list-item" style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap">'
+        +'<div style="min-width:0;flex:1"><strong style="word-break:break-word">📄 '+escapeHtml(String(file.name||rel))+'</strong>'
         +'<div class="admin-video-meta">'+sizeText+(file.modified?' • '+escapeHtml(formatDate(file.modified)):'')+'</div></div>'
         +'<div class="public-file-options-wrap">'
-        +'<button class="options-button public-file-more" type="button" aria-label="File options" onclick="togglePublicFileMenu(\'public-file-menu-'+fileIndex+'\',event)">⋮</button>'
-        +'<div class="video-options public-file-options" id="public-file-menu-'+fileIndex+'" style="display:none">'
+        +'<button class="options-button public-file-more" type="button" aria-label="File options" onclick="togglePublicFileMenu(\''+menuId+'\',event)">⋮</button>'
+        +'<div class="video-options public-file-options" id="'+menuId+'" style="display:none">'
         +'<button type="button" onclick="window.open(\''+escapeJs(link)+'\',\'_blank\');closePublicFileMenus()">OPEN</button>'
         +'<button type="button" onclick="copyPublicFileLink(\''+escapeJs(link)+'\');closePublicFileMenus()">🔗 COPY LINK</button>'
         +'</div></div></div>';
-    }).join('');
+    });
+
+    list.innerHTML=html;
   })
   .catch(function(err){
     const isTimeout=err && err.name==='AbortError';
@@ -4264,6 +3826,11 @@ function loadPublicFiles(options){
   });
 }
 
+function openPublicFolder(folderPath){
+  closePublicFileMenus();
+  publicFilesCurrentFolder=String(folderPath||'').replace(/^\/+|\/+$/g,'');
+  loadPublicFiles({silent:false});
+}
 
 function startPublicFilesAutoRefresh(){
   if(publicFilesAutoRefreshStarted) return;
@@ -5175,8 +4742,8 @@ function getServerError(err){
       );
 
       gain.gain.setValueAtTime(0.0001,now);
-      gain.gain.exponentialRampToValueAtTime(0.32,now+0.006);
-      gain.gain.exponentialRampToValueAtTime(0.0001,now+0.14);
+      gain.gain.exponentialRampToValueAtTime(0.16,now+0.006);
+      gain.gain.exponentialRampToValueAtTime(0.0001,now+0.11);
 
       oscillator.connect(gain);
       gain.connect(ctx.destination);
@@ -5369,107 +4936,6 @@ function getServerError(err){
     );
 
   const historyHeuristic={};
-
-
-  /* =====================================================
-     DU3D ADAPTIVE OPPONENT LEARNING
-     -----------------------------------------------------
-     DU3D remembers recurring opponent move patterns locally
-     and learns which replies performed best in completed games.
-     It supplements the existing search without replacing the
-     current king/queen safety and tactical rules.
-     ===================================================== */
-
-  const DU3D_ADAPTIVE_MEMORY_KEY="du3d_ai_adaptive_memory_v1";
-  const DU3D_ADAPTIVE_MAX_PAIRS=1800;
-  let du3dAdaptiveMemory=du3dLoadAdaptiveMemory();
-  let du3dCurrentLearningPairs=[];
-  let du3dLastOpponentLearningMove=null;
-
-  function du3dLoadAdaptiveMemory(){
-    try{
-      const raw=localStorage.getItem(DU3D_ADAPTIVE_MEMORY_KEY);
-      const data=raw?JSON.parse(raw):null;
-      if(data && data.pairs && typeof data.pairs==="object"){
-        return {version:1,games:Number(data.games)||0,pairs:data.pairs};
-      }
-    }catch(e){ console.warn("DU3D adaptive memory load failed",e); }
-    return {version:1,games:0,pairs:{}};
-  }
-
-  function du3dSaveAdaptiveMemory(){
-    try{
-      const keys=Object.keys(du3dAdaptiveMemory.pairs||{});
-      if(keys.length>DU3D_ADAPTIVE_MAX_PAIRS){
-        keys.sort(function(a,b){
-          return Number(du3dAdaptiveMemory.pairs[a].uses||0)-Number(du3dAdaptiveMemory.pairs[b].uses||0);
-        });
-        for(let i=0;i<keys.length-DU3D_ADAPTIVE_MAX_PAIRS;i++) delete du3dAdaptiveMemory.pairs[keys[i]];
-      }
-      localStorage.setItem(DU3D_ADAPTIVE_MEMORY_KEY,JSON.stringify(du3dAdaptiveMemory));
-    }catch(e){ console.warn("DU3D adaptive memory save failed",e); }
-  }
-
-  function du3dAdaptivePhase(){
-    const ply=game.history().length;
-    if(ply<12) return "opening";
-    if(ply<32) return "middlegame";
-    return "endgame";
-  }
-
-  function du3dMovePattern(move){
-    if(!move) return "";
-    const tactical=move.captured ? "capture-"+String(move.captured) : "quiet";
-    const check=move.san && move.san.indexOf("#")>=0 ? "mate" : (move.san && move.san.indexOf("+")>=0 ? "check" : "normal");
-    return [du3dAdaptivePhase(),String(move.piece||""),String(move.to||""),tactical,check,String(move.promotion||"")].join(":");
-  }
-
-  function du3dRecordOpponentLearningMove(move){
-    if(chessMode!=="ai" || !move) return;
-    du3dLastOpponentLearningMove={pattern:du3dMovePattern(move)};
-  }
-
-  function du3dRecordAiLearningResponse(move){
-    if(chessMode!=="ai" || !move || !du3dLastOpponentLearningMove) return;
-    const key=du3dLastOpponentLearningMove.pattern+"=>"+du3dMovePattern(move);
-    const pair=du3dAdaptiveMemory.pairs[key] || {wins:0,losses:0,uses:0};
-    pair.uses=Number(pair.uses||0)+1;
-    du3dAdaptiveMemory.pairs[key]=pair;
-    du3dCurrentLearningPairs.push(key);
-    du3dSaveAdaptiveMemory();
-  }
-
-  function du3dFinishAdaptiveGame(outcome){
-    if(chessMode!=="ai" || !du3dCurrentLearningPairs.length) return;
-    const seen={};
-    du3dCurrentLearningPairs.forEach(function(key){
-      if(seen[key]) return;
-      seen[key]=true;
-      const pair=du3dAdaptiveMemory.pairs[key];
-      if(!pair) return;
-      if(outcome>0) pair.wins=Number(pair.wins||0)+1;
-      else if(outcome<0) pair.losses=Number(pair.losses||0)+1;
-    });
-    du3dAdaptiveMemory.games=Number(du3dAdaptiveMemory.games||0)+1;
-    du3dCurrentLearningPairs=[];
-    du3dLastOpponentLearningMove=null;
-    du3dSaveAdaptiveMemory();
-  }
-
-  function du3dAdaptiveResponseScore(move){
-    if(chessMode!=="ai" || !move || !du3dLastOpponentLearningMove) return 0;
-    const key=du3dLastOpponentLearningMove.pattern+"=>"+du3dMovePattern(move);
-    const pair=du3dAdaptiveMemory.pairs[key];
-    if(!pair) return 0;
-    const wins=Number(pair.wins||0), losses=Number(pair.losses||0), uses=Number(pair.uses||0);
-    if(!uses) return 0;
-    const confidence=Math.min(1,uses/6);
-    return Math.max(-90,Math.min(90,(wins-losses)*24*confidence));
-  }
-
-  function du3dAdaptiveMemoryCount(){
-    return Object.keys(du3dAdaptiveMemory.pairs||{}).length;
-  }
 
 
   /* =====================================================
@@ -5898,8 +5364,6 @@ function getServerError(err){
     gameStarted=false;
     game.reset();
     resetCapturedPieces();
-    du3dCurrentLearningPairs=[];
-    du3dLastOpponentLearningMove=null;
     selectedSquare=null;
     legalMoves=[];
     pendingPromotion=null;
@@ -6522,7 +5986,6 @@ function getServerError(err){
       setLastAiMove(completedMove,playerDisplayColor);
       recordCapturedPiece(completedMove,playerDisplayColor);
       playMoveSound(completedMove,false);
-      du3dRecordOpponentLearningMove(completedMove);
     }catch(e){
       console.error(e);
       return;
@@ -6532,11 +5995,7 @@ function getServerError(err){
     legalMoves=[];
     drawBoard();
     updateStatus();
-    if(game.game_over()){
-      du3dFinishAdaptiveGame(game.in_checkmate() ? (game.turn()==="w" ? 1 : -1) : 0);
-    }else{
-      setTimeout(aiMove,120);
-    }
+    if(!game.game_over()) setTimeout(aiMove,120);
   }
 
 
@@ -6664,8 +6123,7 @@ function getServerError(err){
             );
           pieceElement.dataset.playerColor=displayColor;
 
-          // Pawns must never glow on the last-move highlight.
-          if(lastAiMove && lastMoveColor && squareName===lastAiMove.to && piece.type!=="p"){
+          if(lastAiMove && lastMoveColor && squareName===lastAiMove.to){
             pieceElement.classList.add("last-opponent-piece-"+lastMoveColor);
           }
 
@@ -6823,7 +6281,6 @@ function getServerError(err){
       setLastAiMove(completedMove,playerDisplayColor);
       recordCapturedPiece(completedMove,playerDisplayColor);
       playMoveSound(completedMove,false);
-      du3dRecordOpponentLearningMove(completedMove);
     }catch(e){
       console.error(e);
       return;
@@ -6833,11 +6290,7 @@ function getServerError(err){
     legalMoves=[];
     drawBoard();
     updateStatus();
-    if(game.game_over()){
-      du3dFinishAdaptiveGame(game.in_checkmate() ? (game.turn()==="w" ? 1 : -1) : 0);
-    }else{
-      setTimeout(aiMove,120);
-    }
+    if(!game.game_over()) setTimeout(aiMove,120);
 
   }
 
@@ -7373,186 +6826,6 @@ function getServerError(err){
 
 
   /* =====================================================
-     DU3D KING + QUEEN PRIORITY
-     ===================================================== */
-
-  const DU3D_QUEEN_SAFETY_BONUS=520;
-  const DU3D_QUEEN_HANG_PENALTY=3200;
-  const DU3D_QUEEN_TRADE_PENALTY=950;
-  const DU3D_QUEEN_ACTIVITY_BONUS=95;
-  const DU3D_QUEEN_DEFENDER_BONUS=120;
-  const DU3D_QUEEN_FREE_TRADE_BONUS=180;
-  const DU3D_EARLY_KING_MOVE_PENALTY=950;
-  const DU3D_UNSAFE_KING_MOVE_PENALTY=1800;
-
-  function du3dSquareToCoords(square){
-    if(!square || square.length!==2) return null;
-    const file=square.charCodeAt(0)-97;
-    const rank=Number(square.charAt(1));
-    if(file<0 || file>7 || rank<1 || rank>8) return null;
-    return {row:8-rank,col:file};
-  }
-
-  function du3dIsSquareAttackedBy(square,attackerColor){
-    const target=du3dSquareToCoords(square);
-    if(!target) return false;
-    const board=game.board(), tr=target.row, tc=target.col;
-    for(let r=0;r<8;r++){
-      for(let c=0;c<8;c++){
-        const p=board[r][c];
-        if(!p || p.color!==attackerColor) continue;
-        const dr=tr-r, dc=tc-c, adr=Math.abs(dr), adc=Math.abs(dc);
-        if(p.type==='p'){ const dir=attackerColor==='w'?-1:1; if(dr===dir && adc===1) return true; continue; }
-        if(p.type==='n'){ if((adr===2&&adc===1)||(adr===1&&adc===2)) return true; continue; }
-        if(p.type==='k'){ if(adr<=1&&adc<=1&&(adr+adc)>0) return true; continue; }
-        const diagonal=adr===adc&&adr>0;
-        const straight=(dr===0&&dc!==0)||(dc===0&&dr!==0);
-        if((p.type==='b'&&diagonal)||(p.type==='r'&&straight)||(p.type==='q'&&(diagonal||straight))){
-          const sr=dr===0?0:(dr>0?1:-1), sc=dc===0?0:(dc>0?1:-1);
-          let rr=r+sr, cc=c+sc, clear=true;
-          while(rr!==tr||cc!==tc){ if(board[rr][cc]){clear=false;break;} rr+=sr;cc+=sc; }
-          if(clear) return true;
-        }
-      }
-    }
-    return false;
-  }
-
-  function du3dKingSafetyScore(color){
-    const kingSquare=color==='w'?'e1':'e8';
-    const king=game.get(kingSquare);
-    let score=0;
-
-    // Castling is a special, safe king move and should never be penalized.
-    const history=game.history({verbose:true}) || [];
-    const castled=history.some(function(m){
-      return m.color===color && m.piece==='k' &&
-        ((color==='w' && (m.from==='e1' && (m.to==='g1'||m.to==='c1'))) ||
-         (color==='b' && (m.from==='e8' && (m.to==='g8'||m.to==='c8'))));
-    });
-
-    // In the opening, keep the king home unless it is castling or escaping check.
-    const materialPieces=game.board().reduce(function(n,row){
-      return n+row.filter(Boolean).length;
-    },0);
-    const openingPhase=materialPieces>=22;
-    if(openingPhase && !castled){
-      const k=game.get(color==='w'?'e1':'e8');
-      if(!k) score-=DU3D_EARLY_KING_MOVE_PENALTY;
-    }
-
-    // Extra protection for a king that is not currently under check: prefer a
-    // sheltered/castled king over unnecessary wandering.
-    if(!game.in_check()){
-      const ksq=color==='w'?'e1':'e8';
-      if(!game.get(ksq) && !castled) score-=DU3D_EARLY_KING_MOVE_PENALTY;
-    }
-
-    return score;
-  }
-
-  /*
-     QUEEN CAPTURE SUPPORT CHECK
-     Before DU3D captures with its queen, temporarily make the capture and
-     check whether the queen has real friendly support. A queen capture that
-     leaves the queen unsupported and immediately capturable is treated as a
-     bad move unless the position is forcing (check/checkmate).
-  */
-  function du3dQueenCaptureSafety(move){
-    if(!move || move.piece!=="q" || !move.to || !move.captured) return 0;
-
-    const mover=game.turn();
-    const enemy=mover==='w'?'b':'w';
-    let result=0;
-
-    try{
-      game.move(move);
-
-      const queenSquare=move.to;
-      const enemyMoves=game.moves({verbose:true}) || [];
-      const queenIsAttacked=du3dIsSquareAttackedBy(queenSquare,enemy);
-      const legalQueenCaptures=enemyMoves.filter(function(m){
-        return m.to===queenSquare;
-      });
-
-      /* Check real legal support, not just geometric protection: a pinned
-         friendly piece does not count as reliable queen support. */
-      let supportCount=0;
-      const board=game.board();
-      for(let r=0;r<8;r++){
-        for(let c=0;c<8;c++){
-          const piece=board[r][c];
-          if(!piece || piece.color!==mover || piece.type==='q') continue;
-          const from=String.fromCharCode(97+c)+(8-r);
-          const pieceMoves=game.moves({square:from,verbose:true}) || [];
-          if(pieceMoves.some(function(m){return m.to===queenSquare;})) supportCount++;
-        }
-      }
-
-      const forcingCheck=game.in_check();
-      const mateAvailable=forcingCheck && enemyMoves.length===0;
-
-      if(mateAvailable){
-        result+=1000000;
-      }else if(forcingCheck){
-        result+=4500;
-      }
-
-      if(supportCount===0){
-        result-=queenIsAttacked ? 14000 : 2200;
-      }else{
-        result+=Math.min(supportCount,3)*650;
-      }
-
-      /* If the opponent can legally capture the queen immediately, this is
-         exactly the kind of unsupported queen sacrifice DU3D should avoid.
-         Queen-vs-queen exchanges remain acceptable when the exchange is legal. */
-      if(legalQueenCaptures.length){
-        const queenTradeOnly=legalQueenCaptures.every(function(m){
-          return m.piece==='q';
-        });
-        if(queenTradeOnly && move.captured==='q'){
-          result+=350;
-        }else{
-          result-=18000;
-        }
-      }
-    }catch(e){
-      result-=20000;
-    }finally{
-      try{ game.undo(); }catch(e){}
-    }
-
-    return result;
-  }
-
-  function du3dQueenSafetyScore(color){
-    const board=game.board(); let score=0;
-    for(let r=0;r<8;r++) for(let c=0;c<8;c++){
-      const p=board[r][c];
-      if(!p||p.color!==color||p.type!=='q') continue;
-      const sq=String.fromCharCode(97+c)+(8-r);
-      const enemy=color==='w'?'b':'w';
-      const attacked=du3dIsSquareAttackedBy(sq,enemy);
-      if(attacked){ score-=DU3D_QUEEN_HANG_PENALTY; continue; }
-      score+=DU3D_QUEEN_SAFETY_BONUS;
-      // Reward a queen that has useful influence instead of simply hiding.
-      const legal=game.moves({square:sq,verbose:true}) || [];
-      score+=Math.min(legal.length,12)*DU3D_QUEEN_ACTIVITY_BONUS;
-      // Reward queens that are defended by at least one friendly piece.
-      let defended=false;
-      for(let rr=0;rr<8&&!defended;rr++) for(let cc=0;cc<8&&!defended;cc++){
-        const q=board[rr][cc]; if(!q||q.color!==color||q.type==='q') continue;
-        const from=String.fromCharCode(97+cc)+(8-rr);
-        const moves=game.moves({square:from,verbose:true}) || [];
-        defended=moves.some(function(m){return m.to===sq;});
-      }
-      if(defended) score+=DU3D_QUEEN_DEFENDER_BONUS;
-    }
-    return score;
-  }
-
-  /* =====================================================
      EVALUATION
      ===================================================== */
 
@@ -7666,12 +6939,6 @@ function getServerError(err){
       kingSafetyScore("b") -
       kingSafetyScore("w");
 
-    /* DU3D keeps the king home in the opening unless there is a real reason. */
-    score+=du3dKingSafetyScore("b")-du3dKingSafetyScore("w");
-
-    /* DU3D strongly protects king and queen. */
-    score+=du3dQueenSafetyScore("b")-du3dQueenSafetyScore("w");
-
 
     /* CENTER CONTROL */
 
@@ -7760,90 +7027,17 @@ function getServerError(err){
   }
 
 
-  /* =====================================================
-     DU3D OPENING STRATEGIES
-     RED  = Sicilian-style counterplay
-     BLUE = Queen's Gambit / QGD-style structure
-     The opening is a preference, not a forced script: tactical safety,
-     king safety and material always remain more important.
-     ===================================================== */
-
-  function du3dOpeningStrategyScore(move){
-    if(chessMode!=="ai" || !move || game.turn()!=="b") return 0;
-
-    const aiColor=getAiDisplayColor();
-    const history=game.history({verbose:true}) || [];
-    const ply=history.length;
-    if(ply>10) return 0;
-
-    let score=0;
-    const from=move.from, to=move.to;
-
-    // RED DU3D: Sicilian Defense — answer 1.e4 with ...c5 and
-    // continue with flexible Sicilian development instead of grabbing pawns.
-    if(aiColor==="red"){
-      const whiteFirst=history.length>=1 && history[0].color==="w" && history[0].from==="e2" && history[0].to==="e4";
-      if(whiteFirst){
-        if(from==="c7" && to==="c5") score+=9000;
-        if(from==="g8" && to==="f6") score+=2200;
-        if(from==="d7" && to==="d6") score+=2100;
-        if(from==="e7" && to==="e6") score+=1900;
-        if(from==="b8" && to==="c6") score+=1500;
-      }
-      // After ...c5, favor natural Sicilian development when available.
-      const playedC5=history.some(function(m){ return m.color==="b" && m.from==="c7" && m.to==="c5"; });
-      if(playedC5){
-        if(from==="g8" && to==="f6") score+=3200;
-        if(from==="d7" && to==="d6") score+=3000;
-        if(from==="e7" && to==="e6") score+=2600;
-        if(from==="b8" && to==="c6") score+=2200;
-      }
-    }
-
-    // BLUE DU3D: Queen's Gambit structure from Black's side.
-    // Since DU3D currently plays Black internally, this means it answers
-    // 1.d4 with ...d5 and then builds a Queen's Gambit Declined-style setup
-    // after c4, rather than pretending Black can make White's 2.c4 move.
-    if(aiColor==="blue"){
-      const whiteD4=history.length>=1 && history[0].color==="w" && history[0].from==="d2" && history[0].to==="d4";
-      if(whiteD4){
-        if(from==="d7" && to==="d5") score+=9000;
-        if(from==="g8" && to==="f6") score+=1700;
-        if(from==="e7" && to==="e6") score+=1500;
-      }
-      const whiteC4=history.some(function(m){ return m.color==="w" && m.from==="c2" && m.to==="c4"; });
-      const blackD5=history.some(function(m){ return m.color==="b" && m.from==="d7" && m.to==="d5"; });
-      if(whiteC4 && blackD5){
-        if(from==="e7" && to==="e6") score+=4200;
-        if(from==="g8" && to==="f6") score+=3600;
-        if(from==="c7" && to==="c6") score+=2500;
-        if(from==="f8" && to==="e7") score+=2200;
-      }
-    }
-
-    return score;
-  }
-
   function movePriority(move,depth){
 
     let score=0;
-
-    score+=du3dOpeningStrategyScore(move);
 
 
     /* Captures: MVV-LVA */
 
     if(move.captured){
 
-      /* Queen captures need special discipline. The normal MVV-LVA capture
-         bonus is intentionally huge, which can make the queen chase pawns
-         even when there is no tactical reason to do so. Keep queen-vs-queen
-         trades fully prioritized, but make captures of lesser pieces compete
-         normally with safe developing/positional moves. */
-      const queenCapturingLesserPiece = move.piece==='q' && move.captured!=='q';
-      const captureBase = queenCapturingLesserPiece ? 15000 : 100000;
       score+=
-        captureBase+
+        100000+
         (pieceValues[
           move.captured
         ] || 0)*10 -
@@ -7863,98 +7057,23 @@ function getServerError(err){
 
     }
 
-    /* KING PRIORITY: keep the king on e1/e8 during the opening.
-       The previous penalty could be outweighed by capture/check/history bonuses,
-       so an unnecessary early king move could still win move ordering. That is
-       dangerous because moving the king permanently destroys both castling rights.
-       Castling (O-O / O-O-O) is always allowed, and moving out of check is mandatory. */
-    if(move.piece==='k'){
-      const color=game.turn();
-      const currentlyInCheck=game.in_check();
-      const isCastle=(move.from==='e1' && (move.to==='g1'||move.to==='c1')) ||
-                      (move.from==='e8' && (move.to==='g8'||move.to==='c8'));
-      const materialPieces=game.board().reduce(function(n,row){
-        return n+row.filter(Boolean).length;
-      },0);
-      const openingPhase=materialPieces>=22;
-
-      if(openingPhase && !currentlyInCheck && !isCastle){
-        /* Hardly ever choose a non-castling king move in the opening. */
-        score-=10000000;
-      }else if(!currentlyInCheck && !isCastle){
-        score-=DU3D_EARLY_KING_MOVE_PENALTY*3;
-      }
-
-      if(move.to){
-        const enemyColor=color==='w'?'b':'w';
-        if(du3dIsSquareAttackedBy(move.to,enemyColor))
-          score-=DU3D_UNSAFE_KING_MOVE_PENALTY;
-      }
-
-      if(isCastle){
-        /* Prefer safe castling strongly once legal: both short and long castle
-           are valid strategic choices, rather than king wandering. */
-        score+=2200;
-      }
-    }
-
-    /* Never casually place DU3D's queen where a pawn/minor can take it. */
-    if(move.piece==="q" && move.to){
-      const enemyColor=game.turn()==="w"?"b":"w";
-      const queenDestinationIsAttacked=du3dIsSquareAttackedBy(move.to,enemyColor);
-      // A queen may trade with the enemy queen when the exchange is safe/equal.
-      // What DU3D must avoid is feeding its queen to pawns, minors or rooks.
-      if(queenDestinationIsAttacked && move.captured!=="q"){
-        score-=DU3D_QUEEN_HANG_PENALTY*5;
-      }
-      if(move.captured && move.captured!=="q"){
-        score-=DU3D_QUEEN_TRADE_PENALTY*2;
-      }
-      if(move.captured==="q"){
-        score+=DU3D_QUEEN_FREE_TRADE_BONUS;
-      }
-      // Prefer useful queen activity when it does not expose the queen.
-      if(!queenDestinationIsAttacked) score+=140;
-
-      // If this is a capture, actually test the position after the capture.
-      // The queen should not take an enemy piece and then discover that no
-      // friendly piece supports it and the opponent can simply take the queen.
-      if(move.captured){
-        score+=du3dQueenCaptureSafety(move);
-      }
-    }
-
 
     if(
       move.san &&
       move.san.indexOf("#")>=0
     ){
 
-      /* A real checkmate always outranks material and positional gains. */
-      score+=100000000;
+      score+=1000000;
 
     }else if(
       move.san &&
       move.san.indexOf("+")>=0
     ){
 
-      /* Checks are useful mating candidates, but only after safe moves. */
-      score+=12000;
+      score+=7000;
 
     }
 
-
-    /* CASTLING: DU3D knows both short (O-O) and long (O-O-O).
-       Prefer castling when it improves king safety and development,
-       but never force it when the position makes it unsafe or unnecessary. */
-    if(move.flags && move.flags.indexOf("k")>=0){
-      score+=950;
-      score+=game.in_check() ? 0 : 250;
-    }
-    if(move.flags && move.flags.indexOf("q")>=0){
-      score+=850;
-      score+=game.in_check() ? 0 : 200;
-    }
 
     if(
       move.flags &&
@@ -7963,7 +7082,9 @@ function getServerError(err){
         move.flags.indexOf("q")>=0
       )
     ){
+
       score+=300;
+
     }
 
 
@@ -8226,24 +7347,6 @@ function getServerError(err){
         verbose:true
       });
 
-    /* HARD OPENING KING RULE: do not allow a non-castling king move to reach
-       the root search during the opening. The old score penalty could still
-       be overcome by captures, checks, history, or adaptive bonuses.
-       Castling and mandatory check evasions remain legal. */
-    const rootInCheck=game.in_check();
-    const rootMaterialPieces=game.board().reduce(function(n,row){
-      return n+row.filter(Boolean).length;
-    },0);
-    const rootOpeningPhase=rootMaterialPieces>=22;
-    if(rootOpeningPhase && !rootInCheck){
-      const nonKingMoves=moves.filter(function(m){return m.piece!=='k';});
-      if(nonKingMoves.length){
-        moves=nonKingMoves.concat(moves.filter(function(m){
-          return m.piece==='k' && m.flags && (m.flags.indexOf('k')>=0 || m.flags.indexOf('q')>=0);
-        }));
-      }
-    }
-
 
     moves=
       orderMoves(
@@ -8381,79 +7484,6 @@ function getServerError(err){
 
 
   /* =====================================================
-     CHECKMATE HUNTING
-     ===================================================== */
-
-  /* Dedicated forced-mate search. This is separate from the normal
-     evaluation so DU3D actively looks for checkmate instead of merely
-     winning material. The search is intentionally small and tactical. */
-  function du3dCanForceMate(depth,attackerColor){
-
-    if(game.in_checkmate())
-      return game.turn()!==attackerColor;
-
-    if(game.in_draw() || depth<=0 || checkSearchTime())
-      return false;
-
-    const moves=orderMoves(
-      game.moves({verbose:true}),
-      depth
-    );
-
-    if(!moves.length)
-      return false;
-
-    const attackerTurn=game.turn()===attackerColor;
-
-    if(attackerTurn){
-      /* The attacker needs at least one move that forces mate. */
-      for(let i=0;i<moves.length;i++){
-        if(checkSearchTime()) return false;
-        game.move(moves[i]);
-        const forced=du3dCanForceMate(depth-1,attackerColor);
-        game.undo();
-        if(forced) return true;
-      }
-      return false;
-    }
-
-    /* The defender must have NO escape. */
-    for(let i=0;i<moves.length;i++){
-      if(checkSearchTime()) return false;
-      game.move(moves[i]);
-      const stillForced=du3dCanForceMate(depth-1,attackerColor);
-      game.undo();
-      if(!stillForced) return false;
-    }
-    return true;
-  }
-
-  function du3dFindForcedMate(rootMoves,attackerColor){
-    /* First priority: mate in one. */
-    for(let i=0;i<rootMoves.length;i++){
-      if(checkSearchTime()) return null;
-      const move=rootMoves[i];
-      game.move(move);
-      const mate=game.in_checkmate() && game.turn()!==attackerColor;
-      game.undo();
-      if(mate) return move;
-    }
-
-    /* Then look for a short forced mate (up to the next attacker move). */
-    for(let i=0;i<rootMoves.length;i++){
-      if(checkSearchTime()) return null;
-      const move=rootMoves[i];
-      game.move(move);
-      const forced=du3dCanForceMate(3,attackerColor);
-      game.undo();
-      if(forced) return move;
-    }
-
-    return null;
-  }
-
-
-  /* =====================================================
      BEST MOVE
      ===================================================== */
 
@@ -8478,14 +7508,6 @@ function getServerError(err){
       game.moves({
         verbose:true
       });
-
-    /* Checkmate is the highest-priority objective. Search for a direct
-       mate and a short forced mating sequence before ordinary evaluation. */
-    const forcedMate=du3dFindForcedMate(moves,"b");
-    if(forcedMate && !aiTimedOut){
-      aiInfoElement.textContent="🧠 DU3D ULTRA • CHECKMATE FOUND";
-      return forcedMate;
-    }
 
 
     moves=
@@ -8535,17 +7557,13 @@ function getServerError(err){
         game.move(move);
 
 
-        const searchScore=
+        const score=
           -minimax(
             depth-1,
             -Infinity,
             Infinity,
             1
           );
-
-        /* Experience gently nudges the root choice toward replies
-           that historically worked against this opponent's pattern. */
-        const score=searchScore+du3dAdaptiveResponseScore(move);
 
 
         game.undo();
@@ -8628,9 +7646,7 @@ function getServerError(err){
       "🧠 DU3D ULTRA • Depth "+
       completedDepth+
       " • Evaluation "+
-      Math.round(bestScore)+
-      " • Adaptive Memory "+
-      du3dAdaptiveMemoryCount();
+      Math.round(bestScore);
 
 
     return bestMove;
@@ -8687,7 +7703,6 @@ function getServerError(err){
           const completedAiMove=game.move(bestMove);
           setLastAiMove(completedAiMove || bestMove,getAiDisplayColor());
           recordCapturedPiece(completedAiMove || bestMove,getAiDisplayColor());
-          du3dRecordAiLearningResponse(completedAiMove || bestMove);
           // Enemy/AI moves are silent. Only the player's own move has sound.
 
         }catch(e){
@@ -8709,9 +7724,6 @@ function getServerError(err){
 
       drawBoard();
       updateStatus();
-      if(game.game_over()){
-        du3dFinishAdaptiveGame(game.in_checkmate() ? (game.turn()==="w" ? 1 : -1) : 0);
-      }
 
 
     },80);
@@ -9174,29 +8186,6 @@ showPage("gallery");
       }
     }
   });
-})();
-</script>
-
-<script>
-(function(){
-  function updateDu3dPhilippinesClock(){
-    var el=document.getElementById('du3dPhilippinesClock');
-    if(!el) return;
-    try{
-      var now=new Date();
-      var parts=new Intl.DateTimeFormat('en-PH',{
-        timeZone:'Asia/Manila',
-        hour:'numeric',minute:'2-digit',second:'2-digit',hour12:true
-      }).formatToParts(now);
-      var out={};
-      parts.forEach(function(p){out[p.type]=p.value;});
-      el.textContent=(out.hour||'12')+':'+(out.minute||'00')+':'+(out.second||'00')+' '+(out.dayPeriod||'AM');
-    }catch(e){
-      el.textContent=new Date().toLocaleTimeString('en-PH',{hour12:false});
-    }
-  }
-  updateDu3dPhilippinesClock();
-  setInterval(updateDu3dPhilippinesClock,500);
 })();
 </script>
 </body>
