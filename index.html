@@ -23,13 +23,10 @@
       return response.json();
     })
     .then(function(config) {
-      // Support either the old 3-link tunnel.json or a simpler 1-link setup.
-      // If only tunnelUrl is provided, automatically use /api and /files.
-      var tunnelBase = String(config.tunnelUrl || '').replace(/\/$/, '');
-      window.DU3D_API_BACKUP_URL = config.apiUrl || (tunnelBase ? tunnelBase + '/api' : '');
-      window.DU3D_PUBLIC_FILES_URL = config.publicFilesUrl || (tunnelBase ? tunnelBase + '/files' : '');
+      window.DU3D_API_BACKUP_URL = config.apiUrl || '';
+      window.DU3D_PUBLIC_FILES_URL = config.publicFilesUrl || '';
 
-      console.log('DU3D tunnel loaded:', tunnelBase);
+      console.log('DU3D tunnel loaded:', config.tunnelUrl);
       console.log('DU3D public files loaded:', window.DU3D_PUBLIC_FILES_URL);
 
       // Immediately connect to the laptop public file server after tunnel.json loads.
@@ -1926,7 +1923,6 @@ button[onclick*="showAdminLogin"] { display:none !important; }
 <div class="menu">
 <button onclick="accountButtonAction()" type="button">👤 <span id="accountButtonText">Login / Register</span></button>
 <button id="adminSettingsButton" onclick="showPage('admin')" style="display:none" type="button">⚙ Website Settings</button>
-<button id="adminUploadsButton" onclick="showPage('adminUploads')" style="display:none" type="button">📤 Admin Uploads</button>
 </div>
 <div class="account-state" id="accountState">Not signed in</div>
 <div class="user-stats" id="userStats">
@@ -2177,12 +2173,11 @@ button[onclick*="showAdminLogin"] { display:none !important; }
 </div>
 </section>
 <!-- ADMIN -->
-<!-- ADMIN UPLOADS -->
-<section class="page-view" id="adminUploads">
-<div class="panel" id="adminUploadsPanel" style="display:none;">
-<h1>📤 ADMIN UPLOADS</h1>
-<p class="about-text">Manage the videos shown in the Chessboard Gallery and access files from the connected Public Files Server.</p>
-<div class="admin-accordion" id="adminSectionVideos"><button class="admin-accordion-title" onclick="toggleAdminAccordion('adminSectionVideos')" type="button">1  ➕ ADD VIDEO TO CHESSBOARD GALLERY</button><div class="admin-accordion-body"><div class="admin-row add-video-form">
+<section class="page-view" id="admin">
+<div class="panel" id="adminPanel" style="display:none;"><h1>⚙ ADMIN DASHBOARD</h1><p class="about-text">
+          Add or remove the YouTube videos shown in the Chessboard Gallery.
+          For every video, you can also create a custom download button and link.
+        </p><div class="admin-accordion" id="adminSectionVideos"><button class="admin-accordion-title" onclick="toggleAdminAccordion('adminSectionVideos')" type="button">1  ➕ ADD VIDEO TO CHESSBOARD GALLERY</button><div class="admin-accordion-body"><div class="admin-row add-video-form">
 <h3 class="admin-section-title"><span class="admin-section-number">1</span> ➕ ADD VIDEO TO CHESSBOARD GALLERY</h3>
 <small>Fill in the YouTube Link, Download Link and optional Video Title. After saving, the form clears automatically so you can add another video immediately.</small>
 <input id="newVideoUrl" placeholder="YouTube Video Link — https://www.youtube.com/watch?v=..." type="url"/>
@@ -2202,14 +2197,8 @@ button[onclick*="showAdminLogin"] { display:none !important; }
 <small>Files inside your laptop's <b>public_files</b> folder appear here. Generate a public link for each file without uploading the file to GitHub or Google Drive.</small>
 <div class="message" id="publicFilesMessage"></div>
 <div class="admin-list" id="publicFilesList"><div class="empty">Loading public files...</div></div>
-</div></div></div></div>
-</section>
-<section class="page-view" id="admin">
-<div class="panel" id="adminPanel" style="display:none;"><h1>⚙ ADMIN DASHBOARD</h1><p class="about-text">
-          Add or remove the YouTube videos shown in the Chessboard Gallery.
-          For every video, you can also create a custom download button and link.
-        </p><div class="admin-accordion" id="adminSectionPosts"><button class="admin-accordion-title" onclick="toggleAdminAccordion('adminSectionPosts')" type="button">1  📝 POSTS UPDATE</button><div class="admin-accordion-body"><div class="admin-row admin-post-form">
-<h3 class="admin-section-title"><span class="admin-section-number">1</span> 📝 POSTS UPDATE</h3>
+</div></div></div><div class="admin-accordion" id="adminSectionPosts"><button class="admin-accordion-title" onclick="toggleAdminAccordion('adminSectionPosts')" type="button">3  📝 POSTS UPDATE</button><div class="admin-accordion-body"><div class="admin-row admin-post-form">
+<h3 class="admin-section-title"><span class="admin-section-number">3</span> 📝 POSTS UPDATE</h3>
 <small>Posts Update controls the newest posts shown on Home. The newest update appears at the top; the Home Headline stays separately in the upper section.</small>
 <textarea id="newPostText" maxlength="5000" placeholder="Write a new Posts Update here..."></textarea>
 <input id="newPostYoutube" maxlength="500" placeholder="Optional YouTube link — https://www.youtube.com/watch?v=..." style="margin-top:8px;width:100%;padding:11px 12px;border-radius:8px;border:1px solid rgba(255,80,90,.35);background:#130407;color:#fff;outline:none;" type="url"/>
@@ -2222,8 +2211,8 @@ button[onclick*="showAdminLogin"] { display:none !important; }
 </div><div class="admin-row">
 <h3>📋 SAVED POSTS UPDATES</h3>
 <div class="admin-list" id="adminPostList">Loading...</div>
-</div></div></div><div class="admin-accordion" id="adminSectionAbout"><button class="admin-accordion-title" onclick="toggleAdminAccordion('adminSectionAbout')" type="button">2  👤 EDIT ABOUT ME</button><div class="admin-accordion-body"><div class="admin-row about-admin-form">
-<h3 class="admin-section-title"><span class="admin-section-number">2</span> 👤 EDIT ABOUT ME</h3>
+</div></div></div><div class="admin-accordion" id="adminSectionAbout"><button class="admin-accordion-title" onclick="toggleAdminAccordion('adminSectionAbout')" type="button">4  👤 EDIT ABOUT ME</button><div class="admin-accordion-body"><div class="admin-row about-admin-form">
+<h3 class="admin-section-title"><span class="admin-section-number">4</span> 👤 EDIT ABOUT ME</h3>
 <small>Edit the About Me details shown on the public About Me page. Your changes are saved to the website.</small>
 <textarea class="about-admin-textarea" id="aboutDetailsInput" maxlength="5000" placeholder="Write your About Me details..."></textarea>
 <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;">
@@ -2231,8 +2220,8 @@ button[onclick*="showAdminLogin"] { display:none !important; }
 <button class="danger" id="cancelAboutButton" onclick="loadAboutIntoAdmin()" style="display:none" type="button">CANCEL</button>
 </div>
 <div class="message" id="aboutAdminMessage"></div>
-</div></div></div><div class="admin-accordion" id="adminSectionHeadline"><button class="admin-accordion-title" onclick="toggleAdminAccordion('adminSectionHeadline')" type="button">3  ✨ CUSTOMIZE HOME HEADLINE</button><div class="admin-accordion-body"><div class="admin-row">
-<h3 class="admin-section-title"><span class="admin-section-number">3</span> ✨ CUSTOMIZE HOME HEADLINE</h3>
+</div></div></div><div class="admin-accordion" id="adminSectionHeadline"><button class="admin-accordion-title" onclick="toggleAdminAccordion('adminSectionHeadline')" type="button">5  ✨ CUSTOMIZE HOME HEADLINE</button><div class="admin-accordion-body"><div class="admin-row">
+<h3 class="admin-section-title"><span class="admin-section-number">5</span> ✨ CUSTOMIZE HOME HEADLINE</h3>
 <small>This is the permanent headline displayed in the upper part of Home. It is separate from Posts Update, which contains the newest posts.</small>
 <input id="homeHeadlineInput" maxlength="120" placeholder="Home headline — e.g. DU3D OFFICIAL" style="margin-top:10px" type="text"/>
 <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;">
@@ -2240,8 +2229,8 @@ button[onclick*="showAdminLogin"] { display:none !important; }
 <button class="danger" onclick="resetHomeHeadline()" style="margin-top:0" type="button">RESET</button>
 </div>
 <div class="message" id="homeHeadlineMessage"></div>
-</div></div></div><div class="admin-accordion" id="adminSectionLinks"><button class="admin-accordion-title" onclick="toggleAdminAccordion('adminSectionLinks')" type="button">4  🔗 CUSTOM MY LINKS</button><div class="admin-accordion-body"><div class="admin-row">
-<h3 class="admin-section-title"><span class="admin-section-number">4</span> 🔗 CUSTOM MY LINKS</h3>
+</div></div></div><div class="admin-accordion" id="adminSectionLinks"><button class="admin-accordion-title" onclick="toggleAdminAccordion('adminSectionLinks')" type="button">6  🔗 CUSTOM MY LINKS</button><div class="admin-accordion-body"><div class="admin-row">
+<h3 class="admin-section-title"><span class="admin-section-number">6</span> 🔗 CUSTOM MY LINKS</h3>
 <small>Add your own link name and URL. It will appear automatically under MY LINKS.</small>
 <input id="customLinkName" maxlength="60" placeholder="Link name — e.g. TikTok" style="margin-top:10px" type="text"/>
 <input id="customLinkUrl" maxlength="2000" placeholder="Link URL — https://..." style="margin-top:8px" type="url"/>
@@ -2250,7 +2239,7 @@ button[onclick*="showAdminLogin"] { display:none !important; }
 </div>
 <div class="message" id="customLinkMessage"></div>
 <div class="admin-list" id="customLinksAdminList" style="margin-top:10px"></div>
-</div></div></div><div class="admin-accordion" id="adminSectionAvatars"><button class="admin-accordion-title" onclick="toggleAdminAccordion('adminSectionAvatars')" type="button">5  🧑‍🎨 USER AVATARS</button><div class="admin-accordion-body"><div class="admin-row">
+</div></div></div><div class="admin-accordion" id="adminSectionAvatars"><button class="admin-accordion-title" onclick="toggleAdminAccordion('adminSectionAvatars')" type="button">7  🧑‍🎨 USER AVATARS</button><div class="admin-accordion-body"><div class="admin-row">
 <h3>🧑‍🎨 UPLOAD USER AVATAR</h3><small>Users cannot upload their own profile images. Only avatars uploaded here by DU3D can be chosen by users.</small>
 <input id="userAvatarName" maxlength="40" placeholder="Avatar name — e.g. Warrior" type="text"/>
 <input id="userAvatarFile" accept="image/png,image/jpeg,image/webp,image/gif" style="margin-top:8px" type="file"/>
@@ -2550,15 +2539,8 @@ function showPage(page){
     if(typeof renderNames === "function") renderNames();
   }
 
-  if(page==="admin" || page==="adminUploads"){
+  if(page==="admin"){
     updateAdminUI();
-    if(page==="adminUploads" && !adminToken){
-      showPage("home");
-      return;
-    }
-    if(page==="adminUploads" && typeof loadPublicFiles === "function"){
-      loadPublicFiles();
-    }
   }
 
   /*
@@ -4177,21 +4159,9 @@ function updateAdminUI(){
   syncAdminSession();
   const loggedIn=!!adminToken;
   const adminPanel=document.getElementById('adminPanel');
-  const adminUploadsPanel=document.getElementById('adminUploadsPanel');
   const settings=document.getElementById('adminSettingsButton');
-  const uploadsButton=document.getElementById('adminUploadsButton');
   if(adminPanel) adminPanel.style.display=loggedIn?'block':'none';
-  if(adminUploadsPanel) adminUploadsPanel.style.display=loggedIn?'block':'none';
   if(settings) settings.style.display=loggedIn?'block':'none';
-  if(uploadsButton) uploadsButton.style.display=loggedIn?'block':'none';
-  if(!loggedIn){
-    const uploadsPage=document.getElementById('adminUploads');
-    if(uploadsPage && uploadsPage.classList.contains('active')){
-      uploadsPage.classList.remove('active');
-      const homePage=document.getElementById('home');
-      if(homePage) homePage.classList.add('active');
-    }
-  }
   if(loggedIn){
     loadAdmin();
     loadPrivateInbox();
@@ -4229,6 +4199,129 @@ let publicFilesAutoRefreshTimer=null;
 let publicFilesAutoRefreshStarted=false;
 const PUBLIC_FILES_AUTO_REFRESH_MS=5000;
 
+let publicFilesCurrentPath='';
+let publicFilesSnapshot=[];
+
+function publicFilesServerRoot(){
+  const base=String(window.DU3D_PUBLIC_FILES_URL||'').replace(/\/$/,'');
+  if(!base) return '';
+  try{
+    const u=new URL(base,window.location.href);
+    u.pathname=u.pathname.replace(/\/files\/?$/,'/').replace(/\/$/,'');
+    u.search='';
+    u.hash='';
+    return u.toString().replace(/\/$/,'');
+  }catch(e){
+    return base.replace(/\/files\/?$/,'');
+  }
+}
+
+function publicFilesEncodePath(path){
+  return String(path||'').split('/').filter(Boolean).map(encodeURIComponent).join('/');
+}
+
+function publicFilesMakeLink(path){
+  const root=publicFilesServerRoot();
+  const encoded=publicFilesEncodePath(path);
+  return root+(encoded?'/'+encoded:'');
+}
+
+function publicFilesBuildFolders(files){
+  const folders={};
+  files.forEach(function(file){
+    const rel=String(file.path||file.name||'').replace(/^\/+|\/+$/g,'');
+    const parts=rel.split('/').filter(Boolean);
+    if(parts.length<2) return;
+    let current='';
+    for(let i=0;i<parts.length-1;i++){
+      current=current?current+'/'+parts[i]:parts[i];
+      if(!folders[current]){
+        folders[current]={name:parts[i],path:current};
+      }
+    }
+  });
+  return Object.keys(folders).map(function(key){return folders[key];}).sort(function(a,b){return a.path.localeCompare(b.path,undefined,{sensitivity:'base'});});
+}
+
+function publicFilesImmediateFolders(files,currentPath){
+  const prefix=currentPath ? currentPath+'/' : '';
+  const found={};
+  files.forEach(function(file){
+    const rel=String(file.path||file.name||'').replace(/^\/+|\/+$/g,'');
+    if(rel.indexOf(prefix)!==0) return;
+    const rest=rel.slice(prefix.length);
+    const slash=rest.indexOf('/');
+    if(slash<0) return;
+    const name=rest.slice(0,slash);
+    if(!name) return;
+    const path=prefix+name;
+    found[path]={name:name,path:path};
+  });
+  return Object.keys(found).map(function(k){return found[k];}).sort(function(a,b){return a.name.localeCompare(b.name,undefined,{sensitivity:'base'});});
+}
+
+function publicFilesImmediateFiles(files,currentPath){
+  const prefix=currentPath ? currentPath+'/' : '';
+  return files.filter(function(file){
+    const rel=String(file.path||file.name||'').replace(/^\/+|\/+$/g,'');
+    if(rel.indexOf(prefix)!==0) return false;
+    return rel.slice(prefix.length).indexOf('/')===-1;
+  }).sort(function(a,b){
+    return String(a.name||a.path||'').localeCompare(String(b.name||b.path||''),undefined,{sensitivity:'base'});
+  });
+}
+
+function publicFilesRender(){
+  const list=document.getElementById('publicFilesList');
+  const msg=document.getElementById('publicFilesMessage');
+  if(!list) return;
+  const path=publicFilesCurrentPath;
+  const folders=publicFilesImmediateFolders(publicFilesSnapshot,path);
+  const files=publicFilesImmediateFiles(publicFilesSnapshot,path);
+  let html='';
+
+  html+='<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:10px">';
+  if(path){
+    const parent=path.split('/').slice(0,-1).join('/');
+    html+='<button class="options-button" type="button" onclick="publicFilesOpenFolder(\''+escapeJs(parent)+'\')">⬆️ UP</button>';
+  }
+  html+='<button class="options-button" type="button" onclick="publicFilesOpenFolder(\'\')">🏠 ROOT</button>';
+  html+='<strong style="word-break:break-all">📁 '+escapeHtml(path||'Public Files')+'</strong></div>';
+
+  folders.forEach(function(folder){
+    const link=publicFilesMakeLink(folder.path)+'/';
+    html+='<div class="admin-list-item" style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap">'
+      +'<div style="min-width:0;flex:1"><strong style="word-break:break-word">📁 '+escapeHtml(folder.name)+'</strong>'
+      +'<div class="admin-video-meta">Folder</div></div>'
+      +'<div style="display:flex;gap:6px;flex-wrap:wrap">'
+      +'<button class="options-button" type="button" onclick="publicFilesOpenFolder(\''+escapeJs(folder.path)+'\')">OPEN</button>'
+      +'<button class="options-button" type="button" onclick="copyPublicFileLink(\''+escapeJs(link)+'\')">🔗 COPY LINK</button>'
+      +'</div></div>';
+  });
+
+  files.forEach(function(file){
+    const rel=String(file.path||file.name||'');
+    const link=publicFilesMakeLink(rel);
+    const size=Number(file.size)||0;
+    const sizeText=size<1024 ? size+' B' : size<1024*1024 ? (size/1024).toFixed(1)+' KB' : (size/1024/1024).toFixed(1)+' MB';
+    html+='<div class="admin-list-item" style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap">'
+      +'<div style="min-width:0;flex:1"><strong style="word-break:break-word">📄 '+escapeHtml(file.name||rel)+'</strong>'
+      +'<div class="admin-video-meta">'+sizeText+(file.modified?' • '+escapeHtml(formatDate(file.modified)):'')+'</div></div>'
+      +'<button class="options-button" type="button" onclick="copyPublicFileLink(\''+escapeJs(link)+'\')">🔗 COPY LINK</button></div>';
+  });
+
+  if(!folders.length && !files.length){
+    html+='<div class="empty">This folder is empty.</div>';
+  }
+  list.innerHTML=html;
+  if(msg) msg.textContent='';
+}
+
+function publicFilesOpenFolder(path){
+  publicFilesCurrentPath=String(path||'').replace(/^\/+|\/+$/g,'');
+  publicFilesRender();
+}
+
 function loadPublicFiles(options){
   options=options||{};
   const list=document.getElementById('publicFilesList');
@@ -4244,7 +4337,7 @@ function loadPublicFiles(options){
 
   const silent=!!options.silent;
   publicFilesLoading=true;
-  if(!silent) list.innerHTML='<div class="empty">Loading public files...</div>';
+  if(!silent && !publicFilesSnapshot.length) list.innerHTML='<div class="empty">Loading public files...</div>';
   if(!silent && msg) msg.textContent='';
 
   const controller=new AbortController();
@@ -4261,26 +4354,8 @@ function loadPublicFiles(options){
   })
   .then(function(data){
     const files=data && Array.isArray(data.files) ? data.files : [];
-    if(!files.length){
-      list.innerHTML='<div class="empty">No files found in public_files.</div>';
-      return;
-    }
-    if(!files.length){
-      if(!silent || !list.querySelector('.admin-list-item')) {
-        list.innerHTML='<div class="empty">No files found in public_files.</div>';
-      }
-      return;
-    }
-    list.innerHTML=files.map(function(file,fileIndex){
-      const rel=String(file.path||file.name||'');
-      const link=base+'/'+rel.split('/').map(encodeURIComponent).join('/');
-      const size=Number(file.size)||0;
-      let sizeText=size<1024 ? size+' B' : size<1024*1024 ? (size/1024).toFixed(1)+' KB' : (size/1024/1024).toFixed(1)+' MB';
-      return '<div class="admin-list-item" style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap">'
-        +'<div style="min-width:0;flex:1"><strong style="word-break:break-word">'+escapeHtml(rel)+'</strong>'
-        +'<div class="admin-video-meta">'+sizeText+(file.modified?' • '+escapeHtml(formatDate(file.modified)):'')+'</div></div>'
-        +'<button class="options-button" type="button" onclick="copyPublicFileLink(\''+escapeJs(link)+'\')">🔗 COPY LINK</button></div>';
-    }).join('');
+    publicFilesSnapshot=files;
+    publicFilesRender();
   })
   .catch(function(err){
     const isTimeout=err && err.name==='AbortError';
