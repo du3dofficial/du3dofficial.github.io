@@ -11,7 +11,7 @@
     <!-- TUNNEL CONFIG -->
     <script>
     window.DU3D_API_BACKUP_URL = '';
-    window.DU3D_PUBLIC_FILES_URL = 'https://anticipated-clearance-leasing-purchased.trycloudflare.com';
+    window.DU3D_PUBLIC_FILES_URL = '';
 
     fetch('tunnel.json?t=' + Date.now(), {
       cache: 'no-store'
@@ -29,10 +29,8 @@
       console.log('DU3D tunnel loaded:', config.tunnelUrl);
       console.log('DU3D public files loaded:', window.DU3D_PUBLIC_FILES_URL);
 
-      // Immediately connect to the laptop public file server after tunnel.json loads.
-      if (typeof loadPublicFiles === 'function') {
-        loadPublicFiles({silent: false});
-      }
+      // Public Files is an ADMIN-ONLY service. Do not connect to the
+      // laptop file server until an administrator is actually signed in.
     })
     .catch(function(error) {
       console.error('Could not load tunnel.json:', error);
@@ -2177,8 +2175,8 @@ button[onclick*="showAdminLogin"] { display:none !important; }
 <div class="panel" id="adminPanel" style="display:none;"><h1>⚙ ADMIN DASHBOARD</h1><p class="about-text">
           Add or remove the YouTube videos shown in the Chessboard Gallery.
           For every video, you can also create a custom download button and link.
-        </p><div class="admin-accordion" id="adminSectionVideos"><button class="admin-accordion-title" onclick="toggleAdminAccordion('adminSectionVideos')" type="button">1  ➕ ADD VIDEO TO CHESSBOARD GALLERY</button><div class="admin-accordion-body"><div class="admin-row add-video-form">
-<h3 class="admin-section-title"><span class="admin-section-number">1</span> ➕ ADD VIDEO TO CHESSBOARD GALLERY</h3>
+        </p><div class="admin-accordion" id="adminSectionVideos"><button class="admin-accordion-title" onclick="toggleAdminAccordion('adminSectionVideos')" type="button">1  🎬 VIDEO GALLERY — ADMIN ONLY</button><div class="admin-accordion-body"><div class="admin-row add-video-form">
+<h3 class="admin-section-title"><span class="admin-section-number">1</span> 🎬 VIDEO GALLERY — ADMIN ONLY</h3>
 <small>Fill in the YouTube Link, Download Link and optional Video Title. After saving, the form clears automatically so you can add another video immediately.</small>
 <input id="newVideoUrl" placeholder="YouTube Video Link — https://www.youtube.com/watch?v=..." type="url"/>
 <input id="newDownloadUrl" placeholder="Download Link — https://example.com/file" style="margin-top:8px" type="url"/>
@@ -2192,9 +2190,9 @@ button[onclick*="showAdminLogin"] { display:none !important; }
 </div><div class="admin-row">
 <h3>📋 SAVED VIDEOS</h3>
 <div class="admin-list" id="adminList">Loading...</div>
-</div></div></div><div class="admin-accordion" id="adminSectionPublicFiles"><button class="admin-accordion-title" onclick="toggleAdminAccordion('adminSectionPublicFiles')" type="button">2  📁 PUBLIC FILES</button><div class="admin-accordion-body"><div class="admin-row">
-<h3 class="admin-section-title"><span class="admin-section-number">2</span> 📁 PUBLIC FILES</h3>
-<small>Files inside your laptop's <b>public_files</b> folder appear here. Generate a public link for each file without uploading the file to GitHub or Google Drive.</small>
+</div></div></div><div class="admin-accordion" id="adminSectionPublicFiles"><button class="admin-accordion-title" onclick="toggleAdminAccordion('adminSectionPublicFiles')" type="button">2  📁 PUBLIC FILE SERVER — ADMIN ONLY</button><div class="admin-accordion-body"><div class="admin-row">
+<h3 class="admin-section-title"><span class="admin-section-number">2</span> 📁 PUBLIC FILE SERVER — ADMIN ONLY</h3>
+<small>Files inside your laptop's <b>public_files</b> folder appear here. This server is connected only while the administrator is signed in. Generate a public link for each file without uploading the file to GitHub or Google Drive.</small>
 <div class="message" id="publicFilesMessage"></div>
 <div class="admin-list" id="publicFilesList"><div class="empty">Loading public files...</div></div>
 </div></div></div><div class="admin-accordion" id="adminSectionPosts"><button class="admin-accordion-title" onclick="toggleAdminAccordion('adminSectionPosts')" type="button">3  📝 POSTS UPDATE</button><div class="admin-accordion-body"><div class="admin-row admin-post-form">
@@ -2790,7 +2788,7 @@ function renderGallery(){
   if(!videos.length){
 
     board.innerHTML=
-      '<div class="empty">No videos added yet. The administrator can add YouTube videos above.</div>';
+      '<div class="empty">No videos added yet. The administrator can add YouTube videos from the Admin Dashboard.</div>';
 
     return;
   }
@@ -4166,11 +4164,15 @@ function updateAdminUI(){
     loadAdmin();
     loadPrivateInbox();
     startPrivateAdminInboxPolling();
+    // Public Files Server is available only while the Admin Dashboard is authenticated.
+    startPublicFilesAutoRefresh();
   }else{
     stopPrivateAdminInboxPolling();
     closeAdminPrivateChat();
     privateAdminSelectedUserId='';
     privateAdminSelectedUsername='';
+    // Stop all public-file polling and clear its admin-only display after logout.
+    stopPublicFilesAutoRefresh();
   }
   updatePrivateMessageFloat();
   if(typeof window.du3dUpdateSpinnerAvatar==='function') window.du3dUpdateSpinnerAvatar();
@@ -4267,20 +4269,36 @@ function loadPublicFiles(options){
 
 
 function startPublicFilesAutoRefresh(){
+  // Hard admin-session gate: never poll the public file server for guests.
+  if(!adminToken) return;
   if(publicFilesAutoRefreshStarted) return;
   publicFilesAutoRefreshStarted=true;
 
-  // Refresh while the PUBLIC FILES panel exists, even when it is currently
-  // hidden. This keeps the next manual opening instantly up to date.
   loadPublicFiles({silent:true});
 
   publicFilesAutoRefreshTimer=setInterval(function(){
-    loadPublicFiles({silent:true});
+    if(adminToken) loadPublicFiles({silent:true});
   },PUBLIC_FILES_AUTO_REFRESH_MS);
 
-  document.addEventListener('visibilitychange',function(){
-    if(!document.hidden) loadPublicFiles({silent:true});
-  });
+  if(!window.du3dPublicFilesVisibilityHandler){
+    window.du3dPublicFilesVisibilityHandler=function(){
+      if(!document.hidden && adminToken) loadPublicFiles({silent:true});
+    };
+    document.addEventListener('visibilitychange',window.du3dPublicFilesVisibilityHandler);
+  }
+}
+
+function stopPublicFilesAutoRefresh(){
+  if(publicFilesAutoRefreshTimer){
+    clearInterval(publicFilesAutoRefreshTimer);
+    publicFilesAutoRefreshTimer=null;
+  }
+  publicFilesAutoRefreshStarted=false;
+
+  const list=document.getElementById('publicFilesList');
+  const msg=document.getElementById('publicFilesMessage');
+  if(list) list.innerHTML='<div class="empty">Admin sign-in required to view public files.</div>';
+  if(msg) msg.textContent='';
 }
 
 function closePublicFileMenus(){
@@ -9060,7 +9078,8 @@ loadCurrentUser();
 
 loadSite();
 startLiveCommentSync();
-startPublicFilesAutoRefresh();
+// Public Files Server is intentionally NOT started globally.
+// updateAdminUI() starts it only for an authenticated administrator.
 
 /*
  * Start on gallery.
