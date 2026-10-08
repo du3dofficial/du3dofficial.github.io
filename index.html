@@ -23,10 +23,13 @@
       return response.json();
     })
     .then(function(config) {
-      window.DU3D_API_BACKUP_URL = config.apiUrl || '';
-      window.DU3D_PUBLIC_FILES_URL = config.publicFilesUrl || '';
+      // Support either the old 3-link tunnel.json or a simpler 1-link setup.
+      // If only tunnelUrl is provided, automatically use /api and /files.
+      var tunnelBase = String(config.tunnelUrl || '').replace(/\/$/, '');
+      window.DU3D_API_BACKUP_URL = config.apiUrl || (tunnelBase ? tunnelBase + '/api' : '');
+      window.DU3D_PUBLIC_FILES_URL = config.publicFilesUrl || (tunnelBase ? tunnelBase + '/files' : '');
 
-      console.log('DU3D tunnel loaded:', config.tunnelUrl);
+      console.log('DU3D tunnel loaded:', tunnelBase);
       console.log('DU3D public files loaded:', window.DU3D_PUBLIC_FILES_URL);
 
       // Immediately connect to the laptop public file server after tunnel.json loads.
