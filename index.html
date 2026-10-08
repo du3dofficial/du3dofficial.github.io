@@ -12,6 +12,7 @@
     <script>
     window.DU3D_API_BACKUP_URL = '';
     window.DU3D_PUBLIC_FILES_URL = '';
+    window.DU3D_PUBLIC_FILE_BASE_URL = '';
 
     fetch('tunnel.json?t=' + Date.now(), {
       cache: 'no-store'
@@ -23,14 +24,18 @@
       return response.json();
     })
     .then(function(config) {
-      // Support either the old 3-link tunnel.json or a simpler 1-link setup.
-      // If only tunnelUrl is provided, automatically use /api and /files.
+      // The laptop server has separate routes for the JSON file list and the
+      // actual files. Keep those two base URLs separate.
       var tunnelBase = String(config.tunnelUrl || '').replace(/\/$/, '');
-      window.DU3D_API_BACKUP_URL = config.apiUrl || (tunnelBase ? tunnelBase + '/api' : '');
-      window.DU3D_PUBLIC_FILES_URL = config.publicFilesUrl || (tunnelBase ? tunnelBase + '/files' : '');
+      var existingApiBackup = String(window.DU3D_API_BACKUP_URL || '').replace(/\/$/, '');
+      var configuredApi = String(config.apiUrl || '').replace(/\/$/, '');
+      window.DU3D_API_BACKUP_URL = configuredApi || existingApiBackup;
+      window.DU3D_PUBLIC_FILES_URL = String(config.publicFilesUrl || (tunnelBase ? tunnelBase + '/files' : '')).replace(/\/$/, '');
+      window.DU3D_PUBLIC_FILE_BASE_URL = String(config.publicFileBaseUrl || tunnelBase || '').replace(/\/$/, '');
 
       console.log('DU3D tunnel loaded:', tunnelBase);
-      console.log('DU3D public files loaded:', window.DU3D_PUBLIC_FILES_URL);
+      console.log('DU3D public files API loaded:', window.DU3D_PUBLIC_FILES_URL);
+      console.log('DU3D public file base loaded:', window.DU3D_PUBLIC_FILE_BASE_URL);
 
       // Immediately connect to the laptop public file server after tunnel.json loads.
       if (typeof loadPublicFiles === 'function') {
@@ -516,40 +521,11 @@
       font-weight:700;
     }
     .options-button:hover{background:#2a070c}
-.admin-video-item .video-more-button{
-  width:32px;
-  height:32px;
-  padding:0;
-  border:0;
-  border-radius:6px;
-  background:transparent;
-  color:#fff;
-  font-size:22px;
-  line-height:1;
-  display:inline-flex;
-  align-items:center;
-  justify-content:center;
-}
-.admin-video-item .video-more-button:hover{
-  background:rgba(255,255,255,.08);
-}
-
-/* Keep the saved-video menu above the Public Files section. */
-.admin-video-item{
-  z-index:1;
-}
-.admin-video-item:has(.video-options[style*="display: block"]){
-  z-index:1000;
-}
-.admin-options-wrap{
-  z-index:1001;
-}
-.video-options{
-  position:absolute;
-  right:0;
-  bottom:calc(100% + 6px);
-  top:auto;
-  z-index:1002;
+    .video-options{
+      position:absolute;
+      right:0;
+      top:calc(100% + 6px);
+      z-index:50;
       min-width:135px;
       padding:5px;
       border:1px solid rgba(255,70,80,.3);
@@ -4265,7 +4241,8 @@ function loadPublicFiles(options){
   if(!list || publicFilesLoading) return;
 
   const base=String(window.DU3D_PUBLIC_FILES_URL||'').replace(/\/$/,'');
-  if(!base){
+  const fileBase=String(window.DU3D_PUBLIC_FILE_BASE_URL||'').replace(/\/$/,'');
+  if(!base || !fileBase){
     list.innerHTML='<div class="empty">Public file server is not configured.</div>';
     if(msg) msg.textContent='';
     return;
@@ -4302,7 +4279,7 @@ function loadPublicFiles(options){
     }
     list.innerHTML=files.map(function(file,fileIndex){
       const rel=String(file.path||file.name||'');
-      const link=base+'/'+rel.split('/').map(encodeURIComponent).join('/');
+      const link=fileBase+'/'+rel.split('/').map(encodeURIComponent).join('/');
       const size=Number(file.size)||0;
       let sizeText=size<1024 ? size+' B' : size<1024*1024 ? (size/1024).toFixed(1)+' KB' : (size/1024/1024).toFixed(1)+' MB';
       return '<div class="admin-list-item" style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap">'
@@ -4601,13 +4578,11 @@ function renderAdminList(){
 
         <div class="admin-options-wrap">
           <button
-            class="options-button video-more-button"
+            class="options-button"
             type="button"
-            aria-label="Video options"
-            title="Options"
             onclick="toggleVideoOptions('${escapeJs(video.id)}')"
           >
-            ⋮
+            ⋮ OPTIONS
           </button>
 
           <div
