@@ -516,6 +516,23 @@
       font-weight:700;
     }
     .options-button:hover{background:#2a070c}
+.admin-video-item .video-more-button{
+  width:32px;
+  height:32px;
+  padding:0;
+  border:0;
+  border-radius:6px;
+  background:transparent;
+  color:#fff;
+  font-size:22px;
+  line-height:1;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+}
+.admin-video-item .video-more-button:hover{
+  background:rgba(255,255,255,.08);
+}
     .video-options{
       position:absolute;
       right:0;
@@ -4572,11 +4589,13 @@ function renderAdminList(){
 
         <div class="admin-options-wrap">
           <button
-            class="options-button"
+            class="options-button video-more-button"
             type="button"
+            aria-label="Video options"
+            title="Options"
             onclick="toggleVideoOptions('${escapeJs(video.id)}')"
           >
-            ⋮ OPTIONS
+            ⋮
           </button>
 
           <div
