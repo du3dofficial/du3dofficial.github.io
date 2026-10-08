@@ -1,3 +1,5 @@
 {
-  "tunnelUrl": "https://partnership-smaller-artificial-premier.trycloudflare.com"
+  "tunnelUrl": "https://partnership-smaller-artificial-premier.trycloudflare.com",
+  "apiUrl": "https://partnership-smaller-artificial-premier.trycloudflare.com/api",
+  "publicFilesUrl": "https://partnership-smaller-artificial-premier.trycloudflare.com/files"
 }
