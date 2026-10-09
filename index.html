@@ -5179,6 +5179,10 @@ function getServerError(err){
   let playerDisplayColor="blue";
   let pendingPromotion=null;
   let lastAiMove=null;
+  let stockfishWorker=null;
+  let stockfishStatus="idle";
+  let stockfishPendingFen="";
+  let stockfishMoveHandler=null;
   let capturedPieces={blue:[],red:[]};
 
   function resetCapturedPieces(){ capturedPieces={blue:[],red:[]}; renderCapturedPieces(); }
@@ -8774,6 +8778,108 @@ function getServerError(err){
      AI MOVE
      ===================================================== */
 
+  function sendStockfishSearch(){
+    if(!stockfishWorker||stockfishStatus!=="ready"||!stockfishPendingFen)return;
+    stockfishWorker.postMessage("ucinewgame");
+    stockfishWorker.postMessage("position fen "+stockfishPendingFen);
+    stockfishWorker.postMessage("go movetime 5000");
+  }
+
+  function ensureStockfish(){
+    if(stockfishStatus==="failed")return false;
+    if(stockfishWorker)return true;
+    try{
+      stockfishStatus="loading";
+      stockfishWorker=new Worker(new URL("stockfish-engine.js",document.baseURI));
+      stockfishWorker.onmessage=function(event){
+        const line=String(event.data||"").trim();
+        if(line==="uciok"){
+          stockfishWorker.postMessage("setoption name Threads value 1");
+          stockfishWorker.postMessage("setoption name Hash value 64");
+          stockfishWorker.postMessage("setoption name Skill Level value 20");
+          stockfishWorker.postMessage("isready");
+          return;
+        }
+        if(line==="readyok"){
+          stockfishStatus="ready";
+          sendStockfishSearch();
+          return;
+        }
+        if(line.indexOf("info depth ")===0&&aiThinking){
+          const depthMatch=line.match(/\bdepth (\d+)/);
+          const nodesMatch=line.match(/\bnodes (\d+)/);
+          if(aiInfoElement)aiInfoElement.textContent="♟ Stockfish 19 • Depth "+(depthMatch?depthMatch[1]:"-")+(nodesMatch?" • "+Number(nodesMatch[1]).toLocaleString()+" nodes":"");
+          return;
+        }
+        if(line.indexOf("bestmove ")===0){
+          const match=line.match(/^bestmove\s+([a-h][1-8])([a-h][1-8])([qrbn])?/i);
+          const handler=stockfishMoveHandler;
+          stockfishMoveHandler=null;
+          stockfishPendingFen="";
+          if(handler)handler(match?{from:match[1],to:match[2],promotion:match[3]||"q"}:null,null);
+        }
+      };
+      stockfishWorker.onerror=function(error){
+        stockfishStatus="failed";
+        stockfishWorker=null;
+        const handler=stockfishMoveHandler;
+        stockfishMoveHandler=null;
+        stockfishPendingFen="";
+        if(handler)handler(null,error||new Error("Stockfish failed to load."));
+      };
+      stockfishWorker.postMessage("uci");
+      return true;
+    }catch(error){
+      stockfishStatus="failed";
+      stockfishWorker=null;
+      return false;
+    }
+  }
+
+  function searchWithStockfish(fen,handler){
+    stockfishPendingFen=fen;
+    stockfishMoveHandler=handler;
+    if(!ensureStockfish()){
+      stockfishMoveHandler=null;
+      stockfishPendingFen="";
+      handler(null,new Error("Stockfish is unavailable."));
+      return;
+    }
+    if(stockfishStatus==="ready")sendStockfishSearch();
+  }
+
+  function finishAiMove(bestMove,searchFen,engineError){
+    if(!aiThinking)return;
+    if(chessMode!=="ai"||!gameStarted||game.fen()!==searchFen){
+      aiThinking=false;
+      newGameButton.disabled=false;
+      return;
+    }
+    if(!bestMove){
+      // Keep the existing search as a local fallback if the browser cannot load Stockfish.
+      if(engineError&&aiInfoElement)aiInfoElement.textContent="Stockfish unavailable — using DU3D local engine.";
+      bestMove=findBestMove();
+    }
+    if(bestMove){
+      try{
+        const completedAiMove=game.move(bestMove);
+        if(!completedAiMove)throw new Error("The engine returned an illegal move.");
+        setLastAiMove(completedAiMove,getAiDisplayColor());
+        recordCapturedPiece(completedAiMove,getAiDisplayColor());
+        du3dRecordAiLearningResponse(completedAiMove);
+      }catch(error){
+        console.error("DU3D AI move error:",error);
+      }
+    }
+    aiThinking=false;
+    newGameButton.disabled=false;
+    selectedSquare=null;
+    legalMoves=[];
+    drawBoard();
+    updateStatus();
+    if(game.game_over())du3dFinishAdaptiveGame(game.in_checkmate()?(game.turn()==="w"?1:-1):0);
+  }
+
   function aiMove(){
 
     if(
@@ -8797,55 +8903,12 @@ function getServerError(err){
     statusElement.textContent=
       getAiIcon()+" DU3D is thinking...";
 
-    aiInfoElement.textContent=
-      "🧠 DU3D ULTRA calculating...";
-
-
-    /*
-     * Small delay lets the browser paint the
-     * "thinking" state before the CPU search.
-     */
-
+    const searchFen=game.fen();
+    if(aiInfoElement)aiInfoElement.textContent="♟ Stockfish 19 • calculating...";
     setTimeout(function(){
-
-      const bestMove=
-        findBestMove();
-
-
-      if(bestMove){
-
-        try{
-
-          const completedAiMove=game.move(bestMove);
-          setLastAiMove(completedAiMove || bestMove,getAiDisplayColor());
-          recordCapturedPiece(completedAiMove || bestMove,getAiDisplayColor());
-          du3dRecordAiLearningResponse(completedAiMove || bestMove);
-          // Enemy/AI moves are silent. Only the player's own move has sound.
-
-        }catch(e){
-
-          console.error(e);
-
-        }
-
-      }
-
-
-      aiThinking=false;
-
-      newGameButton.disabled=
-        false;
-
-      selectedSquare=null;
-      legalMoves=[];
-
-      drawBoard();
-      updateStatus();
-      if(game.game_over()){
-        du3dFinishAdaptiveGame(game.in_checkmate() ? (game.turn()==="w" ? 1 : -1) : 0);
-      }
-
-
+      searchWithStockfish(searchFen,function(bestMove,error){
+        finishAiMove(bestMove,searchFen,error);
+      });
     },80);
 
   }
