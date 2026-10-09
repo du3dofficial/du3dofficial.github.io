@@ -1891,7 +1891,6 @@ button[onclick*="showAdminLogin"] { display:none !important; }
 <button onclick="showPage('gallery')">♟ Chessboard Gallery</button>
 <button onclick="showPage('chess')">♟ Chess</button>
 <button onclick="showPage('spinner')">🎡 Wheel Spinner</button>
-<button onclick="showPage('publicFiles')">📁 Public Files</button>
 </div>
 <div class="menu-title" id="myLinksTitle" style="display:none">MY LINKS</div>
 <div class="menu" id="myLinksMenu"></div>
@@ -1956,14 +1955,6 @@ button[onclick*="showAdminLogin"] { display:none !important; }
 </div>
 </section>
 <!-- WHEEL SPINNER -->
-<section class="page-view" id="publicFiles">
-<div class="panel">
-<h1>📁 PUBLIC FILES</h1>
-<p class="about-text">Copy a public link to any file shared by DU3D.</p>
-<div class="message" id="publicFilesPublicMessage"></div>
-<div class="admin-list" id="publicFilesPublicList"><div class="empty">Loading public files...</div></div>
-</div>
-</section>
 <section class="page-view" id="spinner">
   <div class="header">
     <div class="title">🎡 WHEEL SPINNER</div>
@@ -2524,10 +2515,6 @@ function showPage(page){
 
   if(page==="gallery"){
     renderGallery();
-  }
-
-  if(page==="publicFiles" && typeof loadPublicFiles === "function"){
-    loadPublicFiles();
   }
 
   if(page==="spinner"){
@@ -4220,6 +4207,11 @@ function loadPublicFiles(options){
   const messages=[document.getElementById('publicFilesMessage'),document.getElementById('publicFilesPublicMessage')].filter(Boolean);
   if(!lists.length || publicFilesLoading) return;
 
+  if(!adminToken || !window.du3dUserToken){
+    lists.forEach(function(list){list.innerHTML='<div class="empty">Log in with the admin account to view public files.</div>';});
+    messages.forEach(function(msg){msg.textContent='';});
+    return;
+  }
   const base=String(window.DU3D_PUBLIC_FILES_URL||'').replace(/\/$/,'');
   const fileBase=String(window.DU3D_PUBLIC_FILE_BASE_URL||'').replace(/\/$/,'');
   if(!base || !fileBase){
@@ -4238,6 +4230,7 @@ function loadPublicFiles(options){
 
   fetch(base+'?list=1&ts='+Date.now(),{
     method:'GET',
+    headers:{'Accept':'application/json','Authorization':'Bearer '+String(window.du3dUserToken||'')},
     cache:'no-store',
     signal:controller.signal
   })
