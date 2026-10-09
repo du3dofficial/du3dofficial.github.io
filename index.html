@@ -4230,7 +4230,6 @@ function loadPublicFiles(options){
 
   fetch(base+'?list=1&ts='+Date.now(),{
     method:'GET',
-    headers:{'Accept':'application/json','Authorization':'Bearer '+String(window.du3dUserToken||'')},
     cache:'no-store',
     signal:controller.signal
   })
