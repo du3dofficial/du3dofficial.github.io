@@ -8,43 +8,10 @@
 <meta content="DU3D OFFICIAL — MCGG CHESSBOARD, Chess, Gallery and Community." name="description"/>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
 
-    <!-- TUNNEL CONFIG -->
+    <!-- STABLE PUBLIC FILES SERVER -->
     <script>
-    window.DU3D_API_BACKUP_URL = '';
-    window.DU3D_PUBLIC_FILES_URL = '';
-    window.DU3D_PUBLIC_FILE_BASE_URL = '';
-
-    fetch('tunnel.json?t=' + Date.now(), {
-      cache: 'no-store'
-    })
-    .then(function(response) {
-      if (!response.ok) {
-        throw new Error('tunnel.json not found');
-      }
-      return response.json();
-    })
-    .then(function(config) {
-      // The laptop server has separate routes for the JSON file list and the
-      // actual files. Keep those two base URLs separate.
-      var tunnelBase = String(config.tunnelUrl || '').replace(/\/$/, '');
-      var existingApiBackup = String(window.DU3D_API_BACKUP_URL || '').replace(/\/$/, '');
-      var configuredApi = String(config.apiUrl || '').replace(/\/$/, '');
-      window.DU3D_API_BACKUP_URL = configuredApi || existingApiBackup;
-      window.DU3D_PUBLIC_FILES_URL = String(config.publicFilesUrl || (tunnelBase ? tunnelBase + '/files' : '')).replace(/\/$/, '');
-      window.DU3D_PUBLIC_FILE_BASE_URL = String(config.publicFileBaseUrl || tunnelBase || '').replace(/\/$/, '');
-
-      console.log('DU3D tunnel loaded:', tunnelBase);
-      console.log('DU3D public files API loaded:', window.DU3D_PUBLIC_FILES_URL);
-      console.log('DU3D public file base loaded:', window.DU3D_PUBLIC_FILE_BASE_URL);
-
-      // Immediately connect to the laptop public file server after tunnel.json loads.
-      if (typeof loadPublicFiles === 'function') {
-        loadPublicFiles({silent: false});
-      }
-    })
-    .catch(function(error) {
-      console.error('Could not load tunnel.json:', error);
-    });
+    window.DU3D_PUBLIC_FILES_URL = 'https://desktop-96oacj7.tail3853ae.ts.net:8443/files';
+    window.DU3D_PUBLIC_FILE_BASE_URL = 'https://desktop-96oacj7.tail3853ae.ts.net:8443';
     </script>
 
     <!-- your other existing scripts -->
@@ -1924,6 +1891,7 @@ button[onclick*="showAdminLogin"] { display:none !important; }
 <button onclick="showPage('gallery')">♟ Chessboard Gallery</button>
 <button onclick="showPage('chess')">♟ Chess</button>
 <button onclick="showPage('spinner')">🎡 Wheel Spinner</button>
+<button onclick="showPage('publicFiles')">📁 Public Files</button>
 </div>
 <div class="menu-title" id="myLinksTitle" style="display:none">MY LINKS</div>
 <div class="menu" id="myLinksMenu"></div>
@@ -1988,6 +1956,14 @@ button[onclick*="showAdminLogin"] { display:none !important; }
 </div>
 </section>
 <!-- WHEEL SPINNER -->
+<section class="page-view" id="publicFiles">
+<div class="panel">
+<h1>📁 PUBLIC FILES</h1>
+<p class="about-text">Copy a public link to any file shared by DU3D.</p>
+<div class="message" id="publicFilesPublicMessage"></div>
+<div class="admin-list" id="publicFilesPublicList"><div class="empty">Loading public files...</div></div>
+</div>
+</section>
 <section class="page-view" id="spinner">
   <div class="header">
     <div class="title">🎡 WHEEL SPINNER</div>
@@ -2204,7 +2180,7 @@ button[onclick*="showAdminLogin"] { display:none !important; }
 <div class="admin-list" id="adminList">Loading...</div>
 </div></div></div><div class="admin-accordion" id="adminSectionPublicFiles"><button class="admin-accordion-title" onclick="toggleAdminAccordion('adminSectionPublicFiles')" type="button">2  📁 PUBLIC FILES</button><div class="admin-accordion-body"><div class="admin-row">
 <h3 class="admin-section-title"><span class="admin-section-number">2</span> 📁 PUBLIC FILES</h3>
-<small>Files inside your laptop's <b>public_files</b> folder appear here. Generate a public link for each file without uploading the file to GitHub or Google Drive.</small>
+<small>Files inside your laptop's <b>Pubic Files</b> folder appear here. Generate a public link for each file without uploading the file to GitHub or Google Drive.</small>
 <div class="message" id="publicFilesMessage"></div>
 <div class="admin-list" id="publicFilesList"><div class="empty">Loading public files...</div></div>
 </div></div></div></div>
@@ -2548,6 +2524,10 @@ function showPage(page){
 
   if(page==="gallery"){
     renderGallery();
+  }
+
+  if(page==="publicFiles" && typeof loadPublicFiles === "function"){
+    loadPublicFiles();
   }
 
   if(page==="spinner"){
@@ -4236,22 +4216,22 @@ const PUBLIC_FILES_AUTO_REFRESH_MS=5000;
 
 function loadPublicFiles(options){
   options=options||{};
-  const list=document.getElementById('publicFilesList');
-  const msg=document.getElementById('publicFilesMessage');
-  if(!list || publicFilesLoading) return;
+  const lists=[document.getElementById('publicFilesList'),document.getElementById('publicFilesPublicList')].filter(Boolean);
+  const messages=[document.getElementById('publicFilesMessage'),document.getElementById('publicFilesPublicMessage')].filter(Boolean);
+  if(!lists.length || publicFilesLoading) return;
 
   const base=String(window.DU3D_PUBLIC_FILES_URL||'').replace(/\/$/,'');
   const fileBase=String(window.DU3D_PUBLIC_FILE_BASE_URL||'').replace(/\/$/,'');
   if(!base || !fileBase){
-    list.innerHTML='<div class="empty">Public file server is not configured.</div>';
-    if(msg) msg.textContent='';
+    lists.forEach(function(list){list.innerHTML='<div class="empty">Public file server is not configured.</div>';});
+    messages.forEach(function(msg){msg.textContent='';});
     return;
   }
 
   const silent=!!options.silent;
   publicFilesLoading=true;
-  if(!silent) list.innerHTML='<div class="empty">Loading public files...</div>';
-  if(!silent && msg) msg.textContent='';
+  if(!silent) lists.forEach(function(list){list.innerHTML='<div class="empty">Loading public files...</div>';});
+  if(!silent) messages.forEach(function(msg){msg.textContent='';});
 
   const controller=new AbortController();
   const timer=setTimeout(function(){ controller.abort(); },8000);
@@ -4268,16 +4248,10 @@ function loadPublicFiles(options){
   .then(function(data){
     const files=data && Array.isArray(data.files) ? data.files : [];
     if(!files.length){
-      list.innerHTML='<div class="empty">No files found in public_files.</div>';
+      lists.forEach(function(list){list.innerHTML='<div class="empty">No files found in Pubic Files yet.</div>';});
       return;
     }
-    if(!files.length){
-      if(!silent || !list.querySelector('.admin-list-item')) {
-        list.innerHTML='<div class="empty">No files found in public_files.</div>';
-      }
-      return;
-    }
-    list.innerHTML=files.map(function(file,fileIndex){
+    const markup=files.map(function(file){
       const rel=String(file.path||file.name||'');
       const link=fileBase+'/'+rel.split('/').map(encodeURIComponent).join('/');
       const size=Number(file.size)||0;
@@ -4287,12 +4261,13 @@ function loadPublicFiles(options){
         +'<div class="admin-video-meta">'+sizeText+(file.modified?' • '+escapeHtml(formatDate(file.modified)):'')+'</div></div>'
         +'<button class="options-button" type="button" onclick="copyPublicFileLink(\''+escapeJs(link)+'\')">🔗 COPY LINK</button></div>';
     }).join('');
+    lists.forEach(function(list){list.innerHTML=markup;});
   })
   .catch(function(err){
     const isTimeout=err && err.name==='AbortError';
     if(!silent){
-      list.innerHTML='<div class="empty">Could not load public files.</div>';
-      if(msg) msg.textContent=isTimeout ? 'Laptop file server did not respond within 8 seconds.' : 'File server error: '+String(err && err.message || err);
+      lists.forEach(function(list){list.innerHTML='<div class="empty">Could not load public files.</div>';});
+      messages.forEach(function(msg){msg.textContent=isTimeout ? 'Laptop file server did not respond within 8 seconds.' : 'File server error: '+String(err && err.message || err);});
     }
   })
   .finally(function(){
@@ -4300,7 +4275,6 @@ function loadPublicFiles(options){
     publicFilesLoading=false;
   });
 }
-
 
 function startPublicFilesAutoRefresh(){
   if(publicFilesAutoRefreshStarted) return;
@@ -4339,8 +4313,7 @@ function copyPublicFileLink(link){
   if(!link) return;
   if(navigator.clipboard && navigator.clipboard.writeText){
     navigator.clipboard.writeText(link).then(function(){
-      const msg=document.getElementById('publicFilesMessage');
-      if(msg) msg.textContent='Public link copied.';
+      document.querySelectorAll('#publicFilesMessage,#publicFilesPublicMessage').forEach(function(msg){msg.textContent='Public link copied.';});
     }).catch(function(){ prompt('Copy public link:',link); });
   }else{
     prompt('Copy public link:',link);
