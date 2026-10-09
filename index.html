@@ -488,6 +488,7 @@
       font-weight:700;
     }
     .options-button:hover{background:#2a070c}
+    .video-more-button{width:36px;height:36px;padding:0;font-size:22px;line-height:1;display:inline-flex;align-items:center;justify-content:center}
     .video-options{
       position:absolute;
       right:0;
@@ -1767,14 +1768,16 @@
    BACKUP: DU3D Laptop Cloudflare Tunnel
 ========================================================= */
 window.DU3D_API_URL='https://du3d-api.newjer53.workers.dev';
-window.DU3D_API_BACKUP_URL='https://scanning-atmosphere-melbourne-messenger.trycloudflare.com/api';
+window.DU3D_API_BACKUP_URL='https://desktop-96oacj7.tail3853ae.ts.net:8443/api';
 // Public files are served directly from the DU3D laptop through the same Cloudflare Tunnel.
 
 (function(){
-  var PRIMARY_COOLDOWN_MS=8000;
+  var PRIMARY_COOLDOWN_MS=60000;
   var PRIMARY_TIMEOUT_MS=7000;
-  var BACKUP_TIMEOUT_MS=7000;
+  var BACKUP_TIMEOUT_MS=26000;
   var primaryDownUntil=0;
+  var backupDownUntil=0;
+  var BACKUP_COOLDOWN_MS=30000;
   var SAFE_FAILOVER_METHODS=new Set([
     'getSiteData','getLiveSiteState','getAdminPresence','getChessLobby',
     'getChessChat','getPrivateChat','getPrivateInbox','getCurrentUser',
@@ -1832,19 +1835,31 @@ window.DU3D_API_BACKUP_URL='https://scanning-atmosphere-melbourne-messenger.tryc
       return function(){
         var args=Array.prototype.slice.call(arguments), methodName=prop;
         var safe=SAFE_FAILOVER_METHODS.has(methodName);
-        var backupFirst=safe&&Date.now()<primaryDownUntil;
+        var now=Date.now();
+        var backupFirst=safe&&now<primaryDownUntil&&now>=backupDownUntil;
         var first=backupFirst?window.DU3D_API_BACKUP_URL:window.DU3D_API_URL;
         var second=backupFirst?window.DU3D_API_URL:window.DU3D_API_BACKUP_URL;
-        requestApi(first,methodName,args,PRIMARY_TIMEOUT_MS).then(function(result){
+        requestApi(first,methodName,args,backupFirst?BACKUP_TIMEOUT_MS:PRIMARY_TIMEOUT_MS).then(function(result){
           if(!backupFirst)primaryDownUntil=0;
+          else backupDownUntil=0;
           if(typeof success==='function')success(result);
         }).catch(function(firstError){
           var failover=firstError&&firstError.du3dRetryable&&(safe||(!backupFirst&&isCloudflareLimitError(firstError.du3dResponse,firstError.du3dBody)));
+          if(backupFirst&&firstError&&firstError.du3dRetryable)backupDownUntil=Date.now()+BACKUP_COOLDOWN_MS;
           if(!failover){if(typeof failure==='function')failure(firstError);else console.error('DU3D API:',firstError);return;}
-          if(!backupFirst)primaryDownUntil=Date.now()+PRIMARY_COOLDOWN_MS;
-          requestApi(second,methodName,args,BACKUP_TIMEOUT_MS).then(function(result){
+          if(!backupFirst){
+            primaryDownUntil=Date.now()+PRIMARY_COOLDOWN_MS;
+            if(Date.now()<backupDownUntil){if(typeof failure==='function')failure(firstError);else console.error('DU3D API:',firstError);return;}
+          }
+          requestApi(second,methodName,args,backupFirst?PRIMARY_TIMEOUT_MS:BACKUP_TIMEOUT_MS).then(function(result){
+            if(backupFirst)primaryDownUntil=0;
+            else backupDownUntil=0;
             if(typeof success==='function')success(result);
           }).catch(function(error){
+            if(error&&error.du3dRetryable){
+              if(backupFirst)primaryDownUntil=Date.now()+PRIMARY_COOLDOWN_MS;
+              else backupDownUntil=Date.now()+BACKUP_COOLDOWN_MS;
+            }
             if(typeof failure==='function')failure(error);else console.error('DU3D API backup:',error);
           });
         });
@@ -4543,11 +4558,13 @@ function renderAdminList(){
 
         <div class="admin-options-wrap">
           <button
-            class="options-button"
+            class="options-button video-more-button"
             type="button"
+            aria-label="Video options"
+            title="Video options"
             onclick="toggleVideoOptions('${escapeJs(video.id)}')"
           >
-            ⋮ OPTIONS
+            ⋮
           </button>
 
           <div
