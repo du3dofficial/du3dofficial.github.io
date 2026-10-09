@@ -5183,6 +5183,7 @@ function getServerError(err){
   let stockfishStatus="idle";
   let stockfishPendingFen="";
   let stockfishMoveHandler=null;
+  let stockfishTimeoutTimer=null;
   let capturedPieces={blue:[],red:[]};
 
   function resetCapturedPieces(){ capturedPieces={blue:[],red:[]}; renderCapturedPieces(); }
@@ -8782,7 +8783,7 @@ function getServerError(err){
     if(!stockfishWorker||stockfishStatus!=="ready"||!stockfishPendingFen)return;
     stockfishWorker.postMessage("ucinewgame");
     stockfishWorker.postMessage("position fen "+stockfishPendingFen);
-    stockfishWorker.postMessage("go movetime 5000");
+    stockfishWorker.postMessage("go movetime 1500");
   }
 
   function ensureStockfish(){
@@ -8813,6 +8814,7 @@ function getServerError(err){
         }
         if(line.indexOf("bestmove ")===0){
           const match=line.match(/^bestmove\s+([a-h][1-8])([a-h][1-8])([qrbn])?/i);
+          if(stockfishTimeoutTimer){clearTimeout(stockfishTimeoutTimer);stockfishTimeoutTimer=null;}
           const handler=stockfishMoveHandler;
           stockfishMoveHandler=null;
           stockfishPendingFen="";
@@ -8820,6 +8822,7 @@ function getServerError(err){
         }
       };
       stockfishWorker.onerror=function(error){
+        if(stockfishTimeoutTimer){clearTimeout(stockfishTimeoutTimer);stockfishTimeoutTimer=null;}
         stockfishStatus="failed";
         stockfishWorker=null;
         const handler=stockfishMoveHandler;
@@ -8845,6 +8848,18 @@ function getServerError(err){
       handler(null,new Error("Stockfish is unavailable."));
       return;
     }
+    if(stockfishTimeoutTimer)clearTimeout(stockfishTimeoutTimer);
+    stockfishTimeoutTimer=setTimeout(function(){
+      stockfishTimeoutTimer=null;
+      const callback=stockfishMoveHandler;
+      stockfishMoveHandler=null;
+      stockfishPendingFen="";
+      stockfishStatus="failed";
+      const stalledWorker=stockfishWorker;
+      stockfishWorker=null;
+      if(stalledWorker){try{stalledWorker.terminate();}catch(error){}}
+      if(callback)callback(null,new Error("Stockfish timed out; switching to the DU3D local engine."));
+    },6000);
     if(stockfishStatus==="ready")sendStockfishSearch();
   }
 
