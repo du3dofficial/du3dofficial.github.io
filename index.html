@@ -492,7 +492,8 @@
     .video-options{
       position:absolute;
       right:0;
-      top:calc(100% + 6px);
+      top:auto;
+      bottom:calc(100% + 6px);
       z-index:50;
       min-width:135px;
       padding:5px;
@@ -1782,6 +1783,7 @@ window.DU3D_API_BACKUP_URL='https://desktop-96oacj7.tail3853ae.ts.net:8443/api';
     'getSiteData','getLiveSiteState','getAdminPresence','getChessLobby',
     'getChessChat','getPrivateChat','getPrivateInbox','getCurrentUser',
     'loginUser','touchUserOnline','setAdminOnline','markPrivateChatRead',
+    'saveMlbbAnalogVideo','updateMlbbAnalogVideo','removeMlbbAnalogVideo',
 
     /* Write actions that must still work when the primary Worker is
        temporarily unreachable/rate-limited. The backup is the same
@@ -1904,6 +1906,7 @@ button[onclick*="showAdminLogin"] { display:none !important; }
 <button onclick="showPage('home')">📝 Posts Update</button>
 <button onclick="showPage('about')">👤 About Me</button>
 <button onclick="showPage('gallery')">♟ Chessboard Gallery</button>
+<button onclick="showPage('mlbbAnalog')">🎮 MLBB ANALOG</button>
 <button onclick="showPage('chess')">♟ Chess</button>
 <button onclick="showPage('spinner')">🎡 Wheel Spinner</button>
 </div>
@@ -1968,6 +1971,14 @@ button[onclick*="showAdminLogin"] { display:none !important; }
 <div id="galleryBoard">
 <div class="empty">Loading videos...</div>
 </div>
+</section>
+<!-- MLBB ANALOG -->
+<section class="page-view" id="mlbbAnalog">
+<div class="header">
+<div class="title">🎮 MLBB ANALOG</div>
+<div class="subtitle">Videos and downloads added by the DU3D administrator.</div>
+</div>
+<div id="mlbbAnalogBoard"><div class="empty">Loading videos...</div></div>
 </section>
 <!-- WHEEL SPINNER -->
 <section class="page-view" id="spinner">
@@ -2168,7 +2179,7 @@ button[onclick*="showAdminLogin"] { display:none !important; }
 <section class="page-view" id="adminUploads">
 <div class="panel" id="adminUploadsPanel" style="display:none;">
 <h1>📤 ADMIN UPLOADS</h1>
-<p class="about-text">Manage the videos shown in the Chessboard Gallery and access files from the connected Public Files Server.</p>
+<p class="about-text">Manage videos for Chessboard Gallery and MLBB ANALOG, and access files from the connected Public Files Server.</p>
 <div class="admin-accordion" id="adminSectionVideos"><button class="admin-accordion-title" onclick="toggleAdminAccordion('adminSectionVideos')" type="button">1  ➕ ADD VIDEO TO CHESSBOARD GALLERY</button><div class="admin-accordion-body"><div class="admin-row add-video-form">
 <h3 class="admin-section-title"><span class="admin-section-number">1</span> ➕ ADD VIDEO TO CHESSBOARD GALLERY</h3>
 <small>Fill in the YouTube Link, Download Link and optional Video Title. After saving, the form clears automatically so you can add another video immediately.</small>
@@ -2184,7 +2195,19 @@ button[onclick*="showAdminLogin"] { display:none !important; }
 </div><div class="admin-row">
 <h3>📋 SAVED VIDEOS</h3>
 <div class="admin-list" id="adminList">Loading...</div>
-</div></div></div><div class="admin-accordion" id="adminSectionPublicFiles"><button class="admin-accordion-title" onclick="toggleAdminAccordion('adminSectionPublicFiles')" type="button">2  📁 PUBLIC FILES</button><div class="admin-accordion-body"><div class="admin-row">
+</div></div></div><div class="admin-accordion" id="adminSectionMlbb"><button class="admin-accordion-title" onclick="toggleAdminAccordion('adminSectionMlbb')" type="button">2  ➕ ADD MLBB ANALOG VIDEO</button><div class="admin-accordion-body"><div class="admin-row add-video-form">
+<h3 class="admin-section-title"><span class="admin-section-number">2</span> 🎮 ADD MLBB ANALOG</h3>
+<small>Add a YouTube video, its download link, and a title for the MLBB ANALOG page.</small>
+<input id="newMlbbVideoUrl" placeholder="YouTube Video Link — https://www.youtube.com/watch?v=..." type="url"/>
+<input id="newMlbbDownloadUrl" placeholder="Download Link — https://example.com/file" style="margin-top:8px" type="url"/>
+<input id="newMlbbVideoTitle" placeholder="Video title" style="margin-top:8px" type="text"/>
+<input id="editingMlbbVideoId" type="hidden" value=""/>
+<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;">
+<button class="primary" id="addMlbbVideoButton" onclick="saveMlbbAnalogVideo()" style="margin-top:0 !important;background:#061a3a !important;background-image:none !important;border:1px solid #174a86 !important;color:#ffffff !important;box-shadow:0 4px 12px rgba(0,0,0,.45) !important" type="button">➕ ADD MLBB ANALOG</button>
+<button class="danger" id="cancelEditMlbbButton" onclick="cancelEditMlbbAnalogVideo()" style="display:none" type="button">CANCEL EDIT</button>
+</div>
+<div class="message" id="mlbbVideoMessage"></div>
+</div><div class="admin-row"><h3>📋 SAVED MLBB ANALOG VIDEOS</h3><div class="admin-list" id="mlbbAdminList">Loading...</div></div></div></div><div class="admin-accordion" id="adminSectionPublicFiles"><button class="admin-accordion-title" onclick="toggleAdminAccordion('adminSectionPublicFiles')" type="button">3  📁 PUBLIC FILES</button><div class="admin-accordion-body"><div class="admin-row">
 <h3 class="admin-section-title"><span class="admin-section-number">2</span> 📁 PUBLIC FILES</h3>
 <small>Files inside your laptop's <b>Pubic Files</b> folder appear here. Generate a public link for each file without uploading the file to GitHub or Google Drive.</small>
 <div class="message" id="publicFilesMessage"></div>
@@ -2532,6 +2555,10 @@ function showPage(page){
     renderGallery();
   }
 
+  if(page==="mlbbAnalog"){
+    renderMlbbAnalogPage();
+  }
+
   if(page==="spinner"){
     if(typeof updateSpinnerAvatar === "function") updateSpinnerAvatar();
     if(typeof renderNames === "function") renderNames();
@@ -2615,6 +2642,7 @@ function loadSite(){
         hasCachedSite=true;
         renderHome();
         renderGallery();
+        renderMlbbAnalogPage();
         renderAbout();
         const cachedLogo=document.getElementById('siteLogo');
         if(cachedLogo && siteData.logoUrl){
@@ -2647,6 +2675,7 @@ function loadSite(){
 
       renderHome();
       renderGallery();
+      renderMlbbAnalogPage();
       renderAbout();
 
       const logo=document.getElementById("siteLogo");
@@ -2870,6 +2899,88 @@ function renderGallery(){
   }).join("");
 }
 
+
+/* =========================================================
+   MLBB ANALOG VIDEO PAGE AND ADMINISTRATION
+   Requires matching Apps Script methods and fields:
+   mlbbVideos, mlbbDownloads, save/update/removeMlbbAnalogVideo.
+   ========================================================= */
+function renderMlbbAnalogPage(){
+  const board=document.getElementById('mlbbAnalogBoard');
+  if(!board) return;
+  const videos=Array.isArray(siteData.mlbbVideos)?siteData.mlbbVideos:[];
+  const downloads=siteData.mlbbDownloads||{};
+  if(!videos.length){board.innerHTML='<div class="empty">No MLBB ANALOG videos have been added yet.</div>';return;}
+  board.innerHTML=videos.map(function(video){
+    const saved=downloads[video.id]||{};
+    const download=safeUrl(typeof saved==='string'?saved:saved.url);
+    const downloadText=escapeHtml(typeof saved==='string'?'DOWNLOAD':(saved.text||'DOWNLOAD'));
+    const youtubeId=getYouTubeId(video.url);
+    const thumbnail=video.thumbnail||(youtubeId?'https://i.ytimg.com/vi/'+youtubeId+'/hqdefault.jpg':'');
+    return '<div class="square"><div class="video"><a href="'+escapeHtml(safeUrl(video.url))+'" target="_blank" rel="noopener noreferrer"><img class="thumbnail" src="'+escapeHtml(thumbnail)+'" alt="'+escapeHtml(video.title||'MLBB ANALOG video')+'"><div class="thumbnail-title" title="'+escapeHtml(video.title||'MLBB ANALOG video')+'">'+escapeHtml(video.title||'MLBB ANALOG video')+'</div><div class="play">▶</div></a><div class="actions">'+(download?'<a class="action download" href="'+escapeHtml(download)+'" target="_blank" rel="noopener">⬇ '+downloadText+'</a>':'')+'</div></div></div>';
+  }).join('');
+}
+
+function renderMlbbAnalogAdminList(){
+  const list=document.getElementById('mlbbAdminList');if(!list)return;
+  const videos=Array.isArray(siteData.mlbbVideos)?siteData.mlbbVideos:[];
+  if(!videos.length){list.innerHTML='<div class="empty">No MLBB ANALOG videos have been added yet.</div>';return;}
+  list.innerHTML=videos.map(function(video){
+    return '<div class="admin-video-item"><div class="admin-video-main"><div class="admin-video-title">🎮 '+escapeHtml(video.title||'MLBB ANALOG video')+'</div><div class="admin-video-meta"><span>'+escapeHtml(video.url||'')+'</span></div></div><div class="admin-options-wrap"><button class="options-button video-more-button" type="button" aria-label="MLBB video options" onclick="toggleMlbbVideoOptions(\''+escapeJs(video.id)+'\')">⋮</button><div class="video-options" id="mlbb-options-'+escapeHtml(video.id)+'" style="display:none"><button type="button" onclick="editMlbbAnalogVideo(\''+escapeJs(video.id)+'\')">✏️ Edit</button><button class="remove-option" type="button" onclick="removeMlbbAnalogVideo(\''+escapeJs(video.id)+'\')">🗑 Remove</button></div></div></div>';
+  }).join('');
+}
+
+function toggleMlbbVideoOptions(videoId){
+  document.querySelectorAll('#mlbbAdminList .video-options').forEach(function(menu){if(menu.id!=='mlbb-options-'+videoId)menu.style.display='none';});
+  const menu=document.getElementById('mlbb-options-'+videoId);if(menu)menu.style.display=menu.style.display==='none'?'block':'none';
+}
+
+function editMlbbAnalogVideo(videoId){
+  const video=(siteData.mlbbVideos||[]).find(function(item){return String(item.id)===String(videoId);});if(!video)return;
+  const saved=(siteData.mlbbDownloads||{})[videoId]||{};
+  document.getElementById('newMlbbVideoUrl').value=video.url||'';
+  document.getElementById('newMlbbDownloadUrl').value=typeof saved==='string'?saved:(saved.url||'');
+  document.getElementById('newMlbbVideoTitle').value=video.title||'';
+  document.getElementById('editingMlbbVideoId').value=videoId;
+  document.getElementById('addMlbbVideoButton').textContent='💾 SAVE MLBB CHANGES';
+  document.getElementById('cancelEditMlbbButton').style.display='inline-block';
+  document.getElementById('mlbbVideoMessage').textContent='Editing this MLBB ANALOG video.';
+  document.querySelectorAll('#mlbbAdminList .video-options').forEach(function(menu){menu.style.display='none';});
+  document.getElementById('newMlbbVideoUrl').scrollIntoView({behavior:'smooth',block:'center'});
+}
+
+function cancelEditMlbbAnalogVideo(){
+  ['newMlbbVideoUrl','newMlbbDownloadUrl','newMlbbVideoTitle','editingMlbbVideoId'].forEach(function(id){const input=document.getElementById(id);if(input)input.value='';});
+  const button=document.getElementById('addMlbbVideoButton');if(button)button.textContent='➕ ADD MLBB ANALOG';
+  const cancel=document.getElementById('cancelEditMlbbButton');if(cancel)cancel.style.display='none';
+}
+
+function saveMlbbAnalogVideo(){
+  if(!adminToken)return;
+  const url=document.getElementById('newMlbbVideoUrl').value.trim();
+  const downloadUrl=document.getElementById('newMlbbDownloadUrl').value.trim();
+  const title=document.getElementById('newMlbbVideoTitle').value.trim();
+  const editingId=document.getElementById('editingMlbbVideoId').value.trim();
+  const message=document.getElementById('mlbbVideoMessage');
+  if(!url||!downloadUrl||!title){message.textContent='Enter a YouTube link, download link, and video title.';return;}
+  message.textContent=editingId?'Saving MLBB ANALOG changes...':'Adding MLBB ANALOG video...';
+  const runner=google.script.run.withSuccessHandler(function(result){
+    siteData.mlbbVideos=result.mlbbVideos||[];siteData.mlbbDownloads=result.mlbbDownloads||{};
+    cancelEditMlbbAnalogVideo();message.textContent=editingId?'MLBB ANALOG video updated.':'MLBB ANALOG video added.';
+    renderMlbbAnalogAdminList();renderMlbbAnalogPage();
+  }).withFailureHandler(function(error){message.textContent=getServerError(error);});
+  if(editingId)runner.updateMlbbAnalogVideo(adminToken,editingId,url,downloadUrl,title);
+  else runner.saveMlbbAnalogVideo(adminToken,url,downloadUrl,title);
+}
+
+function removeMlbbAnalogVideo(videoId){
+  if(!adminToken||!confirm('Remove this MLBB ANALOG video?'))return;
+  const message=document.getElementById('mlbbVideoMessage');message.textContent='Removing MLBB ANALOG video...';
+  google.script.run.withSuccessHandler(function(result){
+    siteData.mlbbVideos=result.mlbbVideos||[];siteData.mlbbDownloads=result.mlbbDownloads||{};
+    renderMlbbAnalogAdminList();renderMlbbAnalogPage();message.textContent='MLBB ANALOG video removed.';
+  }).withFailureHandler(function(error){message.textContent=getServerError(error);}).removeMlbbAnalogVideo(adminToken,videoId);
+}
 
 /* =========================================================
    HOME POSTS / PUBLIC COMMENTS
@@ -4342,6 +4453,7 @@ function loadAdmin(){
       };
 
       renderAdminList();
+      renderMlbbAnalogAdminList();
       renderAdminPosts();
       renderAbout();
       loadAboutIntoAdmin();
@@ -4350,6 +4462,7 @@ function loadAdmin(){
       applyHomeHeadline();
       renderHome();
       renderGallery();
+      renderMlbbAnalogPage();
       loadPrivateInbox();
 
     })
