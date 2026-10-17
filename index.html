@@ -1784,7 +1784,7 @@ window.DU3D_API_BACKUP_URL='https://du3d-api.newjer53.workers.dev';
   var SAFE_FAILOVER_METHODS=new Set([
     'getSiteData','getLiveSiteState','getAdminPresence','getChessLobby',
     'getChessChat','getPrivateChat','getPrivateInbox','getCurrentUser',
-    'loginUser','touchUserOnline','setAdminOnline','markPrivateChatRead','grantUserAdmin','removeUserAdmin',
+    'loginUser','touchUserOnline','setAdminOnline','markPrivateChatRead','grantUserAdmin','removeUserAdmin','getAdminUsers',
     'saveMlbbAnalogVideo','updateMlbbAnalogVideo','removeMlbbAnalogVideo',
 
     /* Write actions that must still work when the primary Worker is
@@ -2230,6 +2230,8 @@ button[onclick*="showAdminLogin"] { display:none !important; }
 <button class="primary" id="removeAdminButton" onclick="removeUserAdminFromAdminPanel()" type="button">REMOVE ADMIN</button>
 </div>
 <div class="message" id="grantAdminMessage" role="status" aria-live="polite"></div>
+<h3 style="margin-top:20px">CURRENT ADMIN ACCOUNTS</h3>
+<div class="admin-list" id="adminUsersList"><div class="empty">Loading admin accounts...</div></div>
 </div></div></div><div class="admin-accordion" id="adminSectionPosts"><button class="admin-accordion-title" onclick="toggleAdminAccordion('adminSectionPosts')" type="button">1  📝 POSTS UPDATE</button><div class="admin-accordion-body"><div class="admin-row admin-post-form">
 <h3 class="admin-section-title"><span class="admin-section-number">1</span> 📝 POSTS UPDATE</h3>
 <small>Posts Update controls the newest posts shown on Home. The newest update appears at the top; the Home Headline stays separately in the upper section.</small>
@@ -2578,6 +2580,7 @@ function showPage(page){
 
   if(page==="admin" || page==="adminUploads"){
     updateAdminUI();
+    if(page==="admin" && adminToken && typeof loadAdminUsers === "function") loadAdminUsers();
     if(page==="adminUploads" && !adminToken){
       showPage("home");
       return;
@@ -3704,12 +3707,31 @@ function grantUserAdminFromAdminPanel(){
     if(result && result.user && result.user.username){
       if(message) message.textContent=result.user.username+' can now access the admin dashboard and Public Files.';
       if(input) input.value='';
+      loadAdminUsers();
     }else if(message){ message.textContent='Admin access was updated.'; }
   }).withFailureHandler(function(err){
     if(button) button.disabled=false;
     const text=String(err && err.message || err || 'Could not grant admin access.');
     if(message) message.textContent=text.indexOf('USER_NOT_FOUND')!==-1 ? 'No registered account matches that username.' : text;
   }).grantUserAdmin(adminToken,username);
+}
+
+function loadAdminUsers(){
+  const list=document.getElementById('adminUsersList');
+  if(!list) return;
+  if(!adminToken){ list.innerHTML='<div class="empty">Sign in as an admin to view admin accounts.</div>'; return; }
+  list.innerHTML='<div class="empty">Loading admin accounts...</div>';
+  google.script.run.withSuccessHandler(function(result){
+    const users=result && Array.isArray(result.users) ? result.users : [];
+    if(!users.length){ list.innerHTML='<div class="empty">No admin accounts found.</div>'; return; }
+    list.innerHTML=users.map(function(user){
+      const label=escapeHtml(String(user.username||''));
+      const badge=user.owner ? '<span style="color:#39ff88;font-weight:800">OWNER</span>' : '<span style="color:#ffb347;font-weight:800">ADMIN</span>';
+      return '<div class="admin-list-item" style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap"><strong>'+label+'</strong>'+badge+'</div>';
+    }).join('');
+  }).withFailureHandler(function(err){
+    list.innerHTML='<div class="empty">Could not load admin accounts: '+escapeHtml(getServerError(err))+'</div>';
+  }).getAdminUsers(adminToken);
 }
 
 function removeUserAdminFromAdminPanel(){
@@ -3727,6 +3749,7 @@ function removeUserAdminFromAdminPanel(){
     const account=result && result.user && result.user.username ? result.user.username : username;
     if(message) message.textContent='Admin access removed from '+account+'. Their regular account remains active.';
     if(input) input.value='';
+    loadAdminUsers();
   }).withFailureHandler(function(err){
     if(button) button.disabled=false;
     const text=String(err && err.message || err || 'Could not remove admin access.');
