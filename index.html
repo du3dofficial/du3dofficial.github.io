@@ -4372,8 +4372,8 @@ function loadPublicFiles(options){
     return;
   }
   const servers=[
-    {listUrl:String(window.DU3D_PUBLIC_FILES_URL||'').replace(/\/$/,''),fileBase:String(window.DU3D_PUBLIC_FILE_BASE_URL||'').replace(/\/$/,''),timeoutMs:3000},
-    {listUrl:String(window.DU3D_PUBLIC_FILES_BACKUP_URL||'').replace(/\/$/,''),fileBase:String(window.DU3D_PUBLIC_FILE_BACKUP_BASE_URL||'').replace(/\/$/,''),timeoutMs:8000}
+    {listUrl:String(window.DU3D_PUBLIC_FILES_URL||'').replace(/\/$/,''),fileBase:String(window.DU3D_PUBLIC_FILE_BASE_URL||'').replace(/\/$/,''),timeoutMs:12000},
+    {listUrl:String(window.DU3D_PUBLIC_FILES_BACKUP_URL||'').replace(/\/$/,''),fileBase:String(window.DU3D_PUBLIC_FILE_BACKUP_BASE_URL||'').replace(/\/$/,''),timeoutMs:15000}
   ].filter(function(server){return server.listUrl&&server.fileBase;});
   if(!servers.length){
     lists.forEach(function(list){list.innerHTML='<div class="empty">Public file server is not configured.</div>';});
