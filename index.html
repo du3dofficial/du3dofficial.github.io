@@ -1784,7 +1784,7 @@ window.DU3D_API_BACKUP_URL='https://du3d-api.newjer53.workers.dev';
   var SAFE_FAILOVER_METHODS=new Set([
     'getSiteData','getLiveSiteState','getAdminPresence','getChessLobby',
     'getChessChat','getPrivateChat','getPrivateInbox','getCurrentUser',
-    'loginUser','touchUserOnline','setAdminOnline','markPrivateChatRead','grantUserAdmin',
+    'loginUser','touchUserOnline','setAdminOnline','markPrivateChatRead','grantUserAdmin','removeUserAdmin',
     'saveMlbbAnalogVideo','updateMlbbAnalogVideo','removeMlbbAnalogVideo',
 
     /* Write actions that must still work when the primary Worker is
@@ -2227,6 +2227,7 @@ button[onclick*="showAdminLogin"] { display:none !important; }
 <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;">
 <input id="adminUsernameToGrant" maxlength="24" placeholder="Existing username" autocomplete="off" style="flex:1;min-width:180px" type="text"/>
 <button class="primary" id="grantAdminButton" onclick="grantUserAdminFromAdminPanel()" type="button">MAKE ADMIN</button>
+<button class="primary" id="removeAdminButton" onclick="removeUserAdminFromAdminPanel()" type="button">REMOVE ADMIN</button>
 </div>
 <div class="message" id="grantAdminMessage" role="status" aria-live="polite"></div>
 </div></div></div><div class="admin-accordion" id="adminSectionPosts"><button class="admin-accordion-title" onclick="toggleAdminAccordion('adminSectionPosts')" type="button">1  📝 POSTS UPDATE</button><div class="admin-accordion-body"><div class="admin-row admin-post-form">
@@ -3679,7 +3680,7 @@ function submitAuth(){
     updateAccountUI();
     renderHome();
     closeAuth();
-    if(window.du3dCurrentUser && window.du3dCurrentUser.isAdmin){ setTimeout(function(){ showPage('admin'); },50); }
+    if(window.du3dCurrentUser && window.du3dCurrentUser.isAdmin){ setTimeout(function(){ showPage('adminUploads'); },50); }
     document.getElementById('authPassword').value='';
   };
   if(authMode==='login'){
@@ -3709,6 +3710,28 @@ function grantUserAdminFromAdminPanel(){
     const text=String(err && err.message || err || 'Could not grant admin access.');
     if(message) message.textContent=text.indexOf('USER_NOT_FOUND')!==-1 ? 'No registered account matches that username.' : text;
   }).grantUserAdmin(adminToken,username);
+}
+
+function removeUserAdminFromAdminPanel(){
+  const input=document.getElementById('adminUsernameToGrant');
+  const button=document.getElementById('removeAdminButton');
+  const message=document.getElementById('grantAdminMessage');
+  const username=String(input && input.value || '').trim();
+  if(!adminToken){ if(message) message.textContent='Please sign in as an admin.'; return; }
+  if(!/^[A-Za-z0-9_]{3,24}$/.test(username)){ if(message) message.textContent='Enter the username of the admin account to remove.'; return; }
+  if(!confirm('Remove admin access from '+username+'? They will keep their regular user account.')) return;
+  if(button) button.disabled=true;
+  if(message) message.textContent='Removing admin access...';
+  google.script.run.withSuccessHandler(function(result){
+    if(button) button.disabled=false;
+    const account=result && result.user && result.user.username ? result.user.username : username;
+    if(message) message.textContent='Admin access removed from '+account+'. Their regular account remains active.';
+    if(input) input.value='';
+  }).withFailureHandler(function(err){
+    if(button) button.disabled=false;
+    const text=String(err && err.message || err || 'Could not remove admin access.');
+    if(message) message.textContent=text.indexOf('USER_NOT_FOUND')!==-1 ? 'No registered account matches that username.' : text.indexOf('USER_NOT_ADMIN')!==-1 ? 'That account is not currently an admin.' : text.indexOf('ADMIN_OWNER_PROTECTED')!==-1 ? 'The configured owner account cannot be removed here.' : text.indexOf('ADMIN_SELF_DEMOTION_BLOCKED')!==-1 ? 'You cannot remove your own admin access.' : text;
+  }).removeUserAdmin(adminToken,username);
 }
 
 function toggleAdminAccordion(id){
@@ -3901,7 +3924,7 @@ function loadCurrentUser(){
         if(typeof window.du3dUpdateSpinnerAvatar==='function') window.du3dUpdateSpinnerAvatar();
         renderHome();
         if(window.du3dCurrentUser && window.du3dCurrentUser.isAdmin){
-          setTimeout(function(){ showPage('admin'); },50);
+          setTimeout(function(){ showPage('adminUploads'); },50);
         }
       }else{
         /* The server explicitly says the 30-minute session expired. */
