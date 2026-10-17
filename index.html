@@ -8,10 +8,12 @@
 <meta content="DU3D OFFICIAL — MCGG CHESSBOARD, Chess, Gallery and Community." name="description"/>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
 
-    <!-- STABLE PUBLIC FILES SERVER -->
+    <!-- PUBLIC FILES: CLOUDFLARE WORKER FIRST, LAPTOP FUNNEL FALLBACK -->
     <script>
     window.DU3D_PUBLIC_FILES_URL = 'https://desktop-96oacj7.tail3853ae.ts.net:8443/files';
     window.DU3D_PUBLIC_FILE_BASE_URL = 'https://desktop-96oacj7.tail3853ae.ts.net:8443';
+    window.DU3D_PUBLIC_FILES_BACKUP_URL = 'https://du3d-api.newjer53.workers.dev/public-files';
+    window.DU3D_PUBLIC_FILE_BACKUP_BASE_URL = 'https://du3d-api.newjer53.workers.dev/public-files';
     </script>
 
     <!-- your other existing scripts -->
@@ -1765,16 +1767,16 @@
 <script>
 /* =========================================================
    DU3D API CONNECTION
-   PRIMARY: Cloudflare Worker
-   BACKUP: DU3D Laptop Cloudflare Tunnel
+   PRIMARY: DU3D Laptop Cloudflare Tunnel
+   BACKUP: Cloudflare Worker
 ========================================================= */
-window.DU3D_API_URL='https://du3d-api.newjer53.workers.dev';
-window.DU3D_API_BACKUP_URL='https://desktop-96oacj7.tail3853ae.ts.net:8443/api';
-// Public files are served directly from the DU3D laptop through the same Cloudflare Tunnel.
+window.DU3D_API_URL='https://desktop-96oacj7.tail3853ae.ts.net:8443/api';
+window.DU3D_API_BACKUP_URL='https://du3d-api.newjer53.workers.dev';
+// Public file listings use the laptop first and Cloudflare Worker second.
 
 (function(){
-  var PRIMARY_COOLDOWN_MS=60000;
-  var PRIMARY_TIMEOUT_MS=7000;
+  var PRIMARY_COOLDOWN_MS=5000;
+  var PRIMARY_TIMEOUT_MS=4000;
   var BACKUP_TIMEOUT_MS=26000;
   var primaryDownUntil=0;
   var backupDownUntil=0;
@@ -1838,7 +1840,7 @@ window.DU3D_API_BACKUP_URL='https://desktop-96oacj7.tail3853ae.ts.net:8443/api';
         var args=Array.prototype.slice.call(arguments), methodName=prop;
         var safe=SAFE_FAILOVER_METHODS.has(methodName);
         var now=Date.now();
-        var backupFirst=safe&&now<primaryDownUntil&&now>=backupDownUntil;
+        var backupFirst=now<primaryDownUntil&&now>=backupDownUntil;
         var first=backupFirst?window.DU3D_API_BACKUP_URL:window.DU3D_API_URL;
         var second=backupFirst?window.DU3D_API_URL:window.DU3D_API_BACKUP_URL;
         requestApi(first,methodName,args,backupFirst?BACKUP_TIMEOUT_MS:PRIMARY_TIMEOUT_MS).then(function(result){
@@ -1846,7 +1848,8 @@ window.DU3D_API_BACKUP_URL='https://desktop-96oacj7.tail3853ae.ts.net:8443/api';
           else backupDownUntil=0;
           if(typeof success==='function')success(result);
         }).catch(function(firstError){
-          var failover=firstError&&firstError.du3dRetryable&&(safe||(!backupFirst&&isCloudflareLimitError(firstError.du3dResponse,firstError.du3dBody)));
+          var connectionFailedWithoutResponse=firstError&&firstError.du3dRetryable&&!firstError.du3dResponse&&firstError.name!=='AbortError';
+          var failover=firstError&&firstError.du3dRetryable&&(safe||connectionFailedWithoutResponse||(!backupFirst&&isCloudflareLimitError(firstError.du3dResponse,firstError.du3dBody)));
           if(backupFirst&&firstError&&firstError.du3dRetryable)backupDownUntil=Date.now()+BACKUP_COOLDOWN_MS;
           if(!failover){if(typeof failure==='function')failure(firstError);else console.error('DU3D API:',firstError);return;}
           if(!backupFirst){
@@ -4368,9 +4371,11 @@ function loadPublicFiles(options){
     messages.forEach(function(msg){msg.textContent='';});
     return;
   }
-  const base=String(window.DU3D_PUBLIC_FILES_URL||'').replace(/\/$/,'');
-  const fileBase=String(window.DU3D_PUBLIC_FILE_BASE_URL||'').replace(/\/$/,'');
-  if(!base || !fileBase){
+  const servers=[
+    {listUrl:String(window.DU3D_PUBLIC_FILES_URL||'').replace(/\/$/,''),fileBase:String(window.DU3D_PUBLIC_FILE_BASE_URL||'').replace(/\/$/,''),timeoutMs:3000},
+    {listUrl:String(window.DU3D_PUBLIC_FILES_BACKUP_URL||'').replace(/\/$/,''),fileBase:String(window.DU3D_PUBLIC_FILE_BACKUP_BASE_URL||'').replace(/\/$/,''),timeoutMs:8000}
+  ].filter(function(server){return server.listUrl&&server.fileBase;});
+  if(!servers.length){
     lists.forEach(function(list){list.innerHTML='<div class="empty">Public file server is not configured.</div>';});
     messages.forEach(function(msg){msg.textContent='';});
     return;
@@ -4381,20 +4386,31 @@ function loadPublicFiles(options){
   if(!silent) lists.forEach(function(list){list.innerHTML='<div class="empty">Loading public files...</div>';});
   if(!silent) messages.forEach(function(msg){msg.textContent='';});
 
-  const controller=new AbortController();
-  const timer=setTimeout(function(){ controller.abort(); },8000);
+  function fetchFileList(server){
+    return new Promise(function(resolve,reject){
+      const controller=new AbortController();
+      const timer=setTimeout(function(){controller.abort();},server.timeoutMs||8000);
+      fetch(server.listUrl+'?list=1&ts='+Date.now(),{method:'GET',cache:'no-store',signal:controller.signal})
+      .then(function(response){
+        if(!response.ok) throw new Error('HTTP '+response.status);
+        return response.json();
+      })
+      .then(function(data){
+        if(!data || !Array.isArray(data.files)) throw new Error('Invalid file-list response');
+        resolve({files:data.files,server:server});
+      })
+      .catch(reject)
+      .finally(function(){clearTimeout(timer);});
+    });
+  }
+  const attempts=servers.slice(1).reduce(function(promise,server){
+    return promise.catch(function(){return fetchFileList(server);});
+  },fetchFileList(servers[0]));
 
-  fetch(base+'?list=1&ts='+Date.now(),{
-    method:'GET',
-    cache:'no-store',
-    signal:controller.signal
-  })
-  .then(function(response){
-    if(!response.ok) throw new Error('HTTP '+response.status);
-    return response.json();
-  })
-  .then(function(data){
-    const files=data && Array.isArray(data.files) ? data.files : [];
+  attempts
+  .then(function(result){
+    const files=result.files;
+    const fileBase=result.server.fileBase;
     if(!files.length){
       lists.forEach(function(list){list.innerHTML='<div class="empty">No files found in Pubic Files yet.</div>';});
       return;
@@ -4415,11 +4431,10 @@ function loadPublicFiles(options){
     const isTimeout=err && err.name==='AbortError';
     if(!silent){
       lists.forEach(function(list){list.innerHTML='<div class="empty">Could not load public files.</div>';});
-      messages.forEach(function(msg){msg.textContent=isTimeout ? 'Laptop file server did not respond within 8 seconds.' : 'File server error: '+String(err && err.message || err);});
+      messages.forEach(function(msg){msg.textContent=isTimeout ? 'The laptop and Cloudflare file servers did not respond.' : 'The laptop and Cloudflare file servers could not load the file list: '+String(err && err.message || err);});
     }
   })
   .finally(function(){
-    clearTimeout(timer);
     publicFilesLoading=false;
   });
 }
