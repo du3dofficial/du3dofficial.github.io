@@ -4366,14 +4366,9 @@ function loadPublicFiles(options){
   const messages=[document.getElementById('publicFilesMessage'),document.getElementById('publicFilesPublicMessage')].filter(Boolean);
   if(!lists.length || publicFilesLoading) return;
 
-  if(!adminToken || !window.du3dUserToken){
-    lists.forEach(function(list){list.innerHTML='<div class="empty">Log in with the admin account to view public files.</div>';});
-    messages.forEach(function(msg){msg.textContent='';});
-    return;
-  }
   const servers=[
     {listUrl:String(window.DU3D_PUBLIC_FILES_URL||'').replace(/\/$/,''),fileBase:String(window.DU3D_PUBLIC_FILE_BASE_URL||'').replace(/\/$/,''),timeoutMs:12000},
-    {listUrl:String(window.DU3D_PUBLIC_FILES_BACKUP_URL||'').replace(/\/$/,''),fileBase:String(window.DU3D_PUBLIC_FILE_BACKUP_BASE_URL||'').replace(/\/$/,''),timeoutMs:15000}
+    {listUrl:String(window.DU3D_PUBLIC_FILES_BACKUP_URL||'').replace(/\/$/,''),fileBase:String(window.DU3D_PUBLIC_FILE_BACKUP_BASE_URL||'').replace(/\/$/,''),timeoutMs:18000}
   ].filter(function(server){return server.listUrl&&server.fileBase;});
   if(!servers.length){
     lists.forEach(function(list){list.innerHTML='<div class="empty">Public file server is not configured.</div>';});
@@ -4390,7 +4385,7 @@ function loadPublicFiles(options){
     return new Promise(function(resolve,reject){
       const controller=new AbortController();
       const timer=setTimeout(function(){controller.abort();},server.timeoutMs||8000);
-      fetch(server.listUrl+'?list=1&ts='+Date.now(),{method:'GET',headers:{'X-DU3D-Admin-Token':window.du3dUserToken},cache:'no-store',signal:controller.signal})
+      fetch(server.listUrl+'?list=1&ts='+Date.now(),{method:'GET',cache:'no-store',signal:controller.signal})
       .then(function(response){
         if(!response.ok) throw new Error('HTTP '+response.status);
         return response.json();
@@ -4431,7 +4426,8 @@ function loadPublicFiles(options){
     const isTimeout=err && err.name==='AbortError';
     if(!silent){
       lists.forEach(function(list){list.innerHTML='<div class="empty">Could not load public files.</div>';});
-      messages.forEach(function(msg){msg.textContent=isTimeout ? 'The laptop and Cloudflare file servers did not respond.' : 'The laptop and Cloudflare file servers could not load the file list: '+String(err && err.message || err);});
+      const errorText=String(err && err.message || err);
+      messages.forEach(function(msg){msg.textContent=isTimeout ? 'The file servers did not respond. Check that the laptop server and Tailscale Funnel are running.' : errorText.indexOf('502')!==-1 ? 'Cloudflare could not reach the laptop file server (HTTP 502). The Worker currently relays files from the laptop, so keep the laptop server and Tailscale Funnel running.' : 'The laptop and Cloudflare file servers could not load the file list: '+errorText;});
     }
   })
   .finally(function(){
