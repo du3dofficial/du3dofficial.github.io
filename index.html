@@ -1782,7 +1782,7 @@ window.DU3D_API_BACKUP_URL='https://desktop-96oacj7.tail3853ae.ts.net:8443/api';
   var SAFE_FAILOVER_METHODS=new Set([
     'getSiteData','getLiveSiteState','getAdminPresence','getChessLobby',
     'getChessChat','getPrivateChat','getPrivateInbox','getCurrentUser',
-    'loginUser','touchUserOnline','setAdminOnline','markPrivateChatRead',
+    'loginUser','touchUserOnline','setAdminOnline','markPrivateChatRead','grantUserAdmin',
     'saveMlbbAnalogVideo','updateMlbbAnalogVideo','removeMlbbAnalogVideo',
 
     /* Write actions that must still work when the primary Worker is
@@ -2218,7 +2218,15 @@ button[onclick*="showAdminLogin"] { display:none !important; }
 <div class="panel" id="adminPanel" style="display:none;"><h1>⚙ ADMIN DASHBOARD</h1><p class="about-text">
           Add or remove the YouTube videos shown in the Chessboard Gallery.
           For every video, you can also create a custom download button and link.
-        </p><div class="admin-accordion" id="adminSectionPosts"><button class="admin-accordion-title" onclick="toggleAdminAccordion('adminSectionPosts')" type="button">1  📝 POSTS UPDATE</button><div class="admin-accordion-body"><div class="admin-row admin-post-form">
+        </p><div class="admin-accordion" id="adminSectionUserAdmins"><button class="admin-accordion-title" onclick="toggleAdminAccordion('adminSectionUserAdmins')" type="button">👥 GRANT ADMIN ACCESS</button><div class="admin-accordion-body"><div class="admin-row">
+<h3>👥 PROMOTE A USER ACCOUNT</h3>
+<small>Enter the username of an existing account to let it use the admin dashboard and Public Files page.</small>
+<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;">
+<input id="adminUsernameToGrant" maxlength="24" placeholder="Existing username" autocomplete="off" style="flex:1;min-width:180px" type="text"/>
+<button class="primary" id="grantAdminButton" onclick="grantUserAdminFromAdminPanel()" type="button">MAKE ADMIN</button>
+</div>
+<div class="message" id="grantAdminMessage" role="status" aria-live="polite"></div>
+</div></div></div><div class="admin-accordion" id="adminSectionPosts"><button class="admin-accordion-title" onclick="toggleAdminAccordion('adminSectionPosts')" type="button">1  📝 POSTS UPDATE</button><div class="admin-accordion-body"><div class="admin-row admin-post-form">
 <h3 class="admin-section-title"><span class="admin-section-number">1</span> 📝 POSTS UPDATE</h3>
 <small>Posts Update controls the newest posts shown on Home. The newest update appears at the top; the Home Headline stays separately in the upper section.</small>
 <textarea id="newPostText" maxlength="5000" placeholder="Write a new Posts Update here..."></textarea>
@@ -3676,6 +3684,28 @@ function submitAuth(){
   }else{
     google.script.run.withSuccessHandler(success).withFailureHandler(fail).registerUser(username,password);
   }
+}
+
+function grantUserAdminFromAdminPanel(){
+  const input=document.getElementById('adminUsernameToGrant');
+  const button=document.getElementById('grantAdminButton');
+  const message=document.getElementById('grantAdminMessage');
+  const username=String(input && input.value || '').trim();
+  if(!adminToken){ if(message) message.textContent='Please sign in as an admin.'; return; }
+  if(!/^[A-Za-z0-9_]{3,24}$/.test(username)){ if(message) message.textContent='Enter an existing username (3-24 letters, numbers, or underscores).'; return; }
+  if(button) button.disabled=true;
+  if(message) message.textContent='Updating account access...';
+  google.script.run.withSuccessHandler(function(result){
+    if(button) button.disabled=false;
+    if(result && result.user && result.user.username){
+      if(message) message.textContent=result.user.username+' can now access the admin dashboard and Public Files.';
+      if(input) input.value='';
+    }else if(message){ message.textContent='Admin access was updated.'; }
+  }).withFailureHandler(function(err){
+    if(button) button.disabled=false;
+    const text=String(err && err.message || err || 'Could not grant admin access.');
+    if(message) message.textContent=text.indexOf('USER_NOT_FOUND')!==-1 ? 'No registered account matches that username.' : text;
+  }).grantUserAdmin(adminToken,username);
 }
 
 function toggleAdminAccordion(id){
