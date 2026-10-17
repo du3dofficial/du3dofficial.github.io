@@ -4390,7 +4390,7 @@ function loadPublicFiles(options){
     return new Promise(function(resolve,reject){
       const controller=new AbortController();
       const timer=setTimeout(function(){controller.abort();},server.timeoutMs||8000);
-      fetch(server.listUrl+'?list=1&ts='+Date.now(),{method:'GET',cache:'no-store',signal:controller.signal})
+      fetch(server.listUrl+'?list=1&ts='+Date.now(),{method:'GET',headers:{'X-DU3D-Admin-Token':window.du3dUserToken},cache:'no-store',signal:controller.signal})
       .then(function(response){
         if(!response.ok) throw new Error('HTTP '+response.status);
         return response.json();
