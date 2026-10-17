@@ -1784,7 +1784,7 @@ window.DU3D_API_BACKUP_URL='https://du3d-api.newjer53.workers.dev';
   var SAFE_FAILOVER_METHODS=new Set([
     'getSiteData','getLiveSiteState','getAdminPresence','getChessLobby',
     'getChessChat','getPrivateChat','getPrivateInbox','getCurrentUser',
-    'loginUser','touchUserOnline','setAdminOnline','markPrivateChatRead','grantUserAdmin','removeUserAdmin','getAdminUsers',
+    'loginUser','touchUserOnline','setAdminOnline','markPrivateChatRead','grantUserAdmin','removeUserAdmin',
     'saveMlbbAnalogVideo','updateMlbbAnalogVideo','removeMlbbAnalogVideo',
 
     /* Write actions that must still work when the primary Worker is
@@ -3722,7 +3722,11 @@ function loadAdminUsers(){
   if(!adminToken){ list.innerHTML='<div class="empty">Sign in as an admin to view admin accounts.</div>'; return; }
   list.innerHTML='<div class="empty">Loading admin accounts...</div>';
   google.script.run.withSuccessHandler(function(result){
-    const users=result && Array.isArray(result.users) ? result.users : [];
+    if(!result || !Array.isArray(result.adminUsers)){
+      list.innerHTML='<div class="empty">The deployed Apps Script is missing the admin-list update. Replace Code.gs and deploy a new version.</div>';
+      return;
+    }
+    const users=result.adminUsers;
     if(!users.length){ list.innerHTML='<div class="empty">No admin accounts found.</div>'; return; }
     list.innerHTML=users.map(function(user){
       const label=escapeHtml(String(user.username||''));
@@ -3731,7 +3735,7 @@ function loadAdminUsers(){
     }).join('');
   }).withFailureHandler(function(err){
     list.innerHTML='<div class="empty">Could not load admin accounts: '+escapeHtml(getServerError(err))+'</div>';
-  }).getAdminUsers(adminToken);
+  }).getCurrentUser(adminToken,true);
 }
 
 function removeUserAdminFromAdminPanel(){
