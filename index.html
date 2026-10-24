@@ -1912,6 +1912,7 @@ button[onclick*="showAdminLogin"] { display:none !important; }
 <button onclick="showPage('mlbbAnalog')">🎮 MLBB ANALOG</button>
 <button onclick="showPage('chess')">♟ Chess</button>
 <button onclick="showPage('spinner')">🎡 Wheel Spinner</button>
+<a href="./mp3-mp4-downloader/" aria-label="Open MP3/MP4 Downloader">MP3/MP4 Downloader</a>
 </div>
 <div class="menu-title" id="myLinksTitle" style="display:none">MY LINKS</div>
 <div class="menu" id="myLinksMenu"></div>
@@ -4087,7 +4088,7 @@ function du3dNotifyPrivate(title,body){
   try{ if('Notification' in window && Notification.permission==='granted') new Notification(title,{body:body||'New private message from DU3D.'}); }catch(e){}
 }
 function updatePrivateBadge(id,count){ const el=document.getElementById(id); if(!el)return; const n=Math.max(0,Number(count)||0); el.textContent=n>99?'99+':String(n); el.classList.toggle('show',n>0); }
-function requestPrivateNotificationPermission(){
+function requestPrpZEAWYtiB6bJ16NuLbGCc6CZ6jJdKfb63(){
   try{ if('Notification' in window && Notification.permission==='default') Notification.requestPermission().catch(function(){}); }catch(e){}
 }
 function pollPrivateNotifications(){
@@ -4116,7 +4117,7 @@ function pollPrivateNotifications(){
 }
 function startPrivateNotificationPolling(){
   if(du3dPrivateNotifyTimer) clearInterval(du3dPrivateNotifyTimer);
-  requestPrivateNotificationPermission();
+  requestPrpZEAWYtiB6bJ16NuLbGCc6CZ6jJdKfb63();
   pollPrivateNotifications();
   du3dPrivateNotifyTimer=setInterval(pollPrivateNotifications,5000);
 }
@@ -9263,7 +9264,7 @@ function toggleBackgroundMusic(){
   if(!audio || !audio.src) return;
   if(audio.paused) audio.play().catch(function(){}); else audio.pause();
 }
-function renderBackgroundMusicAdmin(){
+function rpZEAWYtiB6bJ16NuLbGCc6CZ6jJdKfb63(){
   const cfg=siteData.backgroundMusic||{};
   const title=document.getElementById('backgroundMusicTitle');
   const enabled=document.getElementById('backgroundMusicEnabled');
@@ -9286,7 +9287,7 @@ function saveBackgroundMusic(){
     msg.textContent='Uploading music...';
     google.script.run.withSuccessHandler(function(result){
       siteData.backgroundMusic=result.backgroundMusic||{};
-      applyBackgroundMusic(siteData.backgroundMusic); renderBackgroundMusicAdmin(); file.value=''; msg.textContent='Background music uploaded. Previous music was automatically deleted.';
+      applyBackgroundMusic(siteData.backgroundMusic); rpZEAWYtiB6bJ16NuLbGCc6CZ6jJdKfb63(); file.value=''; msg.textContent='Background music uploaded. Previous music was automatically deleted.';
     }).withFailureHandler(function(err){ msg.textContent=getServerError(err); }).uploadBackgroundMusic(adminToken,reader.result,f.name,title,enabled);
   };
   reader.readAsDataURL(f);
@@ -9294,7 +9295,7 @@ function saveBackgroundMusic(){
 function removeBackgroundMusic(){
   if(!adminToken) return;
   google.script.run.withSuccessHandler(function(result){
-    siteData.backgroundMusic=result.backgroundMusic||{}; applyBackgroundMusic(siteData.backgroundMusic); renderBackgroundMusicAdmin();
+    siteData.backgroundMusic=result.backgroundMusic||{}; applyBackgroundMusic(siteData.backgroundMusic); rpZEAWYtiB6bJ16NuLbGCc6CZ6jJdKfb63();
     const msg=document.getElementById('backgroundMusicMessage'); if(msg) msg.textContent='Background music removed.';
   }).withFailureHandler(function(err){ const msg=document.getElementById('backgroundMusicMessage'); if(msg) msg.textContent=getServerError(err); }).removeBackgroundMusic(adminToken);
 }
