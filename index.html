@@ -1408,6 +1408,7 @@
 
     /* FLOATING PRIVATE MESSAGES */
     .du3d-message-float{position:fixed;right:24px;bottom:24px;width:54px;height:54px;border-radius:50%;border:1px solid #ff4655;background:linear-gradient(145deg,#8d0b1b,#43050d);color:#fff;display:flex;align-items:center;justify-content:center;font-size:25px;cursor:pointer;z-index:10010;box-shadow:0 10px 30px rgba(0,0,0,.5),0 0 18px rgba(255,45,60,.16)}
+    .du3d-message-float img.chat-logo{display:block;width:100%;height:100%;object-fit:contain;border-radius:50%}
     .du3d-message-float:hover{transform:translateY(-2px);filter:brightness(1.12)}
     .du3d-message-float .badge{position:absolute;right:-2px;top:-3px;min-width:18px;height:18px;padding:0 4px;border-radius:999px;background:#ff1830;color:#fff;font-size:9px;font-weight:900;display:none;align-items:center;justify-content:center;border:2px solid #100205}
     .du3d-message-float .badge.show{display:flex}
@@ -3684,6 +3685,7 @@ function submitAuth(){
     updateAccountUI();
     renderHome();
     closeAuth();
+    if(window.du3dAutoOpenChat) setTimeout(openAppPrivateChatWhenReady,120);
     if(window.du3dCurrentUser && window.du3dCurrentUser.isAdmin){ setTimeout(function(){ showPage('adminUploads'); },50); }
     document.getElementById('authPassword').value='';
   };
@@ -3949,6 +3951,7 @@ function loadCurrentUser(){
         syncAdminSession();
         updateAdminPresence(!!result.user.isAdmin);
         updateAccountUI();
+        if(window.du3dAutoOpenChat) setTimeout(openAppPrivateChatWhenReady,120);
         if(typeof window.du3dUpdateSpinnerAvatar==='function') window.du3dUpdateSpinnerAvatar();
         renderHome();
         if(window.du3dCurrentUser && window.du3dCurrentUser.isAdmin){
@@ -4176,6 +4179,16 @@ function openPrivateChat(){
   loadPrivateChat();
   startPrivateChatPolling();
   setTimeout(function(){ if(input) input.focus(); },60);
+}
+
+function openAppPrivateChatWhenReady(){
+  if(!window.du3dAutoOpenChat) return;
+  if(window.du3dCurrentUser && window.du3dUserToken){
+    window.du3dAutoOpenChat=false;
+    openPrivateChat();
+  }else if(!window.du3dUserToken){
+    openAuth('login');
+  }
 }
 
 function closePrivateChat(){
@@ -9358,6 +9371,8 @@ document.addEventListener('keydown',function(event){
 
 updateAdminUI();
 loadCurrentUser();
+window.du3dAutoOpenChat=new URLSearchParams(window.location.search).get('du3d_chat')==='1';
+if(window.du3dAutoOpenChat) setTimeout(openAppPrivateChatWhenReady,1400);
 
 loadSite();
 startLiveCommentSync();
@@ -9425,9 +9440,9 @@ showPage("gallery");
 </div>
 <div class="du3d-float-stack">
 <button aria-label="Your Profile - change avatar" class="du3d-profile-float" id="userProfileFloat" onclick="openAvatarPicker()" style="display:none" type="button"><img id="userProfileFloatAvatar" alt="Your Profile" src=""><span class="du3d-profile-default" id="userProfileFloatDefault">👤</span></button>
-<button aria-label="Message DU3D" class="du3d-message-float" id="userMessageFloat" onclick="openPrivateChat()" style="display:none" type="button">💬<span class="du3d-message-badge" id="userMessageBadge"></span></button>
+<button aria-label="Message DU3D" class="du3d-message-float" id="userMessageFloat" onclick="openPrivateChat()" style="display:none" type="button"><img class="chat-logo" src="chat-bubble-logo.png" alt=""><span class="du3d-message-badge" id="userMessageBadge"></span></button>
 <button aria-label="DU3D Profile" class="du3d-profile-float" id="adminProfileFloat" style="display:none" type="button"><img id="adminProfileFloatAvatar" alt="DU3D" src=""></button>
-<button aria-label="Private Messages" class="du3d-message-float" id="adminMessageFloat" onclick="openAdminPrivateChat()" style="display:none" type="button">💬<span class="du3d-message-badge" id="adminMessageBadge"></span></button>
+<button aria-label="Private Messages" class="du3d-message-float" id="adminMessageFloat" onclick="openAdminPrivateChat()" style="display:none" type="button"><img class="chat-logo" src="chat-bubble-logo.png" alt=""><span class="du3d-message-badge" id="adminMessageBadge"></span></button>
 </div>
 <div class="avatar-picker-overlay" id="avatarPickerOverlay" onclick="if(event.target===this) closeAvatarPicker()"><div class="avatar-picker-card" onclick="event.stopPropagation()"><div style="display:flex;justify-content:space-between;align-items:center;gap:10px"><div><h2 style="margin:0;color:#fff;font-size:18px">Choose Your Avatar</h2><div style="margin-top:5px;color:#c58b91;font-size:11px">Choose only from the avatars uploaded by DU3D.</div></div><button class="du3d-admin-chat-close" type="button" onclick="closeAvatarPicker()">✕</button></div><div class="avatar-grid" id="avatarChoiceGrid"></div><div class="message" id="avatarPickerMessage"></div></div></div>
 <div class="auth-overlay" id="authOverlay" onclick="if(event.target===this) closeAuth(); event.stopPropagation();">
